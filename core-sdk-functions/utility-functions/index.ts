@@ -53,7 +53,7 @@ async function main() {
   console.log('✅ Success:', parseUnitsResult);
 
   console.log('\n🏃 Trying to call convertExecutorToOrigin');
-  const convertExecutorToOriginResult = await convertExecutorToOrigin();
+  const convertExecutorToOriginResult = await convertExecutorToOriginAccount();
   console.log('✅ Success:', JSON.stringify(convertExecutorToOriginResult, null, 2));
 }
 
@@ -290,8 +290,8 @@ async function parseUnits() {
   return results;
 }
 
-async function convertExecutorToOrigin() {
+async function convertExecutorToOriginAccount() {
   const testAddress = '0xc16a585b95810F7D204620bb3677F73243242A8F';
-  const { account, isUEA } = await PushChain.utils.account.convertExecutorToOrigin(testAddress);
-  return { account, isUEA };
+  const { account, exists } = await PushChain.utils.account.convertExecutorToOriginAccount(testAddress);
+  return { account, exists };
 }
