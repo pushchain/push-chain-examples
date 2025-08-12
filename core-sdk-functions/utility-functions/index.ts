@@ -291,7 +291,7 @@ async function parseUnits() {
 }
 
 async function convertExecutorToOriginAccount() {
-  const testAddress = '0xc16a585b95810F7D204620bb3677F73243242A8F';
+  const testAddress = '0x2C592Cd90d9d485EB27eC30c718B8A3b63B32d78';
   const { account, exists } = await PushChain.utils.account.convertExecutorToOriginAccount(testAddress);
   return { account, exists };
 }
