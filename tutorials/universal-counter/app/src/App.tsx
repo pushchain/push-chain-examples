@@ -26,7 +26,7 @@ import { ethers } from "ethers";
 import UniversalCounterABI from "./abi/UniversalCounter.json";
 
 // Contract address for the Universal Counter
-const CONTRACT_ADDRESS = "0x5A59a5Ac94d5190553821307F98e4673BF3c4a1D";
+const CONTRACT_ADDRESS = "0x07E7Ca060A4b5BcDa61A6B701305ef0Ee29E1A3e";
 
 // Use the imported ABI
 
