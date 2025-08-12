@@ -36,7 +36,7 @@ async function initializeEthersProvider() {
 
 // Get Transaction with Ethers
 async function getEthersTransaction() {
-  const transactionHash = '0x9405d6d75fe331d17ca53e7076a784b70c030c74a00e72ceff6a3e88356828f5';
+  const transactionHash = '0xe5bec93aa8e98405093f03ab4ed695b673dd08680728788963b6fac77d65aed3';
   const provider = await initializeEthersProvider();
   const transaction = await provider.getTransaction(transactionHash);
   console.log('📄 Transaction details:', transaction);
@@ -80,7 +80,7 @@ async function initializeViemClient() {
 
 // Get Transaction with Viem
 async function getViemTransaction() {
-  const transactionHash = '0x9405d6d75fe331d17ca53e7076a784b70c030c74a00e72ceff6a3e88356828f5';
+  const transactionHash = '0xe5bec93aa8e98405093f03ab4ed695b673dd08680728788963b6fac77d65aed3';
   const publicClient = await initializeViemClient();
   const transaction = await publicClient.getTransaction({
     hash: transactionHash,
