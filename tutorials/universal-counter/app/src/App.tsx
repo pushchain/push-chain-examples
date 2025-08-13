@@ -307,7 +307,9 @@ const App: React.FC = () => {
                   onClick={handleIncrement}
                   disabled={isLoading}
                   style={{
-                    padding: "18px 20px",
+                    width: "100%",
+                    height: "100%",
+                    padding: "12px",
                     fontSize: "16px",
                     backgroundColor: isLoading ? "#727272" : "#d548ec",
                     color: "white",

@@ -1356,6 +1356,29 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@pushchain/core@npm:1.1.29":
+  version: 1.1.29
+  resolution: "@pushchain/core@npm:1.1.29"
+  dependencies:
+    "@bufbuild/protobuf": "npm:^2.0.0"
+    "@coral-xyz/anchor": "npm:^0.31.0"
+    "@cosmjs/crypto": "npm:0.33.1"
+    "@cosmjs/encoding": "npm:0.33.1"
+    "@cosmjs/proto-signing": "npm:^0.33.1"
+    "@cosmjs/stargate": "npm:^0.33.1"
+    "@cosmjs/tendermint-rpc": "npm:0.33.1"
+    "@solana/web3.js": "npm:^1.68.0"
+    buffer: "npm:^6.0.3"
+    cosmjs-types: "npm:0.9.0"
+    ethers: "npm:^6.14.3"
+    protobufjs: "npm:7.4.0"
+    tslib: "npm:^2.3.0"
+    tweetnacl: "npm:^1.0.3"
+    viem: "npm:2.27.2"
+  checksum: 10/da9279452ccb5e747441bb34f9b7856e196d56bfcf551aa21b9c8f0c2128c51e3b7d81ac4514ef85c7e8a05083faf582c5de2223779ac10b423dec0d7e343c9a
+  languageName: node
+  linkType: hard
+
 "@pushchain/core@npm:^0.1.40":
   version: 0.1.40
   resolution: "@pushchain/core@npm:0.1.40"
@@ -1378,21 +1401,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pushchain/ui-kit@npm:^1.1.25":
-  version: 1.1.25
-  resolution: "@pushchain/ui-kit@npm:1.1.25"
+"@pushchain/ui-kit@npm:^1.1.32":
+  version: 1.1.32
+  resolution: "@pushchain/ui-kit@npm:1.1.32"
   dependencies:
     "@coral-xyz/anchor": "npm:^0.31.1"
     "@metamask/sdk": "npm:^0.32.0"
-    "@pushchain/core": "npm:^0.1.40"
+    "@pushchain/core": "npm:1.1.29"
     "@solana/web3.js": "npm:^1.98.2"
     "@walletconnect/ethereum-provider": "npm:^2.21.5"
+    buffer: "npm:^6.0.3"
     ethers: "npm:^6.13.5"
     react: "npm:^18.3.1"
+    react-is: "npm:^19.1.0"
     styled-components: "npm:^5.3.8"
     tslib: "npm:^2.3.0"
     viem: "npm:^2.23.9"
-  checksum: 10/4fd33594eac7f30d2c237fa48cf9c7a229738a664a548880f426d8cdb411b7066f63003ca32e008f49008e9c7a4a539fc055b9f4dcbb1a51f48b01f1ccb75373
+  checksum: 10/6e4c78c27c7152b1c2ed17b20584588d89262f4b39f691f4d7981439d8c2adcb1adb4b8c21cbe262b641c567bd31083d42e194b53fe70676e639f9450339749b
   languageName: node
   linkType: hard
 
@@ -5746,6 +5771,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-is@npm:^19.1.0":
+  version: 19.1.1
+  resolution: "react-is@npm:19.1.1"
+  checksum: 10/44e0937da1f0da1d5dbd4f01972870768ef207f8a49717f4491f5022454f34c956cb66be560aee5286387169853b0283a81e1f419b51dc62654c8710dc98065a
+  languageName: node
+  linkType: hard
+
 "react-refresh@npm:^0.17.0":
   version: 0.17.0
   resolution: "react-refresh@npm:0.17.0"
@@ -6585,7 +6617,7 @@ __metadata:
   dependencies:
     "@eslint/js": "npm:^9.25.0"
     "@pushchain/core": "npm:^0.1.40"
-    "@pushchain/ui-kit": "npm:^1.1.25"
+    "@pushchain/ui-kit": "npm:^1.1.32"
     "@types/gh-pages": "npm:^6"
     "@types/matter-js": "npm:^0.19.8"
     "@types/node": "npm:^24.0.10"
