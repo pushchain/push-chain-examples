@@ -144,11 +144,11 @@ const App: React.FC = () => {
         await tx.wait();
 
         // Refresh counter values
-        // await fetchCounters();
+        await fetchCounters();
 
         // Add a single Push Chain colored ball for immediate visual feedback
         // The fetchCounters will handle adding any additional balls needed
-        addMultipleBlockchainBalls(PUSH_CHAIN_COLOR, 1);
+        // addMultipleBlockchainBalls(PUSH_CHAIN_COLOR, 1);
 
         setIsLoading(false);
       } catch (err) {
@@ -350,7 +350,7 @@ const App: React.FC = () => {
                 </>
               ) : countSol > countEth && countSol > countPC ? (
                 <>
-                  ✨ Solana Users areWinning! 🌟{" "}
+                  ✨ Solana Users are Winning! 🌟{" "}
                   <span style={{ fontSize: "1.8rem" }}>🏆</span>
                 </>
               ) : (
@@ -472,8 +472,8 @@ const App: React.FC = () => {
                     onClick={fetchCounters}
                     style={{
                       padding: "8px 16px",
-                      backgroundColor: "#007bff",
-                      color: "white",
+                      backgroundColor: "transparent",
+                      color: "#0066cc",
                       border: "none",
                       borderRadius: "4px",
                       cursor: "pointer",
