@@ -1421,9 +1421,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pushchain/core@npm:0.1.42, @pushchain/core@npm:^0.1.42":
-  version: 0.1.42
-  resolution: "@pushchain/core@npm:0.1.42"
+"@pushchain/core@npm:1.1.29":
+  version: 1.1.29
+  resolution: "@pushchain/core@npm:1.1.29"
   dependencies:
     "@bufbuild/protobuf": "npm:^2.0.0"
     "@coral-xyz/anchor": "npm:^0.31.0"
@@ -1440,17 +1440,40 @@ __metadata:
     tslib: "npm:^2.3.0"
     tweetnacl: "npm:^1.0.3"
     viem: "npm:2.27.2"
-  checksum: 10/7792b6cef071d2a1c164f1d1c7013548cbdc9612f680e4ba4dbccca353fef430a8588e9ec03fc7fa51f62586049a7bf6d5e61aacd7f5c32a57066ed830e4fdfa
+  checksum: 10/da9279452ccb5e747441bb34f9b7856e196d56bfcf551aa21b9c8f0c2128c51e3b7d81ac4514ef85c7e8a05083faf582c5de2223779ac10b423dec0d7e343c9a
   languageName: node
   linkType: hard
 
-"@pushchain/ui-kit@npm:^1.1.28":
-  version: 1.1.28
-  resolution: "@pushchain/ui-kit@npm:1.1.28"
+"@pushchain/core@npm:^1.1.33":
+  version: 1.1.33
+  resolution: "@pushchain/core@npm:1.1.33"
+  dependencies:
+    "@bufbuild/protobuf": "npm:^2.0.0"
+    "@coral-xyz/anchor": "npm:^0.31.0"
+    "@cosmjs/crypto": "npm:0.33.1"
+    "@cosmjs/encoding": "npm:0.33.1"
+    "@cosmjs/proto-signing": "npm:^0.33.1"
+    "@cosmjs/stargate": "npm:^0.33.1"
+    "@cosmjs/tendermint-rpc": "npm:0.33.1"
+    "@solana/web3.js": "npm:^1.68.0"
+    buffer: "npm:^6.0.3"
+    cosmjs-types: "npm:0.9.0"
+    ethers: "npm:^6.14.3"
+    protobufjs: "npm:7.4.0"
+    tslib: "npm:^2.3.0"
+    tweetnacl: "npm:^1.0.3"
+    viem: "npm:2.27.2"
+  checksum: 10/f060fdaba905feeb3fbd17f13bb903bb2ada84461d5ba0986cf6d9eecb0dd70430a9abaa3b068baf4ac7490029b2494ff7ec73e85cdc5d34e2baa1cc4cd72011
+  languageName: node
+  linkType: hard
+
+"@pushchain/ui-kit@npm:^1.1.33":
+  version: 1.1.33
+  resolution: "@pushchain/ui-kit@npm:1.1.33"
   dependencies:
     "@coral-xyz/anchor": "npm:^0.31.1"
     "@metamask/sdk": "npm:^0.32.0"
-    "@pushchain/core": "npm:0.1.42"
+    "@pushchain/core": "npm:1.1.29"
     "@solana/web3.js": "npm:^1.98.2"
     "@walletconnect/ethereum-provider": "npm:^2.21.5"
     buffer: "npm:^6.0.3"
@@ -1460,7 +1483,7 @@ __metadata:
     styled-components: "npm:^5.3.8"
     tslib: "npm:^2.3.0"
     viem: "npm:^2.23.9"
-  checksum: 10/d5c13e5f84de2de6a1c8da7422903b1d8a7df1816bec2d5bccea696107cb1583e75891b96df72a1adf7eadab6c08b54b1ef1ae9677a89b8909b6da3d343705b8
+  checksum: 10/b66e76511c9f9cba1937322eb2d59a28c507b0f5e663e12ee7ee6c0fce4252245b6b481f1960f0c1cd2dcedf9c5ef54ed7463e427d705bbce88cb0fef6ff14c3
   languageName: node
   linkType: hard
 
@@ -4629,8 +4652,8 @@ __metadata:
   resolution: "core-connection@workspace:."
   dependencies:
     "@eslint/js": "npm:^9.9.0"
-    "@pushchain/core": "npm:^0.1.42"
-    "@pushchain/ui-kit": "npm:^1.1.28"
+    "@pushchain/core": "npm:^1.1.33"
+    "@pushchain/ui-kit": "npm:^1.1.33"
     "@radix-ui/react-popover": "npm:^1.1.2"
     "@types/react": "npm:^18.3.3"
     "@types/react-dom": "npm:^18.3.0"
