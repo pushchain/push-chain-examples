@@ -3,7 +3,7 @@ import { ethers } from 'hardhat';
 import hre from 'hardhat';
 import * as fs from 'fs';
 import * as path from 'path';
-import { buildMerkleTree } from '../scripts/merkle-proof-generator';
+import { buildMerkleTree } from './merkle-proof-generator';
 
 // Load environment variables
 config();
@@ -14,6 +14,27 @@ interface AirdropEntry {
   chainId: string;
   amount: string;
 }
+
+const AIRDROP_ENTRIES: AirdropEntry[] = [
+  {
+    recipient: '0xFd6C2fE69bE13d8bE379CCB6c9306e74193EC1A9',
+    chainNamespace: 'eip155',
+    chainId: '42101',
+    amount: '10000000000000000000',
+  },
+  {
+    recipient: '0xFd6C2fE69bE13d8bE379CCB6c9306e74193EC1A9',
+    chainNamespace: 'eip155',
+    chainId: '11155111',
+    amount: '10000000000000000000',
+  },
+  {
+    recipient: '72JBejJFXrRKpQ69Hmaqr7vWJr6pdZXFEL6jt3sadsXU',
+    chainNamespace: 'solana',
+    chainId: 'EtWTRABZaYq6iMfeYKouRu166VU2xqa1',
+    amount: '10000000000000000000',
+  },
+];
 
 async function main() {
   console.log('🚀 Starting deployment...');
@@ -48,10 +69,9 @@ async function main() {
 
   // Read airdrop entries and generate Merkle tree
   console.log('\n🌳 Generating Merkle tree...');
-  const airdropPath = path.join(__dirname, '../data/airdrop.json');
-  const airdropEntries: AirdropEntry[] = JSON.parse(fs.readFileSync(airdropPath, 'utf8'));
-  // const treeData = buildMerkleTree(airdropEntries);
-  const treeData = { merkleRoot: '0xce1ce6669c44b16a7bec7bea604abb8f7d6f1c62ff3d463c77140f8f00c15644' };
+  const airdropEntries: AirdropEntry[] = AIRDROP_ENTRIES;
+  const treeData = buildMerkleTree(airdropEntries);
+  // const treeData = { merkleRoot: '0xce1ce6669c44b16a7bec7bea604abb8f7d6f1c62ff3d463c77140f8f00c15644' };
   console.log('📁 Merkle root:', treeData.merkleRoot);
 
   // Deploy UniversalAirdrop

@@ -1,14 +1,26 @@
-// @ts-nocheck
+//@ts-nocheck
 import { keccak256 } from 'viem';
 import { makeMerkleTree, getProof } from '@openzeppelin/merkle-tree/dist/core.js';
 import bs58 from 'bs58';
 
-// Hardcoded airdrop data (previously read from data/airdrop.json)
+// Hardcoded airdrop data
 const AIRDROP_ENTRIES = [
   {
     recipient: '0xFd6C2fE69bE13d8bE379CCB6c9306e74193EC1A9',
     chainNamespace: 'eip155',
+    chainId: '42101',
+    amount: '10000000000000000000',
+  },
+  {
+    recipient: '0xFd6C2fE69bE13d8bE379CCB6c9306e74193EC1A9',
+    chainNamespace: 'eip155',
     chainId: '11155111',
+    amount: '10000000000000000000',
+  },
+  {
+    recipient: '72JBejJFXrRKpQ69Hmaqr7vWJr6pdZXFEL6jt3sadsXU',
+    chainNamespace: 'solana',
+    chainId: 'EtWTRABZaYq6iMfeYKouRu166VU2xqa1',
     amount: '10000000000000000000',
   },
 ];
@@ -53,22 +65,28 @@ function generateLeaf(entry) {
 /**
  * Build Merkle tree from airdrop entries
  */
-function buildMerkleTree(entries) {
+export function buildMerkleTree(entries) {
   // Generate leaves
   const leaves = entries.map((entry) => generateLeaf(entry));
 
+  // Pair entries with leaves and sort deterministically by leaf.
+  // This makes the Merkle root independent of input order (matches frontend UI behavior).
+  const paired = entries.map((entry, i) => ({ entry, leaf: leaves[i] }));
+  paired.sort((a, b) => a.leaf.localeCompare(b.leaf));
+  const sortedLeaves = paired.map((p) => p.leaf);
+
   // Create Merkle tree with sorted node hashing (default)
-  const tree = makeMerkleTree(leaves);
+  const tree = makeMerkleTree(sortedLeaves);
   const merkleRoot = tree[0];
 
-  // Generate proofs for each entry
-  const entriesWithProofs = entries.map((entry, index) => {
+  // Generate proofs for each entry based on sorted leaf order
+  const entriesWithProofs = paired.map((p, index) => {
     const leafIndex = tree.length - 1 - index;
     const proof = getProof(tree, leafIndex);
 
     return {
-      ...entry,
-      leaf: leaves[index],
+      ...p.entry,
+      leaf: p.leaf,
       proof,
     };
   });
@@ -144,10 +162,4 @@ async function main() {
   printSummary(treeData);
 }
 
-// Export functions for testing
-export { generateLeaf, buildMerkleTree, printSummary };
-
-// Run if called directly
-if (require.main === module) {
-  main().catch(console.error);
-}
+main().catch(console.error);
