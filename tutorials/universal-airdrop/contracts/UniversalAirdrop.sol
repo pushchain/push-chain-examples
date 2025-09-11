@@ -5,7 +5,18 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "./interfaces/IUEAFactory.sol";
+
+struct UniversalAccountId {
+    string chainNamespace;
+    string chainId;
+    bytes owner;
+}
+
+interface IUEAFactory {
+    function getOriginForUEA(
+        address addr
+    ) external view returns (UniversalAccountId memory account, bool isUEA);
+}
 
 /**
  * @title Universal Airdrop Contract for Push Chain
