@@ -23,7 +23,7 @@ function generateLeaf(entry) {
   // Normalize recipient address:
   // - If hex 0x address (length 42), parse as 20-byte address
   // - Else treat as base58 (e.g., Solana), hash bytes and take last 20 bytes
-  let recipientAddressHex: string;
+  let recipientAddressHex;
   if (recipient.startsWith('0x')) {
     const addr = recipient.toLowerCase();
     const addressBytes = addr.slice(2).padStart(40, '0');
