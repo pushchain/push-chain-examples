@@ -58,58 +58,71 @@ contract UniversalAirdrop is Ownable, ReentrancyGuard {
         string calldata chainNamespace,
         string calldata chainId
     ) external nonReentrant {
-        address caller = msg.sender;
-
-        // Get origin chain information from UEAFactory for verification
-        (UniversalAccountId memory account, bool isUEA) = IUEAFactory(
-            UEA_FACTORY
-        ).getOriginForUEA(caller);
-
         address recipientAddress;
+        {
+            // Get origin chain information from UEAFactory for verification (scoped to reduce stack usage)
+            (UniversalAccountId memory account, bool isUEA) = IUEAFactory(
+                UEA_FACTORY
+            ).getOriginForUEA(msg.sender);
 
-        if (isUEA) {
-            // For UEA accounts, verify the provided chain info matches the origin
-            require(
-                keccak256(abi.encodePacked(chainNamespace)) ==
-                    keccak256(abi.encodePacked(account.chainNamespace)) &&
-                    keccak256(abi.encodePacked(chainId)) ==
-                    keccak256(abi.encodePacked(account.chainId)),
-                "Provided chain info does not match UEA origin"
-            );
-            // Convert owner bytes to address for leaf computation
-            // If owner is 20 bytes (EVM), cast directly; otherwise derive address from keccak256(owner)
-            if (account.owner.length == 20) {
-                recipientAddress = address(bytes20(account.owner));
-            } else {
-                recipientAddress = address(
-                    uint160(uint256(keccak256(account.owner)))
+            if (isUEA) {
+                // For UEA accounts, verify the provided chain info matches the origin
+                require(
+                    keccak256(abi.encodePacked(chainNamespace)) ==
+                        keccak256(abi.encodePacked(account.chainNamespace)) &&
+                        keccak256(abi.encodePacked(chainId)) ==
+                        keccak256(abi.encodePacked(account.chainId)),
+                    "Provided chain info does not match UEA origin"
                 );
+                // Convert owner bytes to address for leaf computation
+                // If owner is 20 bytes (EVM), cast directly; otherwise derive address from keccak256(owner)
+                if (account.owner.length == 20) {
+                    recipientAddress = address(bytes20(account.owner));
+                } else {
+                    recipientAddress = address(
+                        uint160(uint256(keccak256(account.owner)))
+                    );
+                }
+            } else {
+                // For non-UEA accounts (could be native Push Chain or direct connections)
+                // Allow claiming from any chain - the Merkle proof will verify eligibility
+                recipientAddress = msg.sender;
             }
-        } else {
-            // For non-UEA accounts (could be native Push Chain or direct connections)
-            // Allow claiming from any chain - the Merkle proof will verify eligibility
-            recipientAddress = caller;
         }
 
-        // Generate claimId to prevent double claims for the same (address, chainNamespace, chainId) tuple
-        bytes32 claimId = keccak256(
-            abi.encodePacked(recipientAddress, chainNamespace, chainId)
-        );
-        require(!claimed[claimId], "Already claimed for this origin chain");
-
-        // Compute the leaf as per specification: keccak256(abi.encodePacked(recipientOnPush, chainNamespace, chainId, amount))
-        bytes32 leaf = keccak256(
-            abi.encodePacked(recipientAddress, chainNamespace, chainId, amount)
-        );
-
-        // Verify the Merkle proof
+        // Prevent double claims for the same (address, chainNamespace, chainId) tuple
         require(
-            MerkleProof.verify(proof, merkleRoot, leaf),
+            !claimed[
+                keccak256(
+                    abi.encodePacked(recipientAddress, chainNamespace, chainId)
+                )
+            ],
+            "Already claimed for this origin chain"
+        );
+
+        // Verify the Merkle proof (compute leaf inline)
+        require(
+            MerkleProof.verify(
+                proof,
+                merkleRoot,
+                keccak256(
+                    abi.encodePacked(
+                        recipientAddress,
+                        chainNamespace,
+                        chainId,
+                        amount
+                    )
+                )
+            ),
             "Invalid Merkle proof"
         );
 
         // Mark as claimed and transfer tokens
-        claimed[claimId] = true;
+        claimed[
+            keccak256(
+                abi.encodePacked(recipientAddress, chainNamespace, chainId)
+            )
+        ] = true;
         require(
             token.transfer(recipientAddress, amount),
             "Token transfer failed"
