@@ -1,0 +1,23 @@
+{
+  "name": "contract-airdrop",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^6.1.0",
+    "hardhat": "^2.26.3"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.4.0",
+    "@openzeppelin/merkle-tree": "^1.0.8",
+    "bs58": "^6.0.0",
+    "dotenv": "^17.2.2",
+    "viem": "^2.37.5"
+  }
+}

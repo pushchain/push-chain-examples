@@ -1,0 +1,25 @@
+{
+  "network": "pushDonut",
+  "token": {
+    "address": "0x0985db7BCE74C6230Fd3bD5841D1be1bb48141F6",
+    "symbol": "TEST",
+    "name": "TestToken"
+  },
+  "airdrop": {
+    "address": "0x29CB5d637714Dd5e6d6A03d8bF1c14aE52Db164A",
+    "merkleRoot": "0xce1ce6669c44b16a7bec7bea604abb8f7d6f1c62ff3d463c77140f8f00c15644"
+  },
+  "treeData": {
+    "merkleRoot": "0xce1ce6669c44b16a7bec7bea604abb8f7d6f1c62ff3d463c77140f8f00c15644"
+  },
+  "airdropEntries": [
+    {
+      "recipient": "0xFd6C2fE69bE13d8bE379CCB6c9306e74193EC1A9",
+      "chainNamespace": "eip155",
+      "chainId": "11155111",
+      "amount": "10000000000000000000"
+    }
+  ],
+  "totalAmount": "10.0",
+  "deployedAt": "2025-09-11T19:56:59.656Z"
+}
