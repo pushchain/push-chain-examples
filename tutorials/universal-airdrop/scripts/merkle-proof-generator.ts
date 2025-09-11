@@ -101,14 +101,14 @@ function printSummary(treeData) {
     return acc;
   }, {});
 
-  console.log('\n📊 Per-Chain Breakdown:');
+  console.log('📊 Per-Chain Breakdown:');
   Object.entries(chainStats).forEach(([chain, stats]) => {
     console.log('  ' + chain + ': ' + stats.count + ' recipients, ' + stats.totalAmount.toString() + ' tokens');
   });
 
   // Calculate total amount
   const totalAmount = entries.reduce((sum, entry) => sum + BigInt(entry.amount), BigInt(0));
-  console.log('\n💰 Total Airdrop Amount: ' + totalAmount.toString() + ' tokens');
+  console.log('💰 Total Airdrop Amount: ' + totalAmount.toString() + ' tokens');
 }
 
 // Main execution
