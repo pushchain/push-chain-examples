@@ -69,7 +69,9 @@ contract UniversalAirdrop is Ownable, ReentrancyGuard {
         string calldata chainNamespace,
         string calldata chainId
     ) external nonReentrant {
-        address recipientAddress;
+        // Address used in Merkle leaf (origin-based) vs actual payout recipient on Push Chain
+        address leafRecipientAddress;
+        address payoutRecipientAddress;
         {
             // Get origin chain information from UEAFactory for verification (scoped to reduce stack usage)
             (UniversalAccountId memory account, bool isUEA) = IUEAFactory(
@@ -85,19 +87,22 @@ contract UniversalAirdrop is Ownable, ReentrancyGuard {
                         keccak256(abi.encodePacked(account.chainId)),
                     "Provided chain info does not match UEA origin"
                 );
-                // Convert owner bytes to address for leaf computation
+                // Convert owner bytes to address for leaf computation (origin-based)
                 // If owner is 20 bytes (EVM), cast directly; otherwise derive address from keccak256(owner)
                 if (account.owner.length == 20) {
-                    recipientAddress = address(bytes20(account.owner));
+                    leafRecipientAddress = address(bytes20(account.owner));
                 } else {
-                    recipientAddress = address(
+                    leafRecipientAddress = address(
                         uint160(uint256(keccak256(account.owner)))
                     );
                 }
+                // Payout should go to the derived UEA (the caller on Push Chain)
+                payoutRecipientAddress = msg.sender;
             } else {
                 // For non-UEA accounts (could be native Push Chain or direct connections)
                 // Allow claiming from any chain - the Merkle proof will verify eligibility
-                recipientAddress = msg.sender;
+                leafRecipientAddress = msg.sender;
+                payoutRecipientAddress = msg.sender;
             }
         }
 
@@ -105,7 +110,11 @@ contract UniversalAirdrop is Ownable, ReentrancyGuard {
         require(
             !claimed[
                 keccak256(
-                    abi.encodePacked(recipientAddress, chainNamespace, chainId)
+                    abi.encodePacked(
+                        leafRecipientAddress,
+                        chainNamespace,
+                        chainId
+                    )
                 )
             ],
             "Already claimed for this origin chain"
@@ -118,7 +127,7 @@ contract UniversalAirdrop is Ownable, ReentrancyGuard {
                 merkleRoot,
                 keccak256(
                     abi.encodePacked(
-                        recipientAddress,
+                        leafRecipientAddress,
                         chainNamespace,
                         chainId,
                         amount
@@ -131,15 +140,15 @@ contract UniversalAirdrop is Ownable, ReentrancyGuard {
         // Mark as claimed and transfer tokens
         claimed[
             keccak256(
-                abi.encodePacked(recipientAddress, chainNamespace, chainId)
+                abi.encodePacked(leafRecipientAddress, chainNamespace, chainId)
             )
         ] = true;
         require(
-            token.transfer(recipientAddress, amount),
+            token.transfer(payoutRecipientAddress, amount),
             "Token transfer failed"
         );
 
-        emit Claimed(recipientAddress, chainNamespace, chainId, amount);
+        emit Claimed(payoutRecipientAddress, chainNamespace, chainId, amount);
     }
 
     /**
