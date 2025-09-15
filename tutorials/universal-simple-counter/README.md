@@ -71,7 +71,6 @@ Update the contract address in `app/src/App.tsx` with your deployed contract add
 - **Functions**:
   - `countPC()`: Returns current counter value
   - `increment()`: Increments the counter by 1
-  - `reset()`: Resets counter to 0
 
 ## Prerequisites
 

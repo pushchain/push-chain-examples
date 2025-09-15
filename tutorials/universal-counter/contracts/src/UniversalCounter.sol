@@ -88,16 +88,6 @@ contract UniversalCounter {
     }
 
     /**
-     * @notice Resets all counters (Ethereum, Solana, Push Chain) to zero.
-     * @dev Can be called by anyone. Use with caution as it affects all users.
-     */
-    function reset() public {
-        countEth = 0;
-        countSol = 0;
-        countPC = 0;
-    }
-
-    /**
      * @notice Returns the total count across all chains.
      * @return The sum of countEth, countSol, and countPC.
      */

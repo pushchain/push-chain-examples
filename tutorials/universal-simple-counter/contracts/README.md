@@ -14,7 +14,6 @@ The main contract that provides:
 - A simple counter that can be incremented
 - A `countPC` variable to track the current count
 - An `increment()` function to increase the counter
-- A `reset()` function to reset the counter to zero
 - Event emission when the counter is incremented
 
 ## Key Features
@@ -76,7 +75,6 @@ Once deployed, you can interact with the contract:
 
 1. **Read Counter**: Call `countPC()` to get the current counter value
 2. **Increment**: Call `increment()` to increase the counter by 1
-3. **Reset**: Call `reset()` to set the counter back to 0
 
 ## Contract Address
 

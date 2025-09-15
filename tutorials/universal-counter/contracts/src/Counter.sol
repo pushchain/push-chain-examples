@@ -9,8 +9,4 @@ contract Counter {
         countPC += 1;
         emit CountIncremented(countPC, msg.sender);
     }
-    
-    function reset() public {
-        countPC = 0;
-    }
 } 
