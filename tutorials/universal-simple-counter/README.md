@@ -2,6 +2,8 @@
 
 A minimal example demonstrating how to build a simple counter dApp on PushChain. This tutorial shows the basics of smart contract deployment and frontend integration with PushChain.
 
+👉 Full Tutorial: [Read the step-by-step guide on Push.org](https://push.org/docs/chain/tutorials/basics/tutorial-simple-counter/)
+
 ## Overview
 
 This tutorial consists of:

@@ -2,6 +2,8 @@
 
 A minimal React application demonstrating how to interact with a simple counter smart contract on PushChain using the PushChain UI Kit.
 
+👉 Full Tutorial: [Read the step-by-step guide on Push.org](https://push.org/docs/chain/tutorials/basics/tutorial-simple-counter/)
+
 ## Overview
 
 This frontend application provides a clean, simple interface for interacting with the Counter smart contract. It demonstrates the basics of PushChain dApp development with a focus on simplicity and clarity.
