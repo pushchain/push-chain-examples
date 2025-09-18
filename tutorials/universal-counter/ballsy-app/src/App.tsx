@@ -26,7 +26,7 @@ import { ethers } from "ethers";
 import UniversalCounterABI from "./abi/UniversalCounter.json";
 
 // Contract address for the Universal Counter
-const CONTRACT_ADDRESS = "0x8A791620dd6260079BF849Dc5567aDC3F2FdC318";
+const CONTRACT_ADDRESS = "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9";
 
 // Use the imported ABI
 
@@ -39,15 +39,16 @@ interface ChainData {
   color: string;
 }
 
-const App: React.FC = () => {
+const App = () => {
   // Counter state variables
   const [chainData, setChainData] = useState<ChainData[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [totalUniqueCount, setTotalUniqueCount] = useState(0);
-  const [showMatter, setShowMatter] = useState(true);
+  const [showMatter, setShowMatter] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isIncrementing, setIsIncrementing] = useState(false);
   const [txHash, setTxHash] = useState("");
+
 
   // Get PushChain context and client
   const { connectionStatus } = usePushWalletContext();
@@ -58,6 +59,7 @@ const App: React.FC = () => {
   const headingRef = useRef<HTMLHeadingElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const counterBoxRef = useRef<HTMLDivElement>(null);
+  const footerRef = useRef<HTMLParagraphElement>(null);
 
   // Function to encode transaction data for increment function
   const getTxData = () => {
@@ -69,15 +71,59 @@ const App: React.FC = () => {
     });
   };
 
-  // Helper function to get chain name from hash
+  // Helper function to get chain name from raw bytes
   const getChainName = (chainHash: string): string => {
-    // Map known chain hashes to readable names
-    const pushChainHash = ethers.keccak256(ethers.toUtf8Bytes('pushchain'));
-    if (chainHash === pushChainHash) return 'Push Chain';
-    
-    // For other chains, we'll need to decode or use a lookup table
-    // For now, return a shortened hash
-    return `Chain ${chainHash.slice(0, 8)}...`;
+    // Convert hex string back to UTF-8 to get the original chainNamespace:chainId
+    try {
+      // Remove '0x' prefix if present
+      const hexString = chainHash.startsWith('0x') ? chainHash.slice(2) : chainHash;
+      
+      // Convert hex to bytes and then to UTF-8 string
+      const bytes = ethers.getBytes('0x' + hexString);
+      const chainString = ethers.toUtf8String(bytes);
+      
+      // Parse the chainNamespace:chainId format
+      const [chainNamespace, chainId] = chainString.split(':');
+      
+      // Map known chain combinations to readable names
+      const chainKey = `${chainNamespace}:${chainId}`;
+      const knownChains: { [key: string]: string } = {
+        // Push Chain (native)
+        'pushchain:': 'Push Chain',
+        'pushchain:0': 'Push Chain',
+        
+        // Ethereum chains
+        'eip155:1': 'Ethereum Mainnet',
+        'eip155:11155111': 'Ethereum Sepolia',
+        'eip155:5': 'Ethereum Goerli',
+        'eip155:137': 'Polygon',
+        'eip155:80001': 'Polygon Mumbai',
+        'eip155:56': 'BSC Mainnet',
+        'eip155:97': 'BSC Testnet',
+        
+        // Solana chains
+        'solana:mainnet-beta': 'Solana Mainnet',
+        'solana:testnet': 'Solana Testnet',
+        'solana:devnet': 'Solana Devnet',
+      };
+      
+      // Check if we have a known chain name
+      if (knownChains[chainKey]) {
+        return knownChains[chainKey];
+      }
+      
+      // For unknown but valid chains, show namespace and chainId
+      if (chainNamespace && chainId !== undefined) {
+        return `${chainNamespace.toUpperCase()} Chain ${chainId}`;
+      }
+      
+      // Fallback to the decoded string
+      return chainString || `Chain ${chainHash.slice(0, 8)}...`;
+      
+    } catch (error) {
+      // If decoding fails, return a shortened hash
+      return `Chain ${chainHash.slice(0, 8)}...`;
+    }
   };
 
   // Helper function to get chain color
@@ -93,6 +139,8 @@ const App: React.FC = () => {
   // Function to fetch counter values
   const fetchCounters = async () => {
     try {
+      setIsLoading(true);
+      
       // Create a contract instance for read operations
       const provider = new ethers.JsonRpcProvider(
         "https://evm.rpc-testnet-donut-node1.push.org/"
@@ -171,6 +219,8 @@ const App: React.FC = () => {
       setTotalUniqueCount(Number(newTotalUniqueCount));
     } catch (err) {
       console.error("Error fetching counter values:", err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -296,21 +346,24 @@ const App: React.FC = () => {
     };
   }, [pushChainClient, connectionStatus]);
 
+
+
   return (
     <>
       <div
         style={{
-          position: "fixed",
+          position: "absolute",
           top: 0,
           left: 0,
           right: 0,
           bottom: 0,
           zIndex: 1,
+          pointerEvents: "none", // Allow clicks to pass through to content below
         }}
       >
         {showMatter && (
           <MatterComponent
-            physicBodyRefs={[cardRef, counterBoxRef]}
+            physicBodyRefs={[cardRef, counterBoxRef, footerRef]}
             fullScreen={true}
           />
         )}
@@ -319,7 +372,7 @@ const App: React.FC = () => {
       <div
         style={{
           position: "absolute",
-          top: "80px",
+          top: "40px",
           left: "0",
           right: "0",
           display: "flex",
@@ -376,8 +429,8 @@ const App: React.FC = () => {
 
           {connectionStatus !==
             PushUI.CONSTANTS.CONNECTION.STATUS.CONNECTED && (
-            <p style={{ color: "gray", fontSize: "14px", marginTop: "0px" }}>
-              Please connect your wallet to interact with the counter.
+            <p style={{ color: "gray", fontSize: "14px", marginTop: "0px", maxWidth: "480px"}}>
+              Ballsy is a universal app that allows any chain users to interact with the same app natively. Connect your account and chase leaderboard glory for your chain.
             </p>
           )}
 
@@ -385,36 +438,8 @@ const App: React.FC = () => {
             <p>Loading Leaderboard...</p>
           ) : (
             <div>
-              {/* Winner Announcement */}
-              {(() => {
-                const winner = chainData.reduce((prev, current) => 
-                  (prev.totalCount > current.totalCount) ? prev : current
-                );
-                return (
-                  <div
-                    className="winner-announcement"
-                    style={{
-                      textAlign: 'center',
-                      padding: '1rem',
-                      marginBottom: '1rem',
-                      backgroundColor: winner.color + '20',
-                      borderRadius: '8px',
-                      border: `2px solid ${winner.color}`,
-                    }}
-                  >
-                    <span style={{ fontSize: "1.8rem" }}>🏆 </span>
-                    {winner.chainName} Users
-                  </div>
-                );
-              })()}
-              
               {/* Leaderboard Table */}
-              <div style={{
-                backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                borderRadius: '8px',
-                padding: '1rem',
-                marginBottom: '1rem'
-              }}>
+              <div className="responsive-leaderboard">
                 <h3 style={{ margin: '0 0 1rem 0', textAlign: 'center' }}>
                   Universal Leaderboard
                 </h3>
@@ -463,7 +488,50 @@ const App: React.FC = () => {
                       ))}
                   </tbody>
                 </table>
-                
+              </div>
+              
+              {/* Controls section - outside the leaderboard table */}
+              <div style={{ display: "flex", gap: "10px", margin: "20px 0", flexDirection: "column", alignItems: "center" }}>
+                {connectionStatus ===
+                  PushUI.CONSTANTS.CONNECTION.STATUS.CONNECTED && (
+                  <div style={{ display: "grid", gap: "10px", width: "100%", maxWidth: "480px" }}>
+                    {txHash && pushChainClient && (
+                      <>
+                        <div
+                          style={{ display: "flex", gap: "10px", marginTop: "10px", justifyContent: "center" }}
+                        >
+                          <a
+                            href={pushChainClient.explorer.getTransactionUrl(txHash)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ color: "#d548ec", 
+                              backgroundColor: "transparent", 
+                              padding: "8px 16px", 
+                              border: "none", 
+                              cursor: "pointer", }}
+                          >
+                            View in Explorer
+                          </a>
+                          <button
+                            onClick={fetchCounters}
+                            style={{
+                              backgroundColor: "transparent",
+                              color: "#d548ec",
+                              border: "none",
+                              cursor: "pointer",
+                            }}
+                          >
+                            Refresh Leaderboard
+                          </button>
+                        </div>
+                        <div>
+                          <p style={{ fontSize: "12px", margin: "0px", textAlign: "center" }}>Transaction Hash: {txHash}</p>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+              
                 <button
                   onClick={() => setShowMatter(!showMatter)}
                   style={{
@@ -472,7 +540,8 @@ const App: React.FC = () => {
                     backgroundColor: "#6c757d",
                     color: "white",
                     border: "none",
-                    borderRadius: "4px",
+                    borderRadius: "12px",
+                    width: '200px',
                   }}
                 >
                   {showMatter ? "Hide Physics" : "Show Physics"}
@@ -480,43 +549,20 @@ const App: React.FC = () => {
               </div>
             </div>
           )}
+
+          <p ref={footerRef} style={{ 
+            margin: "20px 0 0 0",
+            padding: "12px 20px",
+            color: "gray", 
+            fontSize: "14px",
+            textAlign: "center",
+            borderTop: "1px solid rgba(0, 0, 0, 0.1)",
+          }}>
+              Made with 💖 and only possible with Push Chain.
+          </p>
           
 
-          {connectionStatus ===
-            PushUI.CONSTANTS.CONNECTION.STATUS.CONNECTED && (
-            <div style={{ display: "grid", gap: "10px", width: "100%" }}>
-              {txHash && pushChainClient && (
-                <div
-                  style={{ display: "grid", gap: "10px", marginTop: "10px" }}
-                >
-                  <p>
-                    Transaction Hash: <code>{txHash}</code>
-                  </p>
-                  <a
-                    href={pushChainClient.explorer.getTransactionUrl(txHash)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ color: "#0066cc" }}
-                  >
-                    View in Explorer
-                  </a>
-                  <button
-                    onClick={fetchCounters}
-                    style={{
-                      padding: "8px 16px",
-                      backgroundColor: "transparent",
-                      color: "#0066cc",
-                      border: "none",
-                      borderRadius: "4px",
-                      cursor: "pointer",
-                    }}
-                  >
-                    Refresh Counter Values
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
+          
         </div>
       </div>
     </>

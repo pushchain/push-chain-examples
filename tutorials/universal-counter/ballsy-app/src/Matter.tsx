@@ -173,21 +173,24 @@ const MatterComponent: React.FC<MatterProps> = ({ physicBodyRefs = [], fullScree
       options: {
         width: width,
         height: height,
-        wireframes: false,
+        wireframes: false, // Enable debug wireframes
         background: 'white',
         pixelRatio: window.devicePixelRatio || 1,
+        showDebug: false, // Enable debug info
+        showVelocity: false, // Show velocity vectors
+        showAngleIndicator: false, // Show angle indicators
       },
     });
     
     // Make sure canvas has proper styles
     if (render.canvas) {
-      render.canvas.style.position = 'fixed';
+      render.canvas.style.position = 'absolute';
       render.canvas.style.top = '0';
       render.canvas.style.left = '0';
       render.canvas.style.width = '100%';
       render.canvas.style.height = '100%';
       render.canvas.style.zIndex = '1';
-      render.canvas.style.pointerEvents = 'auto'; // Enable pointer events for interaction
+      render.canvas.style.pointerEvents = 'none'; // Let clicks pass through to content
     }
     
     renderRef.current = render;
@@ -244,9 +247,27 @@ const MatterComponent: React.FC<MatterProps> = ({ physicBodyRefs = [], fullScree
           const scrollX = window.scrollX || window.pageXOffset;
           const scrollY = window.scrollY || window.pageYOffset;
           
+
+          
           // Calculate position relative to the canvas
-          const x = rect.left + rect.width / 2 - canvasRect.left + scrollX;
-          const y = rect.top + rect.height / 2 - canvasRect.top + scrollY;
+          // For fixed positioned elements, use viewport coordinates directly
+          const computedStyle = window.getComputedStyle(element);
+          const isFixed = computedStyle.position === 'fixed';
+          
+
+          
+          let x, y;
+          if (isFixed) {
+            // For fixed elements, use their position relative to the viewport
+            x = rect.left + rect.width / 2;
+            y = rect.top + rect.height / 2;
+          } else {
+            // For normal elements, calculate relative to canvas
+            x = rect.left + rect.width / 2 - canvasRect.left + scrollX;
+            y = rect.top + rect.height / 2 - canvasRect.top + scrollY;
+          }
+          
+
           
           // Create a rectangle body based on the element's dimensions and position
           const body = Matter.Bodies.rectangle(
@@ -261,10 +282,7 @@ const MatterComponent: React.FC<MatterProps> = ({ physicBodyRefs = [], fullScree
               frictionAir: 0.001,     // Low air friction
               restitution: 1.5,      // Some bounciness
               render: {
-                fillStyle: 'rgba(0, 0, 0, 0.2)',  // Semi-transparent fill
-                strokeStyle: '#ff0000',            // Red outline
-                lineWidth: 2,                      // Visible border
-                opacity: 0                       // Make it visible
+                visible: false        // Hide physics bodies in production
               },
               // Store reference to the original element
               elementRef: ref
@@ -276,6 +294,10 @@ const MatterComponent: React.FC<MatterProps> = ({ physicBodyRefs = [], fullScree
           
           // Add the body to the world
           Matter.Composite.add(engine.world, body);
+
+          
+          // Store reference to the body on the element for updates
+          element.matterBody = body;
         }
       });
       } catch (err) {
@@ -371,10 +393,10 @@ const MatterComponent: React.FC<MatterProps> = ({ physicBodyRefs = [], fullScree
       
       // Create new walls positioned outside the visible area
       const newWalls = [
-        // Bottom wall - positioned just below the visible area
+        // Bottom wall - positioned at the bottom edge to keep balls fully visible
         Matter.Bodies.rectangle(
           newWidth / 2,
-          newHeight + 25, // 25px below the bottom edge
+          newHeight - 25, // 25px above the bottom edge to keep balls visible
           newWidth + 100, // wider than the container
           50,
           { 
@@ -474,8 +496,7 @@ const MatterComponent: React.FC<MatterProps> = ({ physicBodyRefs = [], fullScree
           position: 'relative',
           overflow: 'hidden',
           border: '1px solid #ccc',
-          borderRadius: '8px',
-          margin: '0 10px 10px 10px'
+          margin: '0px'
         }}
       />
     </div>

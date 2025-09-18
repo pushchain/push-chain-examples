@@ -74,7 +74,7 @@ contract UniversalCounter {
             IUEAFactory(0x00000000000000000000000000000000000000eA).getOriginForUEA(caller);
 
         // Calculate chain hash
-        bytes32 chainHash = keccak256(abi.encodePacked(originAccount.chainNamespace, ":", originAccount.chainId));
+        bytes memory chainHash = abi.encodePacked(originAccount.chainNamespace, ":", originAccount.chainId);
 
         if (chainCount[chainHash] == 0) {
             // Add new chain to chainIds if it doesn't exist

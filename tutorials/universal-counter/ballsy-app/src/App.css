@@ -48,6 +48,29 @@ html, body {
   animation: pulse 1.5s infinite, shimmer 3s infinite linear;
 }
 
+/* Responsive Leaderboard Styles */
+.responsive-leaderboard {
+  background-color: rgba(245, 245, 245, 0.4);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  min-width: 480px;
+  max-width: 100%;
+}
+
+@media (max-width: 768px) {
+  .responsive-leaderboard {
+    display: inline;
+    min-width: auto;
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+  }
+}
+
 .sol-winner {
   background: #dddddd33;
   backdrop-filter: blur(10px);
