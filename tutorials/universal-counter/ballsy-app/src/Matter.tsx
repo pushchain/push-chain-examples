@@ -190,7 +190,7 @@ const MatterComponent: React.FC<MatterProps> = ({ physicBodyRefs = [], fullScree
       render.canvas.style.width = '100%';
       render.canvas.style.height = '100%';
       render.canvas.style.zIndex = '1';
-      render.canvas.style.pointerEvents = 'none'; // Let clicks pass through to content
+      render.canvas.style.pointerEvents = 'auto'; // Enable mouse interaction with balls
     }
     
     renderRef.current = render;

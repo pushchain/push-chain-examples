@@ -44,7 +44,7 @@ const App = () => {
   const [chainData, setChainData] = useState<ChainData[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [totalUniqueCount, setTotalUniqueCount] = useState(0);
-  const [showMatter, setShowMatter] = useState(false);
+  const [showMatter, setShowMatter] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [isIncrementing, setIsIncrementing] = useState(false);
   const [txHash, setTxHash] = useState("");
@@ -248,7 +248,7 @@ const App = () => {
 
         // Add a single Push Chain colored ball for immediate visual feedback
         // The fetchCounters will handle adding any additional balls needed
-        // addMultipleBlockchainBalls(PUSH_CHAIN_COLOR, 1);
+        addMultipleBlockchainBalls(PUSH_CHAIN_COLOR, 1);
 
         setIsLoading(false);
       } catch (err) {
@@ -357,8 +357,8 @@ const App = () => {
           left: 0,
           right: 0,
           bottom: 0,
-          zIndex: 1,
-          pointerEvents: "none", // Allow clicks to pass through to content below
+          zIndex: 1, // Higher than content (zIndex: 20) to allow ball interaction
+          pointerEvents: showMatter ? "auto" : "none", // Enable interaction when physics is active
         }}
       >
         {showMatter && (
@@ -385,10 +385,13 @@ const App = () => {
         }}
       >
         <h1 ref={headingRef}>Ballsy</h1>
-
+        <p style={{ color: "gray", fontSize: "14px", marginTop: "-20px", maxWidth: "480px"}}>
+          Ballsy is a universal app that allows any chain users to interact with the same app natively. Connect your account and chase leaderboard glory for your chain.
+        </p>
+        
         <div
           style={{
-            padding: "20px",
+            padding: "10px 10px 20px 10px",
             borderRadius: "8px",
             display: "flex",
             flexDirection: "column",
@@ -398,7 +401,7 @@ const App = () => {
             width: "100%",
           }}
         >
-          <div style={{ display: "flex", gap: "15px" }}>
+          <div style={{ display: "flex", gap: "15px", marginBottom: "20px" }}>
             <div ref={cardRef} style={{ width: "200px" }}>
               <PushUniversalAccountButton />
             </div>
@@ -427,22 +430,17 @@ const App = () => {
             )}
           </div>
 
-          {connectionStatus !==
-            PushUI.CONSTANTS.CONNECTION.STATUS.CONNECTED && (
-            <p style={{ color: "gray", fontSize: "14px", marginTop: "0px", maxWidth: "480px"}}>
-              Ballsy is a universal app that allows any chain users to interact with the same app natively. Connect your account and chase leaderboard glory for your chain.
-            </p>
-          )}
+          <div>
+            {/* Leaderboard Table */}
+            <div className="responsive-leaderboard">
+              <h3 style={{ margin: '0 0 1rem 0', textAlign: 'center' }}>
+                Universal Leaderboard
+              </h3>
+              {chainData.length === 0 && 
+                <p>Loading Leaderboard...</p>
+              } 
 
-          {chainData.length === 0 ? (
-            <p>Loading Leaderboard...</p>
-          ) : (
-            <div>
-              {/* Leaderboard Table */}
-              <div className="responsive-leaderboard">
-                <h3 style={{ margin: '0 0 1rem 0', textAlign: 'center' }}>
-                  Universal Leaderboard
-                </h3>
+              {chainData.length !== 0 && 
                 <table style={{
                   width: '100%',
                   borderCollapse: 'collapse',
@@ -488,67 +486,67 @@ const App = () => {
                       ))}
                   </tbody>
                 </table>
-              </div>
-              
-              {/* Controls section - outside the leaderboard table */}
-              <div style={{ display: "flex", gap: "10px", margin: "20px 0", flexDirection: "column", alignItems: "center" }}>
-                {connectionStatus ===
-                  PushUI.CONSTANTS.CONNECTION.STATUS.CONNECTED && (
-                  <div style={{ display: "grid", gap: "10px", width: "100%", maxWidth: "480px" }}>
-                    {txHash && pushChainClient && (
-                      <>
-                        <div
-                          style={{ display: "flex", gap: "10px", marginTop: "10px", justifyContent: "center" }}
-                        >
-                          <a
-                            href={pushChainClient.explorer.getTransactionUrl(txHash)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{ color: "#d548ec", 
-                              backgroundColor: "transparent", 
-                              padding: "8px 16px", 
-                              border: "none", 
-                              cursor: "pointer", }}
-                          >
-                            View in Explorer
-                          </a>
-                          <button
-                            onClick={fetchCounters}
-                            style={{
-                              backgroundColor: "transparent",
-                              color: "#d548ec",
-                              border: "none",
-                              cursor: "pointer",
-                            }}
-                          >
-                            Refresh Leaderboard
-                          </button>
-                        </div>
-                        <div>
-                          <p style={{ fontSize: "12px", margin: "0px", textAlign: "center" }}>Transaction Hash: {txHash}</p>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                )}
-              
-                <button
-                  onClick={() => setShowMatter(!showMatter)}
-                  style={{
-                    marginTop: "20px",
-                    padding: "8px 16px",
-                    backgroundColor: "#6c757d",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "12px",
-                    width: '200px',
-                  }}
-                >
-                  {showMatter ? "Hide Physics" : "Show Physics"}
-                </button>
-              </div>
+              }
             </div>
-          )}
+            
+            {/* Controls section - outside the leaderboard table */}
+            <div style={{ display: "flex", gap: "10px", margin: "20px 0", flexDirection: "column", alignItems: "center" }}>
+              {connectionStatus ===
+                PushUI.CONSTANTS.CONNECTION.STATUS.CONNECTED && (
+                <div style={{ display: "grid", gap: "10px", width: "100%", maxWidth: "480px" }}>
+                  {txHash && pushChainClient && (
+                    <>
+                      <div
+                        style={{ display: "flex", gap: "10px", marginTop: "10px", justifyContent: "center" }}
+                      >
+                        <a
+                          href={pushChainClient.explorer.getTransactionUrl(txHash)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ color: "#d548ec", 
+                            backgroundColor: "transparent", 
+                            padding: "8px 16px", 
+                            border: "none", 
+                            cursor: "pointer", }}
+                        >
+                          View in Explorer
+                        </a>
+                        <button
+                          onClick={fetchCounters}
+                          style={{
+                            backgroundColor: "transparent",
+                            color: "#d548ec",
+                            border: "none",
+                            cursor: "pointer",
+                          }}
+                        >
+                          Refresh Leaderboard
+                        </button>
+                      </div>
+                      <div>
+                        <p style={{ fontSize: "12px", margin: "0px", textAlign: "center" }}>Transaction Hash: {txHash}</p>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+            
+              {/* <button
+                onClick={() => setShowMatter(!showMatter)}
+                style={{
+                  marginTop: "20px",
+                  padding: "8px 16px",
+                  backgroundColor: "#6c757d",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "12px",
+                  width: '200px',
+                }}
+              >
+                {showMatter ? "Hide Physics" : "Show Physics"}
+              </button> */}
+            </div>
+          </div>
 
           <p ref={footerRef} style={{ 
             margin: "20px 0 0 0",
