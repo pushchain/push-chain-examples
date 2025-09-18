@@ -5,7 +5,7 @@ import CounterABI from './abi/Counter.json'
 import './App.css'
 
 // Contract address for the deployed Counter contract
-const COUNTER_CONTRACT_ADDRESS = '0xa513E6E4b8f2a923D98304ec87F64353C4D5C853'
+const COUNTER_CONTRACT_ADDRESS = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266'
 
 // Global provider for Push Chain testnet
 const provider = new ethers.JsonRpcProvider(
@@ -13,7 +13,7 @@ const provider = new ethers.JsonRpcProvider(
 );
 
 function App() {
-  const { universalAccount, connectionStatus } = usePushWalletContext();
+  const { connectionStatus } = usePushWalletContext();
   const { pushChainClient } = usePushChainClient();
   const { PushChain } = usePushChain();
   const [counter, setCounter] = useState<number>(0)
@@ -23,8 +23,6 @@ function App() {
 
   // Function to encode transaction data for increment function
   const getTxData = () => {
-    if (!pushChainClient) return "";
-
     return PushChain.utils.helpers.encodeTxData({
       abi: CounterABI,
       functionName: "increment",
@@ -82,13 +80,6 @@ function App() {
     readCounter()
   }, [])
 
-  // Also read counter when account changes (in case user switches accounts)
-  useEffect(() => {
-    if (universalAccount) {
-      readCounter()
-    }
-  }, [universalAccount])
-  
   return (
     <div style={{ 
       minHeight: '100vh', 
@@ -126,7 +117,7 @@ function App() {
         Counter: {counter}
       </div>
       
-      {!universalAccount ? (
+      {connectionStatus !== "connected" ? (
         <p style={{ 
           fontSize: '1.1rem', 
           color: '#666',
@@ -162,6 +153,35 @@ function App() {
               marginTop: '1rem'
             }}>
               {error}
+            </div>
+          )}
+          
+          {txHash && pushChainClient && (
+            <div style={{ 
+              marginTop: '1rem',
+              padding: '1rem',
+              backgroundColor: '#f8f9fa',
+              borderRadius: '6px',
+              fontSize: '0.9rem'
+            }}>
+              <p style={{ margin: '0 0 0.5rem 0', fontWeight: 'bold' }}>
+                Transaction Successful!
+              </p>
+              <p style={{ margin: '0 0 0.5rem 0' }}>
+                Hash: <code style={{ fontSize: '0.8rem', wordBreak: 'break-all' }}>{txHash}</code>
+              </p>
+              <a
+                href={pushChainClient.explorer.getTransactionUrl(txHash)}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ 
+                  color: '#007bff',
+                  textDecoration: 'none',
+                  fontSize: '0.9rem'
+                }}
+              >
+                View on Explorer →
+              </a>
             </div>
           )}
         </div>

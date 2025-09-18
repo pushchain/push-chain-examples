@@ -1,61 +1,170 @@
-# Universal Counter App
+# Simple Counter Frontend
 
-A React application that demonstrates cross-chain interaction using PushChain's Universal Ethereum Account (UEA) system. This app allows users from Ethereum, Solana, and PushChain to increment counters, with real-time visual feedback through interactive physics simulations.
+A minimal React application demonstrating how to interact with a simple counter smart contract on PushChain using the PushChain UI Kit.
+
+👉 Full Tutorial: [Read the step-by-step guide on Push.org](https://push.org/docs/chain/tutorials/basics/tutorial-simple-counter/)
+
+## Overview
+
+This frontend application provides a clean, simple interface for interacting with the Counter smart contract. It demonstrates the basics of PushChain dApp development with a focus on simplicity and clarity.
 
 ## Features
 
-- **Cross-Chain Interaction**: Connect with wallets from Ethereum, Solana, or PushChain
-- **Interactive Physics Simulation**: Watch blockchain-colored balls drop as counters increment
-- **Real-Time Updates**: WebSocket integration for instant counter updates
-- **Blockchain-Specific Counters**: Track separate counts for each blockchain
-- **Interactive UI**: Drag and play with the physics balls using mouse controls
+- **Clean UI**: Minimal white background with centered layout
+- **Wallet Integration**: Connect wallet using Push Universal Account Button
+- **Real-time Counter**: Displays current counter value immediately on page load
+- **Transaction Support**: Increment counter using PushChain transactions
+- **Error Handling**: Proper error messages and loading states
+- **TypeScript**: Fully typed for better development experience
 
-## Technology Stack
+## Prerequisites
 
-- **Frontend**: React with TypeScript
-- **Build Tool**: Vite
-- **Physics Engine**: Matter.js
-- **Blockchain Integration**: ethers.js and PushChain SDK
-- **UI Components**: PushChain UI Kit
+- Node.js (v16 or higher)
+- npm or yarn
+- A deployed Counter contract on PushChain testnet
 
 ## Installation
 
+1. Install dependencies:
 ```bash
-# Install dependencies
-yarn install
-
-# Start the development server
-yarn dev
+npm install
 ```
 
-## Usage
+2. Update the contract address in `src/App.tsx`:
+```typescript
+const COUNTER_CONTRACT_ADDRESS = 'YOUR_DEPLOYED_CONTRACT_ADDRESS'
+```
 
-1. Connect your wallet using the "Connect Wallet" button
-2. Choose your preferred blockchain (Ethereum, Solana, or PushChain)
-3. Click the increment button for your blockchain to increase its counter
-4. Watch as colored balls drop from the top of the screen:
-   - Blue balls for Ethereum
-   - Purple balls for Solana
-   - Green balls for PushChain
-5. Interact with the balls by dragging them with your mouse
+3. Start the development server:
+```bash
+npm run dev
+```
 
 ## Project Structure
 
-- `src/App.tsx`: Main application component with wallet connection and counter logic
-- `src/Matter.tsx`: Physics simulation using Matter.js for the interactive balls
-- `src/abi/`: Smart contract ABIs for blockchain interaction
-- `src/types/`: TypeScript type definitions
+```
+app/
+├── src/
+│   ├── App.tsx          # Main application component
+│   ├── App.css          # Application styles
+│   ├── index.css        # Global styles
+│   └── abi/
+│       └── Counter.json # Contract ABI
+├── package.json         # Dependencies and scripts
+└── README.md           # This file
+```
 
-## Integration with Smart Contracts
+## Key Components
 
-This app connects to the Universal Counter smart contract deployed on PushChain. The contract:
+### App.tsx
 
-- Identifies the origin chain of the user (Ethereum, Solana, or PushChain)
-- Increments the appropriate counter based on the user's origin
-- Emits events that are captured by the app's WebSocket listener
+The main application component that includes:
 
-The contract source code is available in the `../contracts` directory.
+- **PushChain Hooks**: Uses `usePushWalletContext`, `usePushChainClient`, and `usePushChain`
+- **State Management**: Manages counter value, loading states, and errors
+- **Contract Interaction**: Reads counter value and sends increment transactions
+- **UI Components**: Clean, centered layout with wallet connection and counter display
+
+### Contract Integration
+
+The app demonstrates proper PushChain integration patterns:
+
+```typescript
+// Reading contract state
+const provider = new ethers.JsonRpcProvider(
+  "https://evm.rpc-testnet-donut-node1.push.org/"
+);
+const contract = new ethers.Contract(CONTRACT_ADDRESS, CounterABI, provider);
+const currentCount = await contract.countPC();
+
+// Sending transactions
+const tx = await pushChainClient.universal.sendTransaction({
+  to: CONTRACT_ADDRESS,
+  data: getTxData(),
+  value: BigInt(0),
+});
+```
+
+## Configuration
+
+### Contract Address
+
+Update the contract address after deploying your Counter contract:
+
+```typescript
+const COUNTER_CONTRACT_ADDRESS = '0x9F95857e43d25Bb9DaFc6376055eFf63bC0887C1'
+```
+
+### RPC Endpoint
+
+The app uses the PushChain testnet RPC endpoint:
+
+```typescript
+const provider = new ethers.JsonRpcProvider(
+  "https://evm.rpc-testnet-donut-node1.push.org/"
+);
+```
+
+## User Experience
+
+1. **Page Load**: Counter value displays immediately
+2. **Wallet Connection**: Click "Connect Account" to connect wallet
+3. **Counter Interaction**: Click "Increment Counter" to increase the value
+4. **Real-time Updates**: Counter updates automatically after transactions
 
 ## Development
 
-This project uses Vite for fast development and builds. You can customize the ESLint configuration for your specific needs.
+### Available Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build
+
+### Styling
+
+The app uses inline styles for simplicity, with a focus on:
+- Clean white background
+- Centered layout
+- Responsive design
+- Clear visual hierarchy
+
+## Dependencies
+
+Key dependencies include:
+
+- **@pushchain/ui-kit**: PushChain UI components and hooks
+- **ethers**: Ethereum library for blockchain interactions
+- **react**: Frontend framework
+- **typescript**: Type safety
+- **vite**: Build tool and development server
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Contract not found**: Ensure the contract address is correct
+2. **Transaction fails**: Check wallet connection and network
+3. **Counter not updating**: Verify RPC endpoint and contract deployment
+
+### Error Messages
+
+The app provides clear error messages for:
+- Wallet connection issues
+- Transaction failures
+- Contract interaction problems
+
+## Next Steps
+
+After running this tutorial, you can:
+
+- Explore the more advanced Universal Counter tutorial
+- Add more contract functions (reset, custom increment values)
+- Enhance the UI with additional features
+- Deploy to other networks supported by PushChain
+
+## Resources
+
+- [PushChain Documentation](https://push.org/docs)
+- [PushChain UI Kit](https://www.npmjs.com/package/@pushchain/ui-kit)
+- [React Documentation](https://react.dev/)
+- [Vite Documentation](https://vitejs.dev/)

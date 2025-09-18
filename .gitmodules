@@ -1,3 +1,9 @@
 [submodule "contracts/hello-world/lib/forge-std"]
 	path = contracts/hello-world/lib/forge-std
 	url = https://github.com/foundry-rs/forge-std
+[submodule "tutorials/universal-multi-transactions/contracts/lib/openzeppelin-contracts"]
+	path = tutorials/universal-multi-transactions/contracts/lib/openzeppelin-contracts
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts
+[submodule "tutorials/universal-erc-20-mint/contracts/lib/openzeppelin-contracts"]
+	path = tutorials/universal-erc-20-mint/contracts/lib/openzeppelin-contracts
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts

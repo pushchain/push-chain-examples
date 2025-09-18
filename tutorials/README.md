@@ -2,7 +2,7 @@
 
 This directory contains step-by-step tutorials and example projects to help you learn and build on PushChain. Each tutorial is designed to demonstrate specific features and capabilities of the PushChain ecosystem.
 
-👉 Full Tutorials List: [Explore all tutorials at Push.org](https://push.org/docs/chain/tutorials/)
+👉 All Tutorials: [Explore the full list on Push.org](https://push.org/docs/chain/tutorials/)
 
 ## Available Tutorials
 

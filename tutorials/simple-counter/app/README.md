@@ -1,4 +1,4 @@
-# Universal Simple Counter Frontend
+# Simple Counter Frontend
 
 A minimal React application demonstrating how to interact with a simple counter smart contract on PushChain using the PushChain UI Kit.
 

@@ -1,6 +1,6 @@
-# Universal Simple Counter Smart Contracts
+# Simple Counter Smart Contracts
 
-This folder contains the smart contracts for the Universal Simple Counter tutorial, a minimal example demonstrating basic smart contract development and deployment on PushChain.
+This folder contains the smart contracts for the Simple Counter tutorial, a minimal example demonstrating basic smart contract development and deployment on PushChain.
 
 👉 Full Tutorial: [Read the step-by-step guide on Push.org](https://push.org/docs/chain/tutorials/basics/tutorial-simple-counter/)
 
