@@ -30,12 +30,14 @@ This project consists of two main components:
 ### Smart Contracts
 
 Navigate to the `contracts/` directory and follow the instructions in its README to:
+
 - Build and test the smart contracts
 - Deploy them to PushChain
 
 ### Frontend Application
 
 Navigate to the `app/` directory and follow the instructions in its README to:
+
 - Install dependencies
 - Configure the application to connect to your deployed contracts
 - Start the development server

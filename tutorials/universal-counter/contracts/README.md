@@ -11,6 +11,7 @@ The Universal Counter is a demonstration of how PushChain enables native cross-c
 ### UniversalCounter.sol
 
 The main contract that:
+
 - Maintains separate counters for Ethereum, Solana, and PushChain users
 - Automatically identifies the origin chain of the caller using PushChain's UEA system
 - Increments the appropriate counter based on the user's origin chain
