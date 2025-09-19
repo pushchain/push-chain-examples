@@ -178,15 +178,10 @@ const App = () => {
       
       // Check if this is the initial load
       const isInitialLoad = chainData.length === 0;
-      
-      if (isInitialLoad) {
-        // On initial load, drop balls for each chain
-        console.log("Initial load - dropping balls for current counts");
-        newChainData.forEach(chain => {
-          if (chain.totalCount > 0) {
-            addMultipleBlockchainBalls(chain.color, chain.totalCount);
-          }
-        });
+      // Add balls for visual feedback (only when counters increase, not on initial load)
+      if (chainData.length === 0) {
+        // Initial load - don't add balls for existing counters to avoid spam
+        console.log("Initial load: Skipping ball drops for existing counters");
       } else {
         // On subsequent loads, only add balls if counters have increased
         newChainData.forEach(newChain => {
@@ -231,12 +226,8 @@ const App = () => {
         // Wait for transaction to be mined
         await tx.wait();
 
-        // Refresh counter values
+        // Refresh counter values - this will automatically add balls for the increment
         await fetchCounters();
-
-        // Add a single Push Chain colored ball for immediate visual feedback
-        // The fetchCounters will handle adding any additional balls needed
-        addMultipleBlockchainBalls(PUSH_CHAIN_COLOR, 1);
 
         setIsLoading(false);
       } catch (err) {
