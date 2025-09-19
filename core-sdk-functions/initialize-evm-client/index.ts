@@ -80,7 +80,7 @@ async function initializeViemClient() {
 
 // Get Transaction with Viem
 async function getViemTransaction() {
-  const transactionHash = '0xe5bec93aa8e98405093f03ab4ed695b673dd08680728788963b6fac77d65aed3';
+  const transactionHash = '0x750b4d83b2cc3fbab878c2f1b1e9a5413e19d3cdb7db844877d7f7881b8250a0';
   const publicClient = await initializeViemClient();
   const transaction = await publicClient.getTransaction({
     hash: transactionHash,
