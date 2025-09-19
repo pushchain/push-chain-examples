@@ -1319,9 +1319,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pushchain/core@npm:1.1.35":
-  version: 1.1.35
-  resolution: "@pushchain/core@npm:1.1.35"
+"@pushchain/core@npm:2.0.2":
+  version: 2.0.2
+  resolution: "@pushchain/core@npm:2.0.2"
   dependencies:
     "@bufbuild/protobuf": "npm:^2.0.0"
     "@coral-xyz/anchor": "npm:^0.31.0"
@@ -1338,17 +1338,17 @@ __metadata:
     tslib: "npm:^2.3.0"
     tweetnacl: "npm:^1.0.3"
     viem: "npm:2.27.2"
-  checksum: 10c0/d2893ee961ca86abdcd6d7cd47c1d21771c9fa23567e24017fbc74ef18bcd08e494fda5d301eb1968475f5c6e2a6845e5d2ee4c11d33d345d21ee205d15fb501
+  checksum: 10c0/d52bd7ff3fea9a0796b6c9cb009bd7c1c0c71d98bac14b3fe1aa14394bbd8322de047e24d35ef6c16c4acd5acb55d2ab05d12548114a9d68387fbc769f27da77
   languageName: node
   linkType: hard
 
-"@pushchain/ui-kit@npm:^1.1.34":
-  version: 1.1.34
-  resolution: "@pushchain/ui-kit@npm:1.1.34"
+"@pushchain/ui-kit@npm:^2.0.2":
+  version: 2.0.2
+  resolution: "@pushchain/ui-kit@npm:2.0.2"
   dependencies:
     "@coral-xyz/anchor": "npm:^0.31.1"
     "@metamask/sdk": "npm:^0.32.0"
-    "@pushchain/core": "npm:1.1.35"
+    "@pushchain/core": "npm:2.0.2"
     "@solana/web3.js": "npm:^1.98.2"
     "@walletconnect/ethereum-provider": "npm:^2.21.5"
     buffer: "npm:^6.0.3"
@@ -1360,7 +1360,7 @@ __metadata:
   peerDependencies:
     react: ">=18.3.0 <20.0.0"
     react-dom: ">=18.3.0 <20.0.0"
-  checksum: 10c0/c52113bbc90bb9baa01dc6a7e2e51b43a7cd3b21bfcac52f62e1146fe8e5f1f6aab5ea79409edcba74fce01c0995336b48377c81ae6db536206feda354d3ab70
+  checksum: 10c0/308117f3b3894c270e4ba05c70e0ff52f57c35273b29cb1a7c990cd3a29cb4ceab90aec0c925bd733c1c2c109f708fe24fcee0d634c3940dfcb644702d0d9b29
   languageName: node
   linkType: hard
 
@@ -6515,7 +6515,7 @@ __metadata:
   resolution: "universal-counter-app@workspace:."
   dependencies:
     "@eslint/js": "npm:^9.25.0"
-    "@pushchain/ui-kit": "npm:^1.1.34"
+    "@pushchain/ui-kit": "npm:^2.0.2"
     "@types/gh-pages": "npm:^6"
     "@types/matter-js": "npm:^0.19.8"
     "@types/node": "npm:^24.0.10"
