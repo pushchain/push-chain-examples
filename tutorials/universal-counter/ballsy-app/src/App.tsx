@@ -42,8 +42,6 @@ interface ChainData {
 const App = () => {
   // Counter state variables
   const [chainData, setChainData] = useState<ChainData[]>([]);
-  const [totalCount, setTotalCount] = useState(0);
-  const [totalUniqueCount, setTotalUniqueCount] = useState(0);
   const [showMatter, setShowMatter] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [isIncrementing, setIsIncrementing] = useState(false);
@@ -82,57 +80,32 @@ const App = () => {
       const bytes = ethers.getBytes('0x' + hexString);
       const chainString = ethers.toUtf8String(bytes);
       
-      // Parse the chainNamespace:chainId format
-      const [chainNamespace, chainId] = chainString.split(':');
-      
-      // Map known chain combinations to readable names
-      const chainKey = `${chainNamespace}:${chainId}`;
-      const knownChains: { [key: string]: string } = {
-        // Push Chain (native)
-        'eip155:42101:': 'Push Chain',
-        
-        // Ethereum chains
-        'eip155:1': 'Ethereum Mainnet',
-        'eip155:11155111': 'Ethereum Sepolia',
-        'eip155:5': 'Ethereum Goerli',
-        'eip155:137': 'Polygon',
-        'eip155:80001': 'Polygon Mumbai',
-        'eip155:56': 'BSC Mainnet',
-        'eip155:97': 'BSC Testnet',
-        
-        // Solana chains
-        'solana:mainnet-beta': 'Solana Mainnet',
-        'solana:testnet': 'Solana Testnet',
-        'solana:devnet': 'Solana Devnet',
-      };
-      
-      // Check if we have a known chain name
-      if (knownChains[chainKey]) {
-        return knownChains[chainKey];
+      const chainHumanName = PushChain.utils.helpers.getChainName(chainString);
+
+      if (chainHumanName) {
+        // Split on underscore and take only the part before it if underscore is present
+        const chainName = chainHumanName.split('_')[0];
+        return chainName.charAt(0).toUpperCase() + chainName.slice(1).toLowerCase();
+      } else {
+        return "Unknown";
       }
-      
-      // For unknown but valid chains, show namespace and chainId
-      if (chainNamespace && chainId !== undefined) {
-        return `${chainNamespace.toUpperCase()} Chain ${chainId}`;
-      }
-      
-      // Fallback to the decoded string
-      return chainString || `Chain ${chainHash.slice(0, 8)}...`;
-      
     } catch (error) {
       // If decoding fails, return a shortened hash
-      return `Chain ${chainHash.slice(0, 8)}...`;
+      return `Unknown`;
     }
   };
 
   // Helper function to get chain color
-  const getChainColor = (chainName: string): string => {
-    if (chainName.includes('Push Chain')) return PUSH_CHAIN_COLOR;
-    if (chainName.includes('Ethereum') || chainName.includes('eip155')) return ETHEREUM_COLOR;
-    if (chainName.includes('Solana')) return SOLANA_COLOR;
+  const getChainColor = (chainHash: string): string => {
+    const chainHumanName = getChainName(chainHash);
+
+    if (chainHumanName.toUpperCase().includes('PUSH')) return PUSH_CHAIN_COLOR;
+    if (chainHumanName.toUpperCase().includes('ETHEREUM')) return ETHEREUM_COLOR;
+    if (chainHumanName.toUpperCase().includes('SOLANA')) return SOLANA_COLOR;
+
     // Default colors for other chains
     const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#ffeaa7', '#dda0dd'];
-    return colors[Math.abs(chainName.charCodeAt(0)) % colors.length];
+    return colors[Math.abs(chainHash.charCodeAt(0)) % colors.length];
   };
 
   // Function to fetch counter values
@@ -161,11 +134,29 @@ const App = () => {
         // Keep fetching chain IDs until we get an error (array bounds)
         while (true) {
           const chainHash = await contract.chainIds(chainIndex);
+          
+          // Check if this is a valid chain (not just ":")
+          try {
+            const hexString = chainHash.startsWith('0x') ? chainHash.slice(2) : chainHash;
+            const bytes = ethers.getBytes('0x' + hexString);
+            const chainString = ethers.toUtf8String(bytes);
+            
+            // Skip chains that are just ":" or empty
+            if (chainString === ':' || chainString.trim() === '') {
+              chainIndex++;
+              continue;
+            }
+          } catch (error) {
+            // Skip invalid chain hashes
+            chainIndex++;
+            continue;
+          }
+          
           const totalCount = await contract.chainCount(chainHash);
           const uniqueCount = await contract.chainCountUnique(chainHash);
           
           const chainName = getChainName(chainHash);
-          const color = getChainColor(chainName);
+          const color = getChainColor(chainHash);
           
           newChainData.push({
             chainHash,
@@ -214,8 +205,6 @@ const App = () => {
 
       // Update state
       setChainData(newChainData);
-      setTotalCount(Number(newTotalCount));
-      setTotalUniqueCount(Number(newTotalUniqueCount));
     } catch (err) {
       console.error("Error fetching counter values:", err);
     } finally {
@@ -547,17 +536,27 @@ const App = () => {
             </div>
           </div>
 
-          <p ref={footerRef} style={{ 
+          <div ref={footerRef} style={{ 
             margin: "20px 0 0 0",
             padding: "12px 20px",
-            color: "gray", 
-            fontSize: "14px",
-            textAlign: "center",
             borderTop: "1px solid rgba(0, 0, 0, 0.1)",
           }}>
-              Made with 💖 and only possible with Push Chain.
-          </p>
-          
+            <p style={{ 
+              color: "gray", 
+              fontSize: "14px",
+              textAlign: "center",
+              marginTop: "0px"
+            }}>
+             Made with 💖 and only possible with Push Chain.
+            </p>
+            <p style={{ 
+              color: "gray", 
+              fontSize: "12px",
+            }}>
+              <a href="https://github.com/pushchain/push-chain-examples/tree/main/tutorials/universal-counter/ballsy-app" target="_blank" rel="noopener noreferrer" style={{ color: "#d548ec" }}>Source Code</a> |&nbsp;
+              <a href="https://donut.push.network/address/0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9?tab=contract" target="_blank" rel="noopener noreferrer" style={{ color: "#d548ec" }}>Smart Contract</a>
+            </p>
+          </div>
 
           
         </div>
