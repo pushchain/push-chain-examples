@@ -89,8 +89,7 @@ const App = () => {
       const chainKey = `${chainNamespace}:${chainId}`;
       const knownChains: { [key: string]: string } = {
         // Push Chain (native)
-        'pushchain:': 'Push Chain',
-        'pushchain:0': 'Push Chain',
+        'eip155:42101:': 'Push Chain',
         
         // Ethereum chains
         'eip155:1': 'Ethereum Mainnet',
