@@ -62,7 +62,7 @@ async function main() {
   // Deploy TestToken
   console.log('\n📄 Deploying TestToken...');
   const TestToken = await ethers.getContractFactory('TestToken');
-  const token = await TestToken.deploy('TestToken2', 'TEST2');
+  const token = await TestToken.deploy('TestToken3', 'TEST3');
   await token.waitForDeployment();
   const tokenAddress = await token.getAddress();
   console.log('✅ TestToken deployed to:', tokenAddress);

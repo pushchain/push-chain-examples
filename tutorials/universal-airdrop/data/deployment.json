@@ -1,25 +1,71 @@
 {
   "network": "pushDonut",
   "token": {
-    "address": "0x6B2387fD3E9655aBAdE0c9594b92f757De3DD86b",
+    "address": "0x31e9DE9e9813c3698221CF8922090E5D7b5a29db",
     "symbol": "TEST",
     "name": "TestToken"
   },
   "airdrop": {
-    "address": "0xd0D51A92532Af370C74f11B405bcbdcB955c7cdb",
-    "merkleRoot": "0xce1ce6669c44b16a7bec7bea604abb8f7d6f1c62ff3d463c77140f8f00c15644"
+    "address": "0x7cf6F642f2a8591659e3D667611ceBF91BbE22D9",
+    "merkleRoot": "0xdbea0e7ee52a457ede4c12fc0283e03b87da7f1f94c0f51118c00489d1c40073"
   },
   "treeData": {
-    "merkleRoot": "0xce1ce6669c44b16a7bec7bea604abb8f7d6f1c62ff3d463c77140f8f00c15644"
+    "merkleRoot": "0xdbea0e7ee52a457ede4c12fc0283e03b87da7f1f94c0f51118c00489d1c40073",
+    "entries": [
+      {
+        "recipient": "0xFd6C2fE69bE13d8bE379CCB6c9306e74193EC1A9",
+        "chainNamespace": "eip155",
+        "chainId": "11155111",
+        "amount": "10000000000000000000",
+        "leaf": "0xaf4cc7a5cb4d56cad09aa6a5345a967a6cdf8e025d8aa4bf5443f291e0813783",
+        "proof": [
+          "0xce1ce6669c44b16a7bec7bea604abb8f7d6f1c62ff3d463c77140f8f00c15644",
+          "0xe9c84ccbdbc743cbbaad946b4fe2600f26efcf387934e0efcc065dcc7cf2e012"
+        ]
+      },
+      {
+        "recipient": "0xFd6C2fE69bE13d8bE379CCB6c9306e74193EC1A9",
+        "chainNamespace": "eip155",
+        "chainId": "42101",
+        "amount": "10000000000000000000",
+        "leaf": "0xce1ce6669c44b16a7bec7bea604abb8f7d6f1c62ff3d463c77140f8f00c15644",
+        "proof": [
+          "0xaf4cc7a5cb4d56cad09aa6a5345a967a6cdf8e025d8aa4bf5443f291e0813783",
+          "0xe9c84ccbdbc743cbbaad946b4fe2600f26efcf387934e0efcc065dcc7cf2e012"
+        ]
+      },
+      {
+        "recipient": "72JBejJFXrRKpQ69Hmaqr7vWJr6pdZXFEL6jt3sadsXU",
+        "chainNamespace": "solana",
+        "chainId": "EtWTRABZaYq6iMfeYKouRu166VU2xqa1",
+        "amount": "10000000000000000000",
+        "leaf": "0xe9c84ccbdbc743cbbaad946b4fe2600f26efcf387934e0efcc065dcc7cf2e012",
+        "proof": [
+          "0xd34c2f18a8eb55ba67c58393ea95c91ce61793920fe296b80b8709ec50590614"
+        ]
+      }
+    ]
   },
   "airdropEntries": [
     {
       "recipient": "0xFd6C2fE69bE13d8bE379CCB6c9306e74193EC1A9",
       "chainNamespace": "eip155",
+      "chainId": "42101",
+      "amount": "10000000000000000000"
+    },
+    {
+      "recipient": "0xFd6C2fE69bE13d8bE379CCB6c9306e74193EC1A9",
+      "chainNamespace": "eip155",
       "chainId": "11155111",
+      "amount": "10000000000000000000"
+    },
+    {
+      "recipient": "72JBejJFXrRKpQ69Hmaqr7vWJr6pdZXFEL6jt3sadsXU",
+      "chainNamespace": "solana",
+      "chainId": "EtWTRABZaYq6iMfeYKouRu166VU2xqa1",
       "amount": "10000000000000000000"
     }
   ],
-  "totalAmount": "10.0",
-  "deployedAt": "2025-09-11T20:38:15.088Z"
+  "totalAmount": "30.0",
+  "deployedAt": "2025-09-19T01:46:44.832Z"
 }
