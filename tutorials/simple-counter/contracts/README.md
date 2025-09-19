@@ -13,6 +13,7 @@ The Universal Simple Counter is a beginner-friendly tutorial that shows how to c
 ### Counter.sol
 
 The main contract that provides:
+
 - A simple counter that can be incremented
 - A `countPC` variable to track the current count
 - An `increment()` function to increase the counter

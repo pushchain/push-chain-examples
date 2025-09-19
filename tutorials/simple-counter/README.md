@@ -7,6 +7,7 @@ A minimal example demonstrating how to build a simple counter dApp on PushChain.
 ## Overview
 
 This tutorial consists of:
+
 - **Smart Contract**: A simple counter contract that can be incremented
 - **Frontend App**: A clean, minimal React app that interacts with the counter contract
 
@@ -68,7 +69,7 @@ Update the contract address in `app/src/App.tsx` with your deployed contract add
 
 ## Contract Details
 
-- **Contract Address**: `0x9F95857e43d25Bb9DaFc6376055eFf63bC0887C1` (example)
+- **Contract Address**: `0x5FbDB2315678afecb367f032d93F642f64180aa3` (example)
 - **Network**: Push Chain Testnet
 - **Functions**:
   - `countPC()`: Returns current counter value
@@ -90,6 +91,7 @@ Update the contract address in `app/src/App.tsx` with your deployed contract add
 ## Next Steps
 
 After completing this tutorial, you can:
+
 - Explore the more advanced Universal Counter tutorial
 - Add more functions to the smart contract
 - Enhance the UI with additional features
