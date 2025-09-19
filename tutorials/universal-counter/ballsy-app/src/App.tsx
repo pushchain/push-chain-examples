@@ -170,29 +170,28 @@ const App = () => {
         }
       } catch (error) {
         // Expected error when we reach the end of the array
-        console.log(`Fetched ${chainIndex} chains`);
+
       }
       
-      console.log("Fetched chain data:", newChainData);
-      console.log("Total counts:", { newTotalCount: Number(newTotalCount), newTotalUniqueCount: Number(newTotalUniqueCount) });
+
       
       // Check if this is the initial load
       const isInitialLoad = chainData.length === 0;
       // Add balls for visual feedback (only when counters increase, not on initial load)
-      if (chainData.length === 0) {
+      if (newChainData.length === 0) {
         // Initial load - don't add balls for existing counters to avoid spam
-        console.log("Initial load: Skipping ball drops for existing counters");
+
       } else {
         // On subsequent loads, only add balls if counters have increased
         newChainData.forEach(newChain => {
           const oldChain = chainData.find(c => c.chainHash === newChain.chainHash);
           if (oldChain && newChain.totalCount > oldChain.totalCount) {
             const diff = newChain.totalCount - oldChain.totalCount;
-            console.log(`${newChain.chainName} counter increased by ${diff} - adding balls`);
+
             addMultipleBlockchainBalls(newChain.color, diff);
           } else if (!oldChain && newChain.totalCount > 0) {
             // New chain appeared
-            console.log(`New chain ${newChain.chainName} with ${newChain.totalCount} counts - adding balls`);
+
             addMultipleBlockchainBalls(newChain.color, newChain.totalCount);
           }
         });
@@ -254,12 +253,12 @@ const App = () => {
   useEffect(() => {
     // Only fetch counters on the initial mount, not when dependencies change
     if (!initialFetchDoneRef.current) {
-      console.log("Component mounted, fetching initial counter values...");
+
       fetchCounters();
       initialFetchDoneRef.current = true;
       lastFetchTimeRef.current = Date.now();
     } else {
-      console.log("Skipping initial fetch as it was already done");
+
     }
 
     // Create WebSocket connection
@@ -267,7 +266,7 @@ const App = () => {
     const ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {
-      console.log("WebSocket connected");
+
       // Subscribe to CountIncremented events
       const subscribeMsg = {
         id: 1,
@@ -291,23 +290,23 @@ const App = () => {
         const data = JSON.parse(event.data);
         if (data.method === "eth_subscription" && data.params?.result?.topics) {
           // This is a CountIncremented event
-          console.log("Received CountIncremented event:", data);
+
           
           // Extract blockchain ID from the event data
           const blockchainIdHex = data.params.result.topics[1];
           const blockchainId = parseInt(blockchainIdHex, 16);
           
-          console.log(`Blockchain ID from event: ${blockchainId}`);
+
           
           // Check if enough time has passed since the last fetch
           const now = Date.now();
           if (now - lastFetchTimeRef.current > FETCH_DEBOUNCE_MS) {
-            console.log("Debounce time passed, fetching counters...");
+
             // Refresh counters to update the UI and drop balls
             fetchCounters();
             lastFetchTimeRef.current = now;
           } else {
-            console.log("Skipping fetchCounters due to debounce");
+
           }
         }
       } catch (err) {
@@ -361,10 +360,11 @@ const App = () => {
           gap: "1rem",
           zIndex: 20,
           padding: "20px",
+          pointerEvents: "none",
         }}
       >
-        <h1 ref={headingRef}>Ballsy</h1>
-        <p style={{ color: "gray", fontSize: "14px", marginTop: "-20px", maxWidth: "480px"}}>
+        <h1 ref={headingRef} style={{ pointerEvents: "auto"}}>Ballsy</h1>
+        <p style={{ color: "gray", fontSize: "14px", marginTop: "-20px", maxWidth: "480px", pointerEvents: "auto"}}>
           Ballsy is a universal app that allows any chain users to interact with the same app natively. Connect your account and chase leaderboard glory for your chain.
         </p>
         
@@ -381,7 +381,7 @@ const App = () => {
           }}
         >
           <div style={{ display: "flex", gap: "15px", marginBottom: "20px" }}>
-            <div ref={cardRef} style={{ width: "200px" }}>
+            <div ref={cardRef} style={{ width: "200px", pointerEvents: "auto" }}>
               <PushUniversalAccountButton />
             </div>
 
@@ -401,6 +401,7 @@ const App = () => {
                     border: "none",
                     borderRadius: "12px",
                     cursor: isLoading ? "not-allowed" : "pointer",
+                    pointerEvents: "auto"
                   }}
                 >
                   {isLoading ? "Processing..." : "Increment Counter"}
@@ -411,7 +412,7 @@ const App = () => {
 
           <div>
             {/* Leaderboard Table */}
-            <div className="responsive-leaderboard">
+            <div className="responsive-leaderboard" style={{ pointerEvents: "auto" }}>
               <h3 style={{ margin: '0 0 1rem 0', textAlign: 'center' }}>
                 Universal Leaderboard
               </h3>
@@ -469,7 +470,7 @@ const App = () => {
             </div>
             
             {/* Controls section - outside the leaderboard table */}
-            <div style={{ display: "flex", gap: "10px", margin: "20px 0", flexDirection: "column", alignItems: "center" }}>
+            <div style={{ display: "flex", gap: "10px", margin: "20px 0", flexDirection: "column", alignItems: "center", pointerEvents: "auto" }}>
               {connectionStatus ===
                 PushUI.CONSTANTS.CONNECTION.STATUS.CONNECTED && (
                 <div style={{ display: "grid", gap: "10px", width: "100%", maxWidth: "480px" }}>
@@ -531,6 +532,7 @@ const App = () => {
             margin: "20px 0 0 0",
             padding: "12px 20px",
             borderTop: "1px solid rgba(0, 0, 0, 0.1)",
+            pointerEvents: "auto",
           }}>
             <p style={{ 
               color: "gray", 
