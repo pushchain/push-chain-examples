@@ -9,7 +9,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "deploy": "yarn build && gh-pages -d dist -r https://github.com/pushchain/push-chain-ballsy-app-deployment"
+    "deploy": "yarn run build && echo 'ballsy.push.org' > ./dist/CNAME && gh-pages -d dist -r https://github.com/pushchain/push-chain-ballsy-app-deployment"
   },
   "dependencies": {
     "@pushchain/ui-kit": "^2.0.2",

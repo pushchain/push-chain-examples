@@ -5,7 +5,7 @@ import { defineConfig } from 'vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: '/push-chain-ballsy-app-deployment',  // Use relative paths
+  base: '/',  // Use relative paths
   resolve: {
     alias: {
       process: 'process/browser',
