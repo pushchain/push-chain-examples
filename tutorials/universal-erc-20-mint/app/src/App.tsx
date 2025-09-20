@@ -80,7 +80,7 @@ function App() {
             functionName: "mint",
             args: [
               pushChainClient.universal.account,
-              ethers.parseUnits("100", 18),
+              PushChain.utils.helpers.parseUnits("100", 18),
             ], // Mint 100 tokens
           }),
           value: BigInt(0),
