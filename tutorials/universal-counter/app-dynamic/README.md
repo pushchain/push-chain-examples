@@ -1,18 +1,21 @@
-# Simple Counter Frontend
+# Universal Counter App (Dynamic)
 
-A minimal React application demonstrating how to interact with a simple counter smart contract on PushChain using the PushChain UI Kit.
+An advanced React application demonstrating dynamic cross-chain interaction with the Universal Counter Dynamic smart contract. This implementation automatically detects and displays data for all chains that have interacted with the contract, featuring a comprehensive data table.
 
-👉 Full Tutorial: [Read the step-by-step guide on Push.org](https://push.org/docs/chain/tutorials/basics/tutorial-simple-counter/)
+👉 Full Tutorial: [Read the step-by-step guide on Push.org](https://push.org/docs/chain/tutorials/universal-counter/)
 
 ## Overview
 
-This frontend application provides a clean, simple interface for interacting with the Counter smart contract. It demonstrates the basics of PushChain dApp development with a focus on simplicity and clarity.
+This frontend application provides an advanced interface for the Universal Counter Dynamic contract. Unlike the basic app with hardcoded chains, this version dynamically detects all chains that have interacted with the contract and displays comprehensive analytics in a data table format.
 
 ## Features
 
-- **Clean UI**: Minimal white background with centered layout
+- **Dynamic Chain Detection**: Automatically discovers all chains that have interacted with the contract
+- **Comprehensive Data Table**: Displays chain names, total counts, and unique user counts
+- **Real-Time Analytics**: Shows live data for all participating chains
+- **Chain Name Resolution**: Converts raw chain hashes to human-readable names
+- **Total Universal Count**: Displays the overall count across all chains
 - **Wallet Integration**: Connect wallet using Push Universal Account Button
-- **Real-time Counter**: Displays current counter value immediately on page load
 - **Transaction Support**: Increment counter using PushChain transactions
 - **Error Handling**: Proper error messages and loading states
 - **TypeScript**: Fully typed for better development experience
@@ -21,7 +24,7 @@ This frontend application provides a clean, simple interface for interacting wit
 
 - Node.js (v16 or higher)
 - npm or yarn
-- A deployed Counter contract on PushChain testnet
+- A deployed Universal Counter Dynamic contract on PushChain testnet
 
 ## Installation
 
@@ -32,7 +35,7 @@ npm install
 
 2. Update the contract address in `src/App.tsx`:
 ```typescript
-const COUNTER_CONTRACT_ADDRESS = 'YOUR_DEPLOYED_CONTRACT_ADDRESS'
+const COUNTER_CONTRACT_ADDRESS = 'YOUR_DEPLOYED_UNIVERSAL_COUNTER_DYNAMIC_ADDRESS'
 ```
 
 3. Start the development server:
@@ -43,15 +46,15 @@ npm run dev
 ## Project Structure
 
 ```
-app/
+app-dynamic/
 ├── src/
-│   ├── App.tsx          # Main application component
-│   ├── App.css          # Application styles
-│   ├── index.css        # Global styles
+│   ├── App.tsx                      # Main application component
+│   ├── App.css                      # Application styles
+│   ├── index.css                    # Global styles
 │   └── abi/
-│       └── Counter.json # Contract ABI
-├── package.json         # Dependencies and scripts
-└── README.md           # This file
+│       └── UniversalCounterDynamic.json # Contract ABI
+├── package.json                     # Dependencies and scripts
+└── README.md                       # This file
 ```
 
 ## Key Components
@@ -61,29 +64,48 @@ app/
 The main application component that includes:
 
 - **PushChain Hooks**: Uses `usePushWalletContext`, `usePushChainClient`, and `usePushChain`
-- **State Management**: Manages counter value, loading states, and errors
-- **Contract Interaction**: Reads counter value and sends increment transactions
-- **UI Components**: Clean, centered layout with wallet connection and counter display
+- **Dynamic State Management**: Manages counter value, chain data array, loading states, and errors
+- **Advanced Contract Interaction**: Reads total counts and iterates through all chain data
+- **Data Table UI**: Displays comprehensive chain analytics in a professional table format
+- **Chain Name Resolution**: Converts raw chain hashes to human-readable names
 
-### Contract Integration
+### Dynamic Chain Detection
 
-The app demonstrates proper PushChain integration patterns:
+The app demonstrates advanced contract interaction patterns:
 
 ```typescript
-// Reading contract state
-const provider = new ethers.JsonRpcProvider(
-  "https://evm.rpc-testnet-donut-node1.push.org/"
-);
-const contract = new ethers.Contract(CONTRACT_ADDRESS, CounterABI, provider);
-const currentCount = await contract.countPC();
+// Reading total counts
+const [totalCount, totalUniqueCount] = await contract.getCount();
 
-// Sending transactions
-const tx = await pushChainClient.universal.sendTransaction({
-  to: CONTRACT_ADDRESS,
-  data: getTxData(),
-  value: BigInt(0),
-});
+// Dynamic chain discovery
+const newChainData = [];
+let chainIndex = 0;
+
+try {
+  while (true) {
+    const chainHash = await contract.chainIds(chainIndex);
+    const count = await contract.chainCount(chainHash);
+    const uniqueCount = await contract.chainCountUnique(chainHash);
+    
+    newChainData.push({
+      chainHash: ethers.hexlify(chainHash),
+      count: Number(count),
+      uniqueCount: Number(uniqueCount)
+    });
+    
+    chainIndex++;
+  }
+} catch (error) {
+  // Expected error when we reach the end of the array
+}
 ```
+
+### Chain Data Table
+
+The app features a comprehensive data table showing:
+- **Chain Name**: Human-readable chain names resolved from hashes
+- **Count**: Total interactions from each chain
+- **Unique Count**: Number of unique users from each chain
 
 ## Configuration
 

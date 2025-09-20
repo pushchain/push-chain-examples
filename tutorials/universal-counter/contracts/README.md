@@ -1,32 +1,79 @@
 # Universal Counter Smart Contracts
 
-This folder contains the smart contracts for the Universal Counter application, which demonstrates cross-chain user identification and interaction using PushChain's Universal Ethereum Account (UEA) system.
+This directory contains the smart contracts for the Universal Counter tutorial, demonstrating cross-chain user identification and interaction using PushChain's Universal Ethereum Account (UEA) system.
 
-## Overview
+👉 Full Tutorial: [Read the step-by-step guide on Push.org](https://push.org/docs/chain/tutorials/universal-counter/)
 
-The Universal Counter is a demonstration of how PushChain enables native cross-chain user interactions. The contract tracks and increments counters for users from different blockchains (Ethereum, Solana, and PushChain) based on their origin chain.
+## 🎯 Overview
 
-## Contracts
+The Universal Counter contracts showcase PushChain's revolutionary cross-chain capabilities. These contracts automatically detect users' origin chains and maintain separate counters, enabling true cross-chain user attribution without bridges or complex infrastructure.
+
+**Key Innovation**: Users from Ethereum, Solana, and Push Chain can all interact with the same contract, with their actions automatically attributed to their origin chain.
+
+## 📋 Contracts
 
 ### UniversalCounter.sol
 
-The main contract that:
+The main contract powering the basic and ballsy apps:
 
-- Maintains separate counters for Ethereum, Solana, and PushChain users
-- Automatically identifies the origin chain of the caller using PushChain's UEA system
-- Increments the appropriate counter based on the user's origin chain
-- Emits events when counters are incremented
-- Provides functions to check the current count for each blockchain
+**Core Functions:**
+- `increment()` - Increments counter for caller's origin chain
+- `countETH()` - Returns Ethereum users' total count
+- `countSOL()` - Returns Solana users' total count  
+- `countPC()` - Returns Push Chain users' total count
+- `countETHUnique()` - Returns unique Ethereum users count
+- `countSOLUnique()` - Returns unique Solana users count
+- `countPCUnique()` - Returns unique Push Chain users count
 
-### Counter.sol
+**Chain Detection Logic:**
+```solidity
+// Automatic chain detection using PushChain's UEA system
+bytes memory chainHash = abi.encodePacked(chainNamespace, ":", chainId);
+chainCount[chainHash]++;
 
-A simple helper contract that provides basic counter functionality.
+// Track unique users per chain
+if (!userHasIncremented[chainHash][msg.sender]) {
+    chainCountUnique[chainHash]++;
+    userHasIncremented[chainHash][msg.sender] = true;
+}
+```
 
-## Key Features
+### UniversalCounterDynamic.sol
 
-- **Cross-Chain User Identification**: Automatically detects whether a user is from Ethereum, Solana, or PushChain
-- **Universal Ethereum Accounts (UEAs)**: Leverages PushChain's UEA system to identify users' origin chains
-- **Event Emission**: Emits events when counters are incremented, enabling real-time updates in the frontend
+Advanced contract for the dynamic app with comprehensive chain tracking:
+
+**Enhanced Functions:**
+- `increment()` - Increments with dynamic chain tracking
+- `getCount()` - Returns total count and unique users across all chains
+- `chainIds(uint256)` - Array of all chain hashes that have interacted
+- `chainCount(bytes)` - Count for specific chain hash
+- `chainCountUnique(bytes)` - Unique users for specific chain hash
+
+**Dynamic Chain Discovery:**
+```solidity
+// Automatically tracks new chains as they interact
+if (chainCount[chainHash] == 0) {
+    chainIds.push(chainHash); // Add new chain to tracking array
+}
+```
+
+## ✨ Key Features
+
+### Cross-Chain User Attribution
+- **Automatic Detection**: No manual chain selection required
+- **Universal Accounts**: Leverages PushChain's UEA system for seamless cross-chain identity
+- **Chain Namespace Mapping**: Uses `chainNamespace:chainId` format for precise chain identification
+
+### Advanced Analytics
+- **Total Counters**: Track overall interactions per chain
+- **Unique User Tracking**: Count distinct users from each chain
+- **Dynamic Chain Discovery**: Automatically detect new participating chains
+- **Real-Time Events**: Emit events for frontend real-time updates
+
+### Security & Efficiency
+- **Gas Optimized**: Efficient storage patterns and minimal gas usage
+- **Reentrancy Protection**: Safe against common attack vectors
+- **Event-Driven**: Comprehensive event emission for frontend integration
 
 ## Development
 

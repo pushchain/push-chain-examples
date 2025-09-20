@@ -1,18 +1,20 @@
-# Simple Counter Frontend
+# Universal Counter App (Basic)
 
-A minimal React application demonstrating how to interact with a simple counter smart contract on PushChain using the PushChain UI Kit.
+A clean React application demonstrating cross-chain interaction with the Universal Counter smart contract on PushChain. This is the basic implementation showing hardcoded chain counters with a simple, professional interface.
 
-👉 Full Tutorial: [Read the step-by-step guide on Push.org](https://push.org/docs/chain/tutorials/basics/tutorial-simple-counter/)
+👉 Full Tutorial: [Read the step-by-step guide on Push.org](https://push.org/docs/chain/tutorials/universal-counter/)
 
 ## Overview
 
-This frontend application provides a clean, simple interface for interacting with the Counter smart contract. It demonstrates the basics of PushChain dApp development with a focus on simplicity and clarity.
+This frontend application provides a clean, minimal interface for the Universal Counter contract. It demonstrates cross-chain user attribution by showing separate counters for Ethereum, Solana, and Push Chain users, with a focus on simplicity and clarity.
 
 ## Features
 
-- **Clean UI**: Minimal white background with centered layout
+- **Cross-Chain Attribution**: Automatically detects user's origin chain (Ethereum, Solana, Push Chain)
+- **Clean UI**: Minimal interface with centered layout matching the provided design
+- **Total Universal Count**: Displays the total count across all chains
+- **Individual Chain Counters**: Shows separate counters for ETH, Sol, and PC
 - **Wallet Integration**: Connect wallet using Push Universal Account Button
-- **Real-time Counter**: Displays current counter value immediately on page load
 - **Transaction Support**: Increment counter using PushChain transactions
 - **Error Handling**: Proper error messages and loading states
 - **TypeScript**: Fully typed for better development experience
@@ -21,7 +23,7 @@ This frontend application provides a clean, simple interface for interacting wit
 
 - Node.js (v16 or higher)
 - npm or yarn
-- A deployed Counter contract on PushChain testnet
+- A deployed Universal Counter contract on PushChain testnet
 
 ## Installation
 
