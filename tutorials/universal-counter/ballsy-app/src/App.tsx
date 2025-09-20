@@ -26,7 +26,7 @@ import { ethers } from "ethers";
 import UniversalCounterABI from "./abi/UniversalCounter.json";
 
 // Contract address for the Universal Counter
-const CONTRACT_ADDRESS = "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9";
+const CONTRACT_ADDRESS = "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9";
 
 // Use the imported ABI
 
@@ -365,7 +365,7 @@ const App = () => {
       >
         <h1 ref={headingRef} style={{ pointerEvents: "auto"}}>Ballsy</h1>
         <p style={{ color: "gray", fontSize: "14px", marginTop: "-20px", maxWidth: "480px", pointerEvents: "auto"}}>
-          Ballsy is a universal app that allows any chain users to interact with the same app natively. Connect your account and chase leaderboard glory for your chain.
+        Ballsy lets every chain battle for glory 🏆. No matter if you’re on Ethereum, Solana, or Push Chain, your clicks count towards your chain’s leaderboard. One app, shared across all chains.
         </p>
         
         <div
@@ -547,7 +547,7 @@ const App = () => {
               fontSize: "12px",
             }}>
               <a href="https://github.com/pushchain/push-chain-examples/tree/main/tutorials/universal-counter/ballsy-app" target="_blank" rel="noopener noreferrer" style={{ color: "#d548ec" }}>Source Code</a> |&nbsp;
-              <a href="https://donut.push.network/address/0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9?tab=contract" target="_blank" rel="noopener noreferrer" style={{ color: "#d548ec" }}>Smart Contract</a>
+              <a href="https://donut.push.network/address/0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9?tab=contract" target="_blank" rel="noopener noreferrer" style={{ color: "#d548ec" }}>Smart Contract</a>
             </p>
           </div>
 

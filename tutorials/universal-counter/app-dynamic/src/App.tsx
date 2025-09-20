@@ -6,11 +6,11 @@ import {
 } from "@pushchain/ui-kit";
 import { ethers } from "ethers";
 import { useEffect, useState } from "react";
-import CounterABI from "./abi/Counter.json";
+import UCDynamicABI from "./abi/UniversalCounterDynamic.json";
 import "./App.css";
 
 // Contract address for the deployed Counter contract
-const COUNTER_CONTRACT_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+const COUNTER_CONTRACT_ADDRESS = "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9";
 
 // Global provider for Push Chain testnet
 const provider = new ethers.JsonRpcProvider(
@@ -23,6 +23,7 @@ function App() {
   const { PushChain } = usePushChain();
 
   const [counter, setCounter] = useState<number>(0);
+  const [chainData, setChainData] = useState<Array<{chainHash: string, count: number, uniqueCount: number}>>([]);
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>("");
@@ -33,13 +34,36 @@ function App() {
     try {
       const contract = new ethers.Contract(
         COUNTER_CONTRACT_ADDRESS,
-        CounterABI,
+        UCDynamicABI,
         provider
       );
 
-      const currentCount = await contract.countPC();
+      const [totalCount] = await contract.getCount();
+      setCounter(Number(totalCount));
 
-      setCounter(Number(currentCount));
+      // Get all chain data
+      const newChainData: Array<{chainHash: string, count: number, uniqueCount: number}> = [];
+      let chainIndex = 0;
+      
+      try {
+        while (true) {
+          const chainHash = await contract.chainIds(chainIndex);
+          const count = await contract.chainCount(chainHash);
+          const uniqueCount = await contract.chainCountUnique(chainHash);
+          
+          newChainData.push({
+            chainHash: ethers.hexlify(chainHash),
+            count: Number(count),
+            uniqueCount: Number(uniqueCount)
+          });
+          
+          chainIndex++;
+        }
+      } catch (error) {
+        // Expected error when we reach the end of the array
+      }
+      
+      setChainData(newChainData);
     } catch (err) {
       console.error("Error reading counter:", err);
       setError("Failed to read counter value");
@@ -57,7 +81,7 @@ function App() {
         const tx = await pushChainClient.universal.sendTransaction({
           to: COUNTER_CONTRACT_ADDRESS,
           data: PushChain.utils.helpers.encodeTxData({
-            abi: CounterABI,
+            abi: UCDynamicABI,
             functionName: "increment",
           }),
           value: BigInt(0),
@@ -111,7 +135,7 @@ function App() {
           textAlign: "center",
         }}
       >
-        Simple Counter Example
+        Universal Dynamic Counter Example
       </h1>
       <p
         style={{
@@ -124,7 +148,7 @@ function App() {
           borderBottom: "1px solid rgba(0, 0, 0, 0.1)",
         }}
       >
-        Simple Counter demonstrates how Push Chain enables users from Ethereum, Solana, or any chain to interact with your app seamlessly, with no extra on-chain code.
+        This tutorial shows how Push Chain enables a dynamic Universal Counter that automatically detects and tracks activity from any chain. Unlike the hardcoded version, this contract stores counters for each chain dynamically, including total and unique counts.
       </p>
 
       <div style={{ marginBottom: "2rem" }}>
@@ -154,6 +178,43 @@ function App() {
         }}
       >
         <p>Counter: {counter}</p>
+        {chainData.length > 0 && (
+          <div style={{ marginTop: "2rem", maxWidth: "600px" }}>
+            <h3 style={{ fontSize: "1.2rem", marginBottom: "1rem", color: "#333" }}>Chain Data</h3>
+            <table style={{
+              width: "100%",
+              borderCollapse: "collapse",
+              fontSize: "0.9rem",
+              backgroundColor: "white",
+              borderRadius: "8px",
+              overflow: "hidden",
+              boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
+            }}>
+              <thead>
+                <tr style={{ backgroundColor: "#f8f9fa" }}>
+                  <th style={{ padding: "12px", textAlign: "left", borderBottom: "1px solid #dee2e6" }}>Chain Name</th>
+                  <th style={{ padding: "12px", textAlign: "center", borderBottom: "1px solid #dee2e6" }}>Count</th>
+                  <th style={{ padding: "12px", textAlign: "center", borderBottom: "1px solid #dee2e6" }}>Unique Count</th>
+                </tr>
+              </thead>
+              <tbody>
+                {chainData.map((chain, index) => (
+                  <tr key={index} style={{ borderBottom: index < chainData.length - 1 ? "1px solid #dee2e6" : "none" }}>
+                    <td style={{ padding: "12px", fontFamily: "monospace", fontSize: "0.8rem", wordBreak: "break-all" }}>
+                      {PushChain.utils.helpers.getChainName(ethers.toUtf8String(chain.chainHash))}
+                    </td>
+                    <td style={{ padding: "12px", textAlign: "center", fontWeight: "bold" }}>
+                      {chain.count}
+                    </td>
+                    <td style={{ padding: "12px", textAlign: "center", fontWeight: "bold" }}>
+                      {chain.uniqueCount}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {connectionStatus === "connected" && (
@@ -244,7 +305,7 @@ function App() {
           }}
         >
           <a
-            href="https://github.com/pushchain/push-chain-examples/tree/main/tutorials/simple-counter/app"
+            href="https://github.com/pushchain/push-chain-examples/tree/main/tutorials/universal-counter/app-dynamic"
             target="_blank"
             rel="noopener noreferrer"
             style={{ color: "#d548ec" }}
@@ -253,7 +314,7 @@ function App() {
           </a>{" "}
           |&nbsp;
           <a
-            href="https://donut.push.network/address/0x5FbDB2315678afecb367f032d93F642f64180aa3?tab=contract"
+            href="https://donut.push.network/address/0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9?tab=contract"
             target="_blank"
             rel="noopener noreferrer"
             style={{ color: "#d548ec" }}
