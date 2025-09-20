@@ -174,7 +174,7 @@ const MatterComponent: React.FC<MatterProps> = ({ physicBodyRefs = [], fullScree
         width: width,
         height: height,
         wireframes: false, // Enable debug wireframes
-        background: 'white',
+        background: 'transparent',
         pixelRatio: window.devicePixelRatio || 1,
         showDebug: false, // Enable debug info
         showVelocity: false, // Show velocity vectors
@@ -495,7 +495,6 @@ const MatterComponent: React.FC<MatterProps> = ({ physicBodyRefs = [], fullScree
           flex: 1,
           position: 'relative',
           overflow: 'hidden',
-          border: '1px solid #ccc',
           margin: '0px'
         }}
       />

@@ -47,7 +47,6 @@ const App = () => {
   const [isIncrementing, setIsIncrementing] = useState(false);
   const [txHash, setTxHash] = useState("");
 
-
   // Get PushChain context and client
   const { connectionStatus } = usePushWalletContext();
   const { pushChainClient } = usePushChainClient();
@@ -74,18 +73,22 @@ const App = () => {
     // Convert hex string back to UTF-8 to get the original chainNamespace:chainId
     try {
       // Remove '0x' prefix if present
-      const hexString = chainHash.startsWith('0x') ? chainHash.slice(2) : chainHash;
-      
+      const hexString = chainHash.startsWith("0x")
+        ? chainHash.slice(2)
+        : chainHash;
+
       // Convert hex to bytes and then to UTF-8 string
-      const bytes = ethers.getBytes('0x' + hexString);
+      const bytes = ethers.getBytes("0x" + hexString);
       const chainString = ethers.toUtf8String(bytes);
-      
+
       const chainHumanName = PushChain.utils.helpers.getChainName(chainString);
 
       if (chainHumanName) {
         // Split on underscore and take only the part before it if underscore is present
-        const chainName = chainHumanName.split('_')[0];
-        return chainName.charAt(0).toUpperCase() + chainName.slice(1).toLowerCase();
+        const chainName = chainHumanName.split("_")[0];
+        return (
+          chainName.charAt(0).toUpperCase() + chainName.slice(1).toLowerCase()
+        );
       } else {
         return "Unknown";
       }
@@ -99,12 +102,20 @@ const App = () => {
   const getChainColor = (chainHash: string): string => {
     const chainHumanName = getChainName(chainHash);
 
-    if (chainHumanName.toUpperCase().includes('PUSH')) return PUSH_CHAIN_COLOR;
-    if (chainHumanName.toUpperCase().includes('ETHEREUM')) return ETHEREUM_COLOR;
-    if (chainHumanName.toUpperCase().includes('SOLANA')) return SOLANA_COLOR;
+    if (chainHumanName.toUpperCase().includes("PUSH")) return PUSH_CHAIN_COLOR;
+    if (chainHumanName.toUpperCase().includes("ETHEREUM"))
+      return ETHEREUM_COLOR;
+    if (chainHumanName.toUpperCase().includes("SOLANA")) return SOLANA_COLOR;
 
     // Default colors for other chains
-    const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#ffeaa7', '#dda0dd'];
+    const colors = [
+      "#ff6b6b",
+      "#4ecdc4",
+      "#45b7d1",
+      "#96ceb4",
+      "#ffeaa7",
+      "#dda0dd",
+    ];
     return colors[Math.abs(chainHash.charCodeAt(0)) % colors.length];
   };
 
@@ -112,7 +123,7 @@ const App = () => {
   const fetchCounters = async () => {
     try {
       setIsLoading(true);
-      
+
       // Create a contract instance for read operations
       const provider = new ethers.JsonRpcProvider(
         "https://evm.rpc-testnet-donut-node1.push.org/"
@@ -125,24 +136,26 @@ const App = () => {
 
       // Get total counts
       const [newTotalCount, newTotalUniqueCount] = await contract.getCount();
-      
+
       // Get all chain IDs (we need to iterate through the chainIds array)
       const newChainData: ChainData[] = [];
       let chainIndex = 0;
-      
+
       try {
         // Keep fetching chain IDs until we get an error (array bounds)
         while (true) {
           const chainHash = await contract.chainIds(chainIndex);
-          
+
           // Check if this is a valid chain (not just ":")
           try {
-            const hexString = chainHash.startsWith('0x') ? chainHash.slice(2) : chainHash;
-            const bytes = ethers.getBytes('0x' + hexString);
+            const hexString = chainHash.startsWith("0x")
+              ? chainHash.slice(2)
+              : chainHash;
+            const bytes = ethers.getBytes("0x" + hexString);
             const chainString = ethers.toUtf8String(bytes);
-            
+
             // Skip chains that are just ":" or empty
-            if (chainString === ':' || chainString.trim() === '') {
+            if (chainString === ":" || chainString.trim() === "") {
               chainIndex++;
               continue;
             }
@@ -151,40 +164,38 @@ const App = () => {
             chainIndex++;
             continue;
           }
-          
+
           const totalCount = await contract.chainCount(chainHash);
           const uniqueCount = await contract.chainCountUnique(chainHash);
-          
+
           const chainName = getChainName(chainHash);
           const color = getChainColor(chainHash);
-          
+
           newChainData.push({
             chainHash,
             chainName,
             totalCount: Number(totalCount),
             uniqueCount: Number(uniqueCount),
-            color
+            color,
           });
-          
+
           chainIndex++;
         }
       } catch (error) {
         // Expected error when we reach the end of the array
-
       }
-      
 
-      
       // Check if this is the initial load
       const isInitialLoad = chainData.length === 0;
       // Add balls for visual feedback (only when counters increase, not on initial load)
       if (newChainData.length === 0) {
         // Initial load - don't add balls for existing counters to avoid spam
-
       } else {
         // On subsequent loads, only add balls if counters have increased
-        newChainData.forEach(newChain => {
-          const oldChain = chainData.find(c => c.chainHash === newChain.chainHash);
+        newChainData.forEach((newChain) => {
+          const oldChain = chainData.find(
+            (c) => c.chainHash === newChain.chainHash
+          );
           if (oldChain && newChain.totalCount > oldChain.totalCount) {
             const diff = newChain.totalCount - oldChain.totalCount;
 
@@ -253,12 +264,10 @@ const App = () => {
   useEffect(() => {
     // Only fetch counters on the initial mount, not when dependencies change
     if (!initialFetchDoneRef.current) {
-
       fetchCounters();
       initialFetchDoneRef.current = true;
       lastFetchTimeRef.current = Date.now();
     } else {
-
     }
 
     // Create WebSocket connection
@@ -266,7 +275,6 @@ const App = () => {
     const ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {
-
       // Subscribe to CountIncremented events
       const subscribeMsg = {
         id: 1,
@@ -291,22 +299,17 @@ const App = () => {
         if (data.method === "eth_subscription" && data.params?.result?.topics) {
           // This is a CountIncremented event
 
-          
           // Extract blockchain ID from the event data
           const blockchainIdHex = data.params.result.topics[1];
           const blockchainId = parseInt(blockchainIdHex, 16);
-          
 
-          
           // Check if enough time has passed since the last fetch
           const now = Date.now();
           if (now - lastFetchTimeRef.current > FETCH_DEBOUNCE_MS) {
-
             // Refresh counters to update the UI and drop balls
             fetchCounters();
             lastFetchTimeRef.current = now;
           } else {
-
           }
         }
       } catch (err) {
@@ -324,10 +327,8 @@ const App = () => {
     };
   }, [pushChainClient, connectionStatus]);
 
-
-
   return (
-    <>
+    <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
       <div
         style={{
           position: "absolute",
@@ -351,8 +352,6 @@ const App = () => {
         style={{
           position: "absolute",
           top: "40px",
-          left: "0",
-          right: "0",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
@@ -360,14 +359,25 @@ const App = () => {
           gap: "1rem",
           zIndex: 20,
           padding: "20px",
-          pointerEvents: "none",
         }}
       >
-        <h1 ref={headingRef} style={{ pointerEvents: "auto"}}>Ballsy</h1>
-        <p style={{ color: "gray", fontSize: "14px", marginTop: "-20px", maxWidth: "480px", pointerEvents: "auto"}}>
-        Ballsy lets every chain battle for glory 🏆. No matter if you’re on Ethereum, Solana, or Push Chain, your clicks count towards your chain’s leaderboard. One app, shared across all chains.
+        <h1 ref={headingRef} style={{ pointerEvents: "auto" }}>
+          Ballsy
+        </h1>
+        <p
+          style={{
+            color: "gray",
+            fontSize: "14px",
+            marginTop: "-20px",
+            maxWidth: "480px",
+            pointerEvents: "auto",
+          }}
+        >
+          Ballsy lets every chain battle for glory 🏆. No matter if you’re on
+          Ethereum, Solana, or Push Chain, your clicks count towards your
+          chain’s leaderboard. One app, shared across all chains.
         </p>
-        
+
         <div
           style={{
             padding: "10px 10px 20px 10px",
@@ -380,8 +390,19 @@ const App = () => {
             width: "100%",
           }}
         >
-          <div style={{ display: "flex", gap: "15px", marginBottom: "20px" }}>
-            <div ref={cardRef} style={{ width: "200px", pointerEvents: "auto" }}>
+          <div
+            style={{
+              display: "flex",
+              gap: "15px",
+              marginBottom: "20px",
+              flexWrap: "wrap",
+              justifyContent: "center",
+            }}
+          >
+            <div
+              ref={cardRef}
+              style={{ width: "200px", pointerEvents: "auto" }}
+            >
               <PushUniversalAccountButton />
             </div>
 
@@ -401,7 +422,7 @@ const App = () => {
                     border: "none",
                     borderRadius: "12px",
                     cursor: isLoading ? "not-allowed" : "pointer",
-                    pointerEvents: "auto"
+                    pointerEvents: "auto",
                   }}
                 >
                   {isLoading ? "Processing..." : "Increment Counter"}
@@ -412,82 +433,142 @@ const App = () => {
 
           <div>
             {/* Leaderboard Table */}
-            <div className="responsive-leaderboard" style={{ pointerEvents: "auto" }}>
-              <h3 style={{ margin: '0 0 1rem 0', textAlign: 'center' }}>
+            <div
+              className="responsive-leaderboard"
+              style={{ pointerEvents: "auto" }}
+            >
+              <h3 style={{ margin: "0 0 1rem 0", textAlign: "center" }}>
                 Universal Leaderboard
               </h3>
-              {chainData.length === 0 && 
-                <p>Loading Leaderboard...</p>
-              } 
+              {chainData.length === 0 && <p>Loading Leaderboard...</p>}
 
-              {chainData.length !== 0 && 
-                <table style={{
-                  width: '100%',
-                  borderCollapse: 'collapse',
-                  fontSize: '14px'
-                }}>
+              {chainData.length !== 0 && (
+                <table
+                  style={{
+                    width: "100%",
+                    borderCollapse: "collapse",
+                    fontSize: "14px",
+                  }}
+                >
                   <thead>
-                    <tr style={{ borderBottom: '2px solid #ddd' }}>
-                      <th style={{ padding: '8px', textAlign: 'left' }}>Rank</th>
-                      <th style={{ padding: '8px', textAlign: 'left' }}>Chain</th>
-                      <th style={{ padding: '8px', textAlign: 'right' }}>Total Count</th>
-                      <th style={{ padding: '8px', textAlign: 'right' }}>Unique Users</th>
+                    <tr style={{ borderBottom: "2px solid #ddd" }}>
+                      <th style={{ padding: "8px", textAlign: "left" }}>
+                        Rank
+                      </th>
+                      <th style={{ padding: "8px", textAlign: "left" }}>
+                        Chain
+                      </th>
+                      <th style={{ padding: "8px", textAlign: "right" }}>
+                        Total Count
+                      </th>
+                      <th style={{ padding: "8px", textAlign: "right" }}>
+                        Unique Users
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {chainData
                       .sort((a, b) => b.totalCount - a.totalCount)
                       .map((chain, index) => (
-                        <tr key={chain.chainHash} style={{ 
-                          borderBottom: '1px solid #eee',
-                          backgroundColor: index === 0 ? chain.color + '10' : 'transparent'
-                        }}>
-                          <td style={{ padding: '8px' }}>
-                            {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}`}
+                        <tr
+                          key={chain.chainHash}
+                          style={{
+                            borderBottom: "1px solid #eee",
+                            backgroundColor:
+                              index === 0 ? chain.color + "10" : "transparent",
+                          }}
+                        >
+                          <td style={{ padding: "8px" }}>
+                            {index === 0
+                              ? "🥇"
+                              : index === 1
+                              ? "🥈"
+                              : index === 2
+                              ? "🥉"
+                              : `${index + 1}`}
                           </td>
-                          <td style={{ padding: '8px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                              <div style={{
-                                width: '12px',
-                                height: '12px',
-                                borderRadius: '50%',
-                                backgroundColor: chain.color
-                              }}></div>
+                          <td style={{ padding: "8px" }}>
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "8px",
+                              }}
+                            >
+                              <div
+                                style={{
+                                  width: "12px",
+                                  height: "12px",
+                                  borderRadius: "50%",
+                                  backgroundColor: chain.color,
+                                }}
+                              ></div>
                               {chain.chainName}
                             </div>
                           </td>
-                          <td style={{ padding: '8px', textAlign: 'right', fontWeight: 'bold' }}>
+                          <td
+                            style={{
+                              padding: "8px",
+                              textAlign: "right",
+                              fontWeight: "bold",
+                            }}
+                          >
                             {chain.totalCount}
                           </td>
-                          <td style={{ padding: '8px', textAlign: 'right' }}>
+                          <td style={{ padding: "8px", textAlign: "right" }}>
                             {chain.uniqueCount}
                           </td>
                         </tr>
                       ))}
                   </tbody>
                 </table>
-              }
+              )}
             </div>
-            
+
             {/* Controls section - outside the leaderboard table */}
-            <div style={{ display: "flex", gap: "10px", margin: "20px 0", flexDirection: "column", alignItems: "center", pointerEvents: "auto" }}>
+            <div
+              style={{
+                display: "flex",
+                gap: "10px",
+                margin: "20px 0",
+                flexDirection: "column",
+                alignItems: "center",
+                pointerEvents: "auto",
+              }}
+            >
               {connectionStatus ===
                 PushUI.CONSTANTS.CONNECTION.STATUS.CONNECTED && (
-                <div style={{ display: "grid", gap: "10px", width: "100%", maxWidth: "480px" }}>
+                <div
+                  style={{
+                    display: "grid",
+                    gap: "10px",
+                    width: "100%",
+                    maxWidth: "480px",
+                  }}
+                >
                   {txHash && pushChainClient && (
                     <>
                       <div
-                        style={{ display: "flex", gap: "10px", marginTop: "10px", justifyContent: "center" }}
+                        style={{
+                          display: "flex",
+                          gap: "10px",
+                          marginTop: "10px",
+                          justifyContent: "center",
+                        }}
                       >
                         <a
-                          href={pushChainClient.explorer.getTransactionUrl(txHash)}
+                          href={pushChainClient.explorer.getTransactionUrl(
+                            txHash
+                          )}
                           target="_blank"
                           rel="noopener noreferrer"
-                          style={{ color: "#d548ec", 
-                            backgroundColor: "transparent", 
-                            padding: "8px 16px", 
-                            border: "none", 
-                            cursor: "pointer", }}
+                          style={{
+                            color: "#d548ec",
+                            backgroundColor: "transparent",
+                            padding: "8px 16px",
+                            border: "none",
+                            cursor: "pointer",
+                          }}
                         >
                           View in Explorer
                         </a>
@@ -504,13 +585,21 @@ const App = () => {
                         </button>
                       </div>
                       <div>
-                        <p style={{ fontSize: "12px", margin: "0px", textAlign: "center" }}>Transaction Hash: {txHash}</p>
+                        <p
+                          style={{
+                            fontSize: "12px",
+                            margin: "0px",
+                            textAlign: "center",
+                          }}
+                        >
+                          Transaction Hash: {txHash}
+                        </p>
                       </div>
                     </>
                   )}
                 </div>
               )}
-            
+
               {/* <button
                 onClick={() => setShowMatter(!showMatter)}
                 style={{
@@ -528,33 +617,54 @@ const App = () => {
             </div>
           </div>
 
-          <div ref={footerRef} style={{ 
-            margin: "20px 0 0 0",
-            padding: "12px 20px",
-            borderTop: "1px solid rgba(0, 0, 0, 0.1)",
-            pointerEvents: "auto",
-          }}>
-            <p style={{ 
-              color: "gray", 
-              fontSize: "14px",
-              textAlign: "center",
-              marginTop: "0px"
-            }}>
-             Made with 💖 and only possible with Push Chain.
+          <div
+            ref={footerRef}
+            style={{
+              margin: "20px 0 0 0",
+              padding: "12px 20px",
+              borderTop: "1px solid rgba(0, 0, 0, 0.1)",
+              background: "#fff",
+              pointerEvents: "auto",
+            }}
+          >
+            <p
+              style={{
+                color: "gray",
+                fontSize: "14px",
+                textAlign: "center",
+                marginTop: "0px",
+              }}
+            >
+              Made with 💖 and only possible with Push Chain.
             </p>
-            <p style={{ 
-              color: "gray", 
-              fontSize: "12px",
-            }}>
-              <a href="https://github.com/pushchain/push-chain-examples/tree/main/tutorials/universal-counter/ballsy-app" target="_blank" rel="noopener noreferrer" style={{ color: "#d548ec" }}>Source Code</a> |&nbsp;
-              <a href="https://donut.push.network/address/0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9?tab=contract" target="_blank" rel="noopener noreferrer" style={{ color: "#d548ec" }}>Smart Contract</a>
+            <p
+              style={{
+                color: "gray",
+                fontSize: "12px",
+              }}
+            >
+              <a
+                href="https://github.com/pushchain/push-chain-examples/tree/main/tutorials/universal-counter/ballsy-app"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: "#d548ec" }}
+              >
+                Source Code
+              </a>{" "}
+              |&nbsp;
+              <a
+                href="https://donut.push.network/address/0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9?tab=contract"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: "#d548ec" }}
+              >
+                Smart Contract
+              </a>
             </p>
           </div>
-
-          
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

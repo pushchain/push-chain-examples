@@ -6,11 +6,11 @@ import {
 } from "@pushchain/ui-kit";
 import { ethers } from "ethers";
 import { useEffect, useState } from "react";
-import UCDynamicABI from "./abi/UniversalCounterDynamic.json";
+import ERC20ABI from "./abi/ERC20.json";
 import "./App.css";
 
 // Contract address for the deployed Counter contract
-const COUNTER_CONTRACT_ADDRESS = "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9";
+const CONTRACT_ADDRESS = "0x0165878A594ca255338adfa4d48449f69242Eb8F";
 
 // Global provider for Push Chain testnet
 const provider = new ethers.JsonRpcProvider(
@@ -22,67 +22,66 @@ function App() {
   const { pushChainClient } = usePushChainClient();
   const { PushChain } = usePushChain();
 
-  const [counter, setCounter] = useState<number>(0);
-  const [chainData, setChainData] = useState<Array<{chainHash: string, count: number, uniqueCount: number}>>([]);
+  const [balance, setBalance] = useState<number>(-1);
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>("");
   const [txHash, setTxHash] = useState<string>("");
 
-  // Function to read the current counter value
-  const readCounter = async () => {
-    try {
-      const contract = new ethers.Contract(
-        COUNTER_CONTRACT_ADDRESS,
-        UCDynamicABI,
-        provider
-      );
-
-      const [totalCount] = await contract.getCount();
-      setCounter(Number(totalCount));
-
-      // Get all chain data
-      const newChainData: Array<{chainHash: string, count: number, uniqueCount: number}> = [];
-      let chainIndex = 0;
-      
+  // Function to read the $UNICORN Balance
+  const readBalance = async () => {
+    if (connectionStatus === "connected" && pushChainClient) {
       try {
-        while (true) {
-          const chainHash = await contract.chainIds(chainIndex);
-          const count = await contract.chainCount(chainHash);
-          const uniqueCount = await contract.chainCountUnique(chainHash);
-          
-          newChainData.push({
-            chainHash: ethers.hexlify(chainHash),
-            count: Number(count),
-            uniqueCount: Number(uniqueCount)
-          });
-          
-          chainIndex++;
-        }
-      } catch (error) {
-        // Expected error when we reach the end of the array
+        const contract = new ethers.Contract(
+          CONTRACT_ADDRESS,
+          ERC20ABI,
+          provider
+        );
+
+        const balance = await contract.balanceOf(
+          pushChainClient.universal.account
+        );
+
+        // Convert from wei to human readable format (18 decimals)
+        const formattedBalance = ethers.formatUnits(balance, 18);
+        setBalance(Number(formattedBalance));
+      } catch (err) {
+        console.error("Error reading balance:", err);
+        setError("Failed to read user balance");
       }
-      
-      setChainData(newChainData);
-    } catch (err) {
-      console.error("Error reading counter:", err);
-      setError("Failed to read counter value");
     }
   };
 
+  // Read balance when account is connected
+  useEffect(() => {
+    if (connectionStatus === "connected" && pushChainClient) {
+      readBalance();
+    }
+
+    // status reset
+    // reset balance
+    if (!pushChainClient) {
+      setBalance(-1);
+    }
+  }, [connectionStatus, pushChainClient]);
+
   // Function to increment the counter
-  const incrementCounter = async () => {
+  const mintToken = async () => {
     if (connectionStatus === "connected" && pushChainClient) {
       try {
         setIsLoading(true);
         setError("");
 
-        // Send transaction to increment counter
+        // Send transaction to mint tokens
         const tx = await pushChainClient.universal.sendTransaction({
-          to: COUNTER_CONTRACT_ADDRESS,
+          to: CONTRACT_ADDRESS,
           data: PushChain.utils.helpers.encodeTxData({
-            abi: UCDynamicABI,
-            functionName: "increment",
+            abi: ERC20ABI,
+            functionName: "mint",
+            args: [
+              pushChainClient.universal.account,
+              ethers.parseUnits("100", 18),
+            ], // Mint 100 tokens
           }),
           value: BigInt(0),
         });
@@ -93,23 +92,18 @@ function App() {
         await tx.wait();
 
         // Refresh counter values
-        await readCounter();
+        await readBalance();
 
         setIsLoading(false);
       } catch (err) {
         console.error("Transaction error:", err);
-        setError("Failed to increment counter");
+        setError("Failed to mint token");
         setIsLoading(false);
       }
     } else {
       setError("Please connect your wallet first");
     }
   };
-
-  // Read counter value on component mount
-  useEffect(() => {
-    readCounter();
-  }, []);
 
   return (
     <div
@@ -132,7 +126,7 @@ function App() {
           textAlign: "center",
         }}
       >
-        Universal Dynamic Counter Example
+        Mint Universal ERC-20 Example
       </h1>
       <p
         style={{
@@ -144,7 +138,14 @@ function App() {
           borderBottom: "1px solid rgba(0, 0, 0, 0.1)",
         }}
       >
-        This tutorial shows how Push Chain enables a dynamic Universal Counter that automatically detects and tracks activity from any chain. Unlike the hardcoded version, this contract stores counters for each chain dynamically, including total and unique counts.
+        This tutorial demonstrates a Universal ERC-20 token on Push Chain. Any
+        user, whether from Ethereum, Solana, Push or any supported chain can
+        mint the same token (<b>$UNICORN</b>) directly from their wallet.
+        <p />
+        &nbsp;
+        <p />
+        You don't require any bridging, wrapping, etc. Simply connect wallet and
+        mint.
       </p>
 
       <div style={{ marginBottom: "2rem" }}>
@@ -161,7 +162,7 @@ function App() {
             marginBottom: "2rem",
           }}
         >
-          Please connect your wallet to interact with the counter
+          Please connect your wallet to view and mint balance.
         </p>
       )}
 
@@ -173,50 +174,27 @@ function App() {
           textAlign: "center",
         }}
       >
-        <p>Counter: {counter}</p>
-        {chainData.length > 0 && (
-          <div style={{ marginTop: "2rem", maxWidth: "600px" }}>
-            <h3 style={{ fontSize: "1.2rem", marginBottom: "1rem", color: "#333" }}>Chain Data</h3>
-            <table style={{
-              width: "100%",
-              borderCollapse: "collapse",
-              fontSize: "0.9rem",
-              backgroundColor: "white",
-              borderRadius: "8px",
-              overflow: "hidden",
-              boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
-            }}>
-              <thead>
-                <tr style={{ backgroundColor: "#f8f9fa" }}>
-                  <th style={{ padding: "12px", textAlign: "left", borderBottom: "1px solid #dee2e6" }}>Chain Name</th>
-                  <th style={{ padding: "12px", textAlign: "center", borderBottom: "1px solid #dee2e6" }}>Count</th>
-                  <th style={{ padding: "12px", textAlign: "center", borderBottom: "1px solid #dee2e6" }}>Unique Count</th>
-                </tr>
-              </thead>
-              <tbody>
-                {chainData.map((chain, index) => (
-                  <tr key={index} style={{ borderBottom: index < chainData.length - 1 ? "1px solid #dee2e6" : "none" }}>
-                    <td style={{ padding: "12px", fontFamily: "monospace", fontSize: "0.8rem", wordBreak: "break-all" }}>
-                      {PushChain.utils.helpers.getChainName(ethers.toUtf8String(chain.chainHash))}
-                    </td>
-                    <td style={{ padding: "12px", textAlign: "center", fontWeight: "bold" }}>
-                      {chain.count}
-                    </td>
-                    <td style={{ padding: "12px", textAlign: "center", fontWeight: "bold" }}>
-                      {chain.uniqueCount}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        <p>User Balance: {balance == -1 ? "..." : `${balance} $UNICORN`}</p>
+        {balance != -1 && (
+          <p style={{
+            fontSize: "0.9rem",
+            marginTop: "0.5rem",
+            marginBottom: "1rem",
+            color: "#333",
+            textAlign: "center",
+            margin: "0 auto",
+            maxWidth: "480px",
+          }}>
+            Optional: Add <b>0x0165878A594ca255338adfa4d48449f69242Eb8F</b> ($UNICORN Token Address) to your
+            wallet to see your balance in the wallet.
+          </p>
         )}
       </div>
 
       {connectionStatus === "connected" && (
         <div style={{ textAlign: "center" }}>
           <button
-            onClick={incrementCounter}
+            onClick={mintToken}
             disabled={isLoading}
             style={{
               padding: "12px 24px",
@@ -230,7 +208,7 @@ function App() {
               marginBottom: "1rem",
             }}
           >
-            {isLoading ? "Incrementing..." : "Increment Counter"}
+            {isLoading ? "Minting..." : "Mint Token"}
           </button>
 
           {error && (
@@ -301,7 +279,7 @@ function App() {
           }}
         >
           <a
-            href="https://github.com/pushchain/push-chain-examples/tree/main/tutorials/universal-counter/app-dynamic"
+            href="https://github.com/pushchain/push-chain-examples/tree/main/tutorials/universal-erc-20-mint/app"
             target="_blank"
             rel="noopener noreferrer"
             style={{ color: "#d548ec" }}
@@ -310,7 +288,7 @@ function App() {
           </a>{" "}
           |&nbsp;
           <a
-            href="https://donut.push.network/address/0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9?tab=contract"
+            href="https://donut.push.network/address/0x0165878A594ca255338adfa4d48449f69242Eb8F?tab=contract"
             target="_blank"
             rel="noopener noreferrer"
             style={{ color: "#d548ec" }}

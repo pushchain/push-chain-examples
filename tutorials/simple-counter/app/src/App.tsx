@@ -98,9 +98,6 @@ function App() {
         justifyContent: "center",
         padding: "2rem",
         width: "100%",
-        position: "fixed",
-        top: 0,
-        left: 0,
       }}
     >
       <h1
@@ -120,7 +117,6 @@ function App() {
           margin: "-1rem 0 5rem 0",
           padding: "0 0 1rem 0",
           maxWidth: "480px",
-          pointerEvents: "auto",
           borderBottom: "1px solid rgba(0, 0, 0, 0.1)",
         }}
       >
@@ -234,7 +230,7 @@ function App() {
           margin: "40px 0 0 0",
           padding: "12px 20px",
           borderTop: "1px solid rgba(0, 0, 0, 0.1)",
-          pointerEvents: "auto",
+          background: "#fff",
         }}
       >
         <p
