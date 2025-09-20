@@ -135,7 +135,7 @@ function App() {
       >
         This tutorial demonstrates the <b>Universal Counter</b> — a contract that identifies whether a user is from Push Chain, Ethereum, or Solana, and attributes counts accordingly. We keep the logic simple with hardcoded chains. For a more dynamic approach, see the {" "}
         <a
-          href="https://github.com/pushchain/push-chain-examples/tree/main/tutorials/universal-counter/dynamic-app"
+          href="https://github.com/pushchain/push-chain-examples/tree/main/tutorials/universal-counter-dynamic/app"
           target="_blank"
           rel="noopener noreferrer"
           style={{ color: "#d548ec" }}

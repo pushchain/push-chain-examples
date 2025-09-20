@@ -1,65 +1,43 @@
 # Universal Counter Tutorial
 
-A comprehensive tutorial demonstrating cross-chain interaction using PushChain's Universal Ethereum Account (UEA) system. This project showcases how users from different blockchains (Ethereum, Solana, and PushChain) can interact with the same application seamlessly.
+A tutorial demonstrating cross-chain interaction using PushChain's Universal Ethereum Account (UEA) system. This project showcases how users from different blockchains (Ethereum, Solana, and PushChain) can interact with the same smart contract seamlessly.
 
 👉 Full Tutorial: [Read the step-by-step guide on Push.org](https://push.org/docs/chain/tutorials/universal-counter/)
 
 ## 🌟 Overview
 
-The Universal Counter is a full-stack application that demonstrates the power of PushChain's cross-chain capabilities through multiple implementations:
+The Universal Counter is a full-stack application that demonstrates PushChain's cross-chain capabilities:
 
 1. **Cross-Chain User Attribution**: Automatically identifies users' origin chains (Ethereum, Solana, or PushChain)
 2. **Universal Counter Logic**: Maintains separate counters for each blockchain
-3. **Multiple Frontend Variants**: From simple displays to interactive physics simulations
+3. **Clean Frontend Interface**: Simple, elegant counter display
 4. **Real-Time Updates**: WebSocket integration for instant counter updates across all users
 
 ## 📁 Project Structure
 
-This tutorial includes multiple implementations to demonstrate different approaches:
+This tutorial includes a clean implementation of cross-chain counter functionality:
 
 ```
 universal-counter/
 ├── contracts/              # Smart contracts
 │   ├── src/
-│   │   ├── UniversalCounter.sol        # Hardcoded chain counter
-│   │   └── UniversalCounterDynamic.sol # Dynamic chain detection
+│   │   └── UniversalCounter.sol # Cross-chain counter contract
 │   └── README.md
-├── app/                    # Clean counter display (hardcoded chains)
+├── app/                    # Frontend application
 │   ├── src/
-│   │   └── App.tsx         # Simple counter UI
-│   └── README.md
-├── app-dynamic/            # Dynamic chain detection with data table
-│   ├── src/
-│   │   └── App.tsx         # Dynamic counter with chain table
-│   └── README.md
-├── ballsy-app/            # Interactive physics-based game
-│   ├── src/
-│   │   ├── App.tsx         # Main game component
-│   │   └── Matter.tsx      # Physics engine integration
+│   │   └── App.tsx         # Counter UI with cross-chain support
 │   └── README.md
 └── README.md              # This file
 ```
 
-## 🚀 Applications Overview
+## 🚀 Application Overview
 
-### 1. **Basic App** (`app/`)
+### **Universal Counter App** (`app/`)
 Clean, minimal interface showing:
-- Total universal count
+- Total universal count across all chains
 - Individual chain counters (ETH, Sol, PC)
 - Simple increment functionality
-
-### 2. **Dynamic App** (`app-dynamic/`)
-Advanced interface with:
-- Dynamic chain detection
-- Data table showing all chain hashes, counts, and unique counts
-- Real-time chain analytics
-
-### 3. **Ballsy App** (`ballsy-app/`)
-Interactive gaming experience featuring:
-- Matter.js physics engine
-- Falling balls on counter increments
-- Real-time leaderboard
-- Cross-chain competition mechanics
+- Cross-chain user attribution
 
 ## ✨ Key Features
 
@@ -68,16 +46,16 @@ Interactive gaming experience featuring:
 - **Chain Attribution**: Automatically detects whether a user is from Ethereum, Solana, or PushChain
 - **Universal Access**: Users from any supported chain can interact with the same contract
 
-### Smart Contract Variants
-- **Hardcoded Chains**: Simple implementation with predefined chain support
-- **Dynamic Detection**: Advanced contract that automatically handles any chain
+### Smart Contract Features
+- **Cross-Chain Support**: Handles Ethereum, Solana, and Push Chain users
+- **Chain Attribution**: Automatically detects user origin chains
 - **Event Emission**: Real-time updates through blockchain events
 
-### Frontend Implementations
-- **Clean UI**: Minimal, professional interfaces
-- **Interactive Physics**: Engaging visual feedback with Matter.js
+### Frontend Features
+- **Clean UI**: Minimal, professional interface
 - **Real-Time Updates**: WebSocket integration for instant updates
 - **Responsive Design**: Works on desktop and mobile devices
+- **Cross-Chain Display**: Shows counters for all supported chains
 
 ## 🎯 What You'll Learn
 
@@ -90,15 +68,14 @@ Interactive gaming experience featuring:
 ### Technical Skills
 - Smart contract development with cross-chain features
 - Frontend integration with PushChain UI Kit
-- Physics engine integration (Matter.js)
 - Real-time data visualization
 - WebSocket event handling
 
 ### Design Patterns
-- Hardcoded vs dynamic chain handling
+- Cross-chain user attribution
 - Clean UI design principles
-- Interactive user experience design
-- Cross-chain leaderboard systems
+- Real-time counter updates
+- Chain-specific data display
 
 ## 🚀 Quick Start
 
@@ -110,25 +87,10 @@ forge build
 forge script script/Deploy.s.sol --rpc-url push_testnet --broadcast
 ```
 
-### 2. Choose Your Frontend
+### 2. Run the Frontend App
 
-#### Basic Counter App
 ```bash
 cd app
-npm install
-npm run dev
-```
-
-#### Dynamic Counter App
-```bash
-cd app-dynamic
-npm install
-npm run dev
-```
-
-#### Interactive Ballsy App
-```bash
-cd ballsy-app
 npm install
 npm run dev
 ```

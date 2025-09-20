@@ -1,46 +1,20 @@
-# Universal Counter Smart Contracts
+# Universal Counter Dynamic Smart Contracts
 
-This directory contains the smart contracts for the Universal Counter tutorial, demonstrating cross-chain user identification and interaction using PushChain's Universal Ethereum Account (UEA) system.
+This directory contains the advanced smart contracts for the Universal Counter Dynamic tutorial, demonstrating dynamic cross-chain user identification and comprehensive analytics using PushChain's Universal Ethereum Account (UEA) system.
 
 👉 Full Tutorial: [Read the step-by-step guide on Push.org](https://push.org/docs/chain/tutorials/universal-counter/)
 
 ## 🎯 Overview
 
-The Universal Counter contracts showcase PushChain's revolutionary cross-chain capabilities. These contracts automatically detect users' origin chains and maintain separate counters, enabling true cross-chain user attribution without bridges or complex infrastructure.
+The Universal Counter Dynamic contracts showcase PushChain's most advanced cross-chain capabilities. These contracts automatically detect and track any chain that interacts with them, maintaining comprehensive analytics and enabling true dynamic cross-chain user attribution without bridges or complex infrastructure.
 
-**Key Innovation**: Users from Ethereum, Solana, and Push Chain can all interact with the same contract, with their actions automatically attributed to their origin chain.
+**Key Innovation**: Users from any blockchain can interact with the contract, and the system automatically discovers, tracks, and analyzes their chain interactions in real-time.
 
-## 📋 Contracts
-
-### UniversalCounter.sol
-
-The main contract powering the basic and ballsy apps:
-
-**Core Functions:**
-- `increment()` - Increments counter for caller's origin chain
-- `countETH()` - Returns Ethereum users' total count
-- `countSOL()` - Returns Solana users' total count  
-- `countPC()` - Returns Push Chain users' total count
-- `countETHUnique()` - Returns unique Ethereum users count
-- `countSOLUnique()` - Returns unique Solana users count
-- `countPCUnique()` - Returns unique Push Chain users count
-
-**Chain Detection Logic:**
-```solidity
-// Automatic chain detection using PushChain's UEA system
-bytes memory chainHash = abi.encodePacked(chainNamespace, ":", chainId);
-chainCount[chainHash]++;
-
-// Track unique users per chain
-if (!userHasIncremented[chainHash][msg.sender]) {
-    chainCountUnique[chainHash]++;
-    userHasIncremented[chainHash][msg.sender] = true;
-}
-```
+## 📋 Contract
 
 ### UniversalCounterDynamic.sol
 
-Advanced contract for the dynamic app with comprehensive chain tracking:
+The advanced contract powering both the dynamic analytics app and ballsy gaming app with comprehensive chain tracking:
 
 **Enhanced Functions:**
 - `increment()` - Increments with dynamic chain tracking
@@ -64,10 +38,11 @@ if (chainCount[chainHash] == 0) {
 - **Universal Accounts**: Leverages PushChain's UEA system for seamless cross-chain identity
 - **Chain Namespace Mapping**: Uses `chainNamespace:chainId` format for precise chain identification
 
-### Advanced Analytics
+### Dynamic Analytics
 - **Total Counters**: Track overall interactions per chain
 - **Unique User Tracking**: Count distinct users from each chain
 - **Dynamic Chain Discovery**: Automatically detect new participating chains
+- **Comprehensive Chain Array**: Maintains array of all chain hashes for iteration
 - **Real-Time Events**: Emit events for frontend real-time updates
 
 ### Security & Efficiency
@@ -105,4 +80,14 @@ forge script script/Deploy.s.sol --rpc-url <PUSH_CHAIN_RPC_URL> --private-key <Y
 
 ## Integration with Frontend
 
-The frontend application in the `../app` directory connects to these contracts to display and update the counters. It uses the contract's ABI to interact with the deployed contract on PushChain.
+The frontend applications in the `../app` (dynamic analytics) and `../ballsy-app` (interactive gaming) directories connect to this contract to display and update the counters. They use the contract's ABI to interact with the deployed contract on PushChain.
+
+### Dynamic App Integration
+- Iterates through `chainIds` array to discover all participating chains
+- Calls `chainCount()` and `chainCountUnique()` for each chain
+- Uses `getCount()` for total statistics across all chains
+
+### Ballsy App Integration
+- Uses the same dynamic contract for leaderboard data
+- Triggers physics animations based on counter increments
+- Real-time updates via contract events

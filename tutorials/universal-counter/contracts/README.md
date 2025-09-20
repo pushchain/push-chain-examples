@@ -38,25 +38,6 @@ if (!userHasIncremented[chainHash][msg.sender]) {
 }
 ```
 
-### UniversalCounterDynamic.sol
-
-Advanced contract for the dynamic app with comprehensive chain tracking:
-
-**Enhanced Functions:**
-- `increment()` - Increments with dynamic chain tracking
-- `getCount()` - Returns total count and unique users across all chains
-- `chainIds(uint256)` - Array of all chain hashes that have interacted
-- `chainCount(bytes)` - Count for specific chain hash
-- `chainCountUnique(bytes)` - Unique users for specific chain hash
-
-**Dynamic Chain Discovery:**
-```solidity
-// Automatically tracks new chains as they interact
-if (chainCount[chainHash] == 0) {
-    chainIds.push(chainHash); // Add new chain to tracking array
-}
-```
-
 ## ✨ Key Features
 
 ### Cross-Chain User Attribution
@@ -64,10 +45,9 @@ if (chainCount[chainHash] == 0) {
 - **Universal Accounts**: Leverages PushChain's UEA system for seamless cross-chain identity
 - **Chain Namespace Mapping**: Uses `chainNamespace:chainId` format for precise chain identification
 
-### Advanced Analytics
-- **Total Counters**: Track overall interactions per chain
+### Counter Analytics
+- **Total Counters**: Track overall interactions per chain (ETH, SOL, PC)
 - **Unique User Tracking**: Count distinct users from each chain
-- **Dynamic Chain Discovery**: Automatically detect new participating chains
 - **Real-Time Events**: Emit events for frontend real-time updates
 
 ### Security & Efficiency

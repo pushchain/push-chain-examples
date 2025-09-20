@@ -1,6 +1,6 @@
-# Universal Counter App (Basic)
+# Universal Counter App
 
-A clean React application demonstrating cross-chain interaction with the Universal Counter smart contract on PushChain. This is the basic implementation showing hardcoded chain counters with a simple, professional interface.
+A clean React application demonstrating cross-chain interaction with the Universal Counter smart contract on PushChain. This implementation shows cross-chain counters with a simple, professional interface.
 
 👉 Full Tutorial: [Read the step-by-step guide on Push.org](https://push.org/docs/chain/tutorials/universal-counter/)
 
