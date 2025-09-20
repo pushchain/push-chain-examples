@@ -106,7 +106,7 @@ function App() {
     }
   };
 
-  // Read counter value on component mount and when account changes
+  // Read counter value on component mount
   useEffect(() => {
     readCounter();
   }, []);
