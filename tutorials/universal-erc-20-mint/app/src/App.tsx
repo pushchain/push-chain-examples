@@ -174,10 +174,26 @@ function App() {
           textAlign: "center",
         }}
       >
-        <p>User Balance: {balance == -1 ? "..." : `${balance} $UNICORN`}</p>
+        <p>User Balance: {balance == -1 ? "..." : (
+          <>
+              {balance}
+            <span 
+              style={{
+                background: 'linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3)',
+                backgroundSize: '400% 400%',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+                animation: 'rainbow 3s ease-in-out infinite',
+              }}
+            >
+            {' $UNICORN'}
+            </span>
+          </>
+        )}</p>
         {balance != -1 && (
           <p style={{
-            fontSize: "0.9rem",
+            fontSize: "0.8rem",
             marginTop: "0.5rem",
             marginBottom: "1rem",
             color: "#333",
