@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.22;
+pragma solidity ^0.8.22;
 
 struct UniversalAccountId {
     // @notice Chain namespace identifier (e.g., "eip155" or "solana").
