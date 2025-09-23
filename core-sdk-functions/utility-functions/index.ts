@@ -49,8 +49,12 @@ async function main() {
   console.log('✅ Success:', encodeTxDataResult);
 
   console.log('\n🏃 Trying to call parseUnits');
-  const parseUnitsResult = await parseUnits();
+  const parseUnitsResult = parseUnits();
   console.log('✅ Success:', parseUnitsResult);
+
+  console.log('\n🏃 Trying to call formatUnits');
+  const formatUnitsResult = formatUnits();
+  console.log('✅ Success:', formatUnitsResult);
 
   console.log('\n🏃 Trying to call convertExecutorToOrigin');
   const convertExecutorToOriginResult = await convertExecutorToOriginAccount();
@@ -278,13 +282,26 @@ async function encodeTxData() {
 
   return result;
 }
-// Test function for parseUnits
-async function parseUnits() {
+
+// pushchain.utils.helpers.parseUnits('string', options: { decimals: number })
+function parseUnits() {
   const results = {
-    integerValue: PushChain.utils.helpers.parseUnits('420', 9),
-    decimalValue1: PushChain.utils.helpers.parseUnits('1.5', 18),
-    decimalValue2: PushChain.utils.helpers.parseUnits('0.1', 6),
-    decimalValue3: PushChain.utils.helpers.parseUnits('1.23', 6),
+    integerValue: PushChain.utils.helpers.parseUnits('420', { decimals: 9 }),
+    decimalValue1: PushChain.utils.helpers.parseUnits('1.5', { decimals: 18 }),
+    decimalValue2: PushChain.utils.helpers.parseUnits('0.1', { decimals: 6 }),
+    decimalValue3: PushChain.utils.helpers.parseUnits('1.23', { decimals: 6 }),
+  };
+
+  return results;
+}
+
+// pushchain.utils.helpers.formatUnits(bigint, options: { decimals: number })
+function formatUnits() {
+  const results = {
+    integerValue1: PushChain.utils.helpers.formatUnits(BigInt(420), { decimals: 9 }),
+    integerValue2: PushChain.utils.helpers.formatUnits(BigInt(15), { decimals: 18 }),
+    decimalValue1: PushChain.utils.helpers.formatUnits(BigInt(0.1), { decimals: 6 }),
+    decimalValue2: PushChain.utils.helpers.formatUnits(BigInt(1.23), { decimals: 6 }),
   };
 
   return results;
@@ -295,3 +312,4 @@ async function convertExecutorToOriginAccount() {
   const { account, exists } = await PushChain.utils.account.convertExecutorToOriginAccount(testAddress);
   return { account, exists };
 }
+
