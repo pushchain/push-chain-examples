@@ -1444,9 +1444,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pushchain/core@npm:2.0.2, @pushchain/core@npm:^2.0.2":
-  version: 2.0.2
-  resolution: "@pushchain/core@npm:2.0.2"
+"@pushchain/core@npm:2.0.10, @pushchain/core@npm:^2.0.10":
+  version: 2.0.10
+  resolution: "@pushchain/core@npm:2.0.10"
   dependencies:
     "@bufbuild/protobuf": "npm:^2.0.0"
     "@coral-xyz/anchor": "npm:^0.31.0"
@@ -1463,17 +1463,17 @@ __metadata:
     tslib: "npm:^2.3.0"
     tweetnacl: "npm:^1.0.3"
     viem: "npm:2.27.2"
-  checksum: 10/507e7795740a372a454f95d871cc808ce6496638a8b651c97a960cde40bfc2aea732a2c973d01ef660cffaf39e63ee5f6c903afab5246530706de55e0d5b9dd2
+  checksum: 10/ecbe937b3d4bbffaac07df9e89a94482fb7cb6f1c12547fbb474ab1dc52272767017bc5d705f82240c7e404a7547e6fb64c91adee44187e0af274ffc3118aaa0
   languageName: node
   linkType: hard
 
-"@pushchain/ui-kit@npm:^2.0.2":
-  version: 2.0.2
-  resolution: "@pushchain/ui-kit@npm:2.0.2"
+"@pushchain/ui-kit@npm:^2.0.7":
+  version: 2.0.7
+  resolution: "@pushchain/ui-kit@npm:2.0.7"
   dependencies:
     "@coral-xyz/anchor": "npm:^0.31.1"
     "@metamask/sdk": "npm:^0.32.0"
-    "@pushchain/core": "npm:2.0.2"
+    "@pushchain/core": "npm:2.0.10"
     "@solana/web3.js": "npm:^1.98.2"
     "@walletconnect/ethereum-provider": "npm:^2.21.5"
     buffer: "npm:^6.0.3"
@@ -1485,7 +1485,7 @@ __metadata:
   peerDependencies:
     react: ">=18.3.0 <20.0.0"
     react-dom: ">=18.3.0 <20.0.0"
-  checksum: 10/abb136660f44040e47eefb905b358d1a3eccdbc13369aca6f80d5e494f3d00c3e6a5b1d0f788c56c6762fec14abdd04721d4ebfa26c1a1077bffb6f505cab377
+  checksum: 10/0a2aa323682cb9e3453a5f821666181c3c358103050ae426620fb05a766e0798abf6b747d46c7ebb4628bc05a6fdc6537f55b27809f50884e43a5a4e3bfdccf6
   languageName: node
   linkType: hard
 
@@ -4661,8 +4661,8 @@ __metadata:
   resolution: "core-connection@workspace:."
   dependencies:
     "@eslint/js": "npm:^9.9.0"
-    "@pushchain/core": "npm:^2.0.2"
-    "@pushchain/ui-kit": "npm:^2.0.2"
+    "@pushchain/core": "npm:^2.0.10"
+    "@pushchain/ui-kit": "npm:^2.0.7"
     "@radix-ui/react-popover": "npm:^1.1.2"
     "@types/react": "npm:^18.3.3"
     "@types/react-dom": "npm:^18.3.0"
