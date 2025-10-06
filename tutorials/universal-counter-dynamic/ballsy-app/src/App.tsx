@@ -81,7 +81,7 @@ const App = () => {
       const bytes = ethers.getBytes("0x" + hexString);
       const chainString = ethers.toUtf8String(bytes);
 
-      const chainHumanName = PushChain.utils.helpers.getChainName(chainString);
+      const chainHumanName = PushChain.utils.chains.getChainName(chainString);
 
       if (chainHumanName) {
         // Split on underscore and take only the part before it if underscore is present
