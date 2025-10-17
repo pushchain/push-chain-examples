@@ -5,6 +5,8 @@ import "./App.css";
 // Import Matter component
 import MatterComponent, {
   addMultipleBlockchainBalls,
+  ARBITRUM_COLOR,
+  BASE_COLOR,
   ETHEREUM_COLOR,
   PUSH_CHAIN_COLOR,
   SOLANA_COLOR,
@@ -106,6 +108,8 @@ const App = () => {
     if (chainHumanName.toUpperCase().includes("ETHEREUM"))
       return ETHEREUM_COLOR;
     if (chainHumanName.toUpperCase().includes("SOLANA")) return SOLANA_COLOR;
+    if (chainHumanName.toUpperCase().includes("ARBITRUM")) return ARBITRUM_COLOR;
+    if (chainHumanName.toUpperCase().includes("BASE")) return BASE_COLOR;
 
     // Default colors for other chains
     const colors = [
@@ -140,6 +144,8 @@ const App = () => {
       // Get all chain IDs (we need to iterate through the chainIds array)
       const newChainData: ChainData[] = [];
       let chainIndex = 0;
+
+      console.log(contract);
 
       try {
         // Keep fetching chain IDs until we get an error (array bounds)

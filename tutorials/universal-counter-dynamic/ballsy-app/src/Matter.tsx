@@ -19,6 +19,8 @@ const Matter = window.Matter;
 export const ETHEREUM_COLOR = '#627EEA';
 export const SOLANA_COLOR = '#15EAAC';
 export const PUSH_CHAIN_COLOR = '#D548EC';
+export const ARBITRUM_COLOR = '#B45309';
+export const BASE_COLOR = '#E11D48';
 
 interface MatterProps {
   physicBodyRefs?: React.RefObject<HTMLElement>[];
