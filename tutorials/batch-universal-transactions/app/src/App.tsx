@@ -5,12 +5,16 @@ import {
   usePushWalletContext,
 } from "@pushchain/ui-kit";
 import { ethers } from "ethers";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import CounterABI from "./abi/Counter.json";
+import ERC20ABI from "./abi/ERC20.json";
 import "./App.css";
 
 // Contract address for the deployed Counter contract
 const COUNTER_CONTRACT_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+
+// ERC20 contract address for the deployed ERC20 contract
+const ERC20_CONTRACT_ADDRESS = "0x0165878A594ca255338adfa4d48449f69242Eb8F";
 
 // Global provider for Push Chain testnet
 const provider = new ethers.JsonRpcProvider(
@@ -23,58 +27,84 @@ function App() {
   const { PushChain } = usePushChain();
 
   const [counter, setCounter] = useState<number>(0);
+  const [balance, setBalance] = useState<number>(0);
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>("");
   const [txHash, setTxHash] = useState<string>("");
 
-  // Function to read the current counter value
-  const readCounter = async () => {
+  // Function to read the current counter value and balance
+  const readStatus = useCallback(async () => {
     try {
-      const contract = new ethers.Contract(
+      // Read counter value
+      const counterContract = new ethers.Contract(
         COUNTER_CONTRACT_ADDRESS,
         CounterABI,
         provider
       );
-
-      const currentCount = await contract.countPC();
-
+      const currentCount = await counterContract.countPC();
       setCounter(Number(currentCount));
-    } catch (err) {
-      console.error("Error reading counter:", err);
-      setError("Failed to read counter value");
-    }
-  };
 
-  // Function to increment the counter
-  const incrementCounter = async () => {
+      // Read ERC20 balance if wallet is connected
+      if (pushChainClient && connectionStatus === "connected") {
+        const erc20Contract = new ethers.Contract(
+          ERC20_CONTRACT_ADDRESS,
+          ERC20ABI,
+          provider
+        );
+        const bal = await erc20Contract.balanceOf(pushChainClient.universal.account);
+        setBalance(Number(ethers.formatUnits(bal, 18)));
+      }
+    } catch (err) {
+      console.error("Error reading status:", err);
+      setError("Failed to read contract values");
+    }
+  }, [pushChainClient, connectionStatus]);
+
+  // Function to execute batch transaction (increment counter + mint tokens)
+  const executeBatchTransaction = async () => {
     if (connectionStatus === "connected" && pushChainClient) {
       try {
         setIsLoading(true);
         setError("");
 
-        // Send transaction to increment counter
-        const tx = await pushChainClient.universal.sendTransaction({
-          to: COUNTER_CONTRACT_ADDRESS,
-          data: PushChain.utils.helpers.encodeTxData({
-            abi: CounterABI,
-            functionName: "increment",
-          }),
-          value: BigInt(0),
+        // Create function call for Counter.increment()
+        const incrementData = PushChain.utils.helpers.encodeTxData({
+          abi: CounterABI,
+          functionName: "increment",
         });
 
-        setTxHash(tx.hash);
+        // Create function call for ERC20.mint()
+        const mintData = PushChain.utils.helpers.encodeTxData({
+          abi: ERC20ABI,
+          functionName: "mint",
+          args: [
+            pushChainClient.universal.account,
+            PushChain.utils.helpers.parseUnits("11", 18), // 11 tokens in wei
+          ],
+        });
+
+        // Create batch transaction
+        const batchTx = await pushChainClient.universal.sendTransaction({
+          to: pushChainClient.universal.account,
+          data: [
+            { to: COUNTER_CONTRACT_ADDRESS, value: BigInt(0), data: incrementData },
+            { to: ERC20_CONTRACT_ADDRESS, value: BigInt(0), data: mintData },
+          ],
+        });
+
+        setTxHash(batchTx.hash);
 
         // Wait for transaction to be mined
-        await tx.wait();
+        await batchTx.wait();
 
-        // Refresh counter values
-        await readCounter();
+        // Refresh counter and balance values
+        await readStatus();
 
         setIsLoading(false);
       } catch (err) {
         console.error("Transaction error:", err);
-        setError("Failed to increment counter");
+        setError("Failed to execute batch transaction");
         setIsLoading(false);
       }
     } else {
@@ -82,10 +112,14 @@ function App() {
     }
   };
 
-  // Read counter value on component mount and when account changes
+  // Read status on component mount and when connection changes
   useEffect(() => {
-    readCounter();
-  }, []);
+    if (pushChainClient && connectionStatus === "notConnected") {
+      setCounter(0);
+      setBalance(0);
+    }
+    readStatus();
+  }, [connectionStatus, pushChainClient, readStatus]);
 
   return (
     <div
@@ -108,7 +142,7 @@ function App() {
           textAlign: "center",
         }}
       >
-        Simple Counter Example
+        Batch Transactions (Multicall) Example
       </h1>
       <p
         style={{
@@ -120,7 +154,7 @@ function App() {
           borderBottom: "1px solid rgba(0, 0, 0, 0.1)",
         }}
       >
-        Simple Counter demonstrates how Push Chain enables users from Ethereum, Solana, or any chain to interact with your app seamlessly, with no extra on-chain code.
+        Batch Transactions (Multicall) demonstrate how Push Chain enables executing multiple contract calls in a single transaction, reducing gas costs and improving UX.
       </p>
 
       <div style={{ marginBottom: "2rem" }}>
@@ -137,7 +171,7 @@ function App() {
             marginBottom: "2rem",
           }}
         >
-          Please connect your wallet to interact with the counter
+          Please connect your wallet to execute batch transactions (multicall).
         </p>
       )}
 
@@ -150,12 +184,21 @@ function App() {
         }}
       >
         <p>Counter: {counter}</p>
+        <p>Balance: {balance} $UNICORN</p>
       </div>
+
+      {balance > 0 && (
+        <div style={{ maxWidth: "500px", textAlign: "center", fontSize: "0.75rem", marginBottom: "1rem" }}>
+          <p>
+            Optional: Add <b>{ERC20_CONTRACT_ADDRESS}</b> ($UNICORN Token Address) to your wallet to see your balance.
+          </p>
+        </div>
+      )}
 
       {connectionStatus === "connected" && (
         <div style={{ textAlign: "center" }}>
           <button
-            onClick={incrementCounter}
+            onClick={executeBatchTransaction}
             disabled={isLoading}
             style={{
               padding: "12px 24px",
@@ -169,7 +212,7 @@ function App() {
               marginBottom: "1rem",
             }}
           >
-            {isLoading ? "Incrementing..." : "Increment Counter"}
+            {isLoading ? "Executing..." : "Do Batch Transaction"}
           </button>
 
           {error && (

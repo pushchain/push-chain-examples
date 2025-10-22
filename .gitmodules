@@ -7,3 +7,6 @@
 [submodule "tutorials/universal-erc-20-mint/contracts/lib/openzeppelin-contracts"]
 	path = tutorials/universal-erc-20-mint/contracts/lib/openzeppelin-contracts
 	url = https://github.com/OpenZeppelin/openzeppelin-contracts
+[submodule "tutorials/batch-universal-transactions/contracts/lib/openzeppelin-contracts"]
+	path = tutorials/batch-universal-transactions/contracts/lib/openzeppelin-contracts
+	url = https://github.com/openzeppelin/openzeppelin-contracts

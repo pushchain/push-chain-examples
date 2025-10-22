@@ -27,10 +27,11 @@ const PushChainProviders = ({ children }: { children: React.ReactNode }) => {
     
     // Login options - enable/disable authentication methods
     login: {
-      email: true,        // Allow email authentication
-      google: true,       // Allow Google OAuth
+      email: false,        // Allow email authentication
+      google: false,       // Allow Google OAuth
       wallet: {
         enabled: true,    // Allow wallet connection (MetaMask, etc.)
+        chains: [PushUI.CONSTANTS.CHAIN.ETHEREUM, PushUI.CONSTANTS.CHAIN.SOLANA]
       },
       appPreview: true,   // Show app preview in login modal
     },
