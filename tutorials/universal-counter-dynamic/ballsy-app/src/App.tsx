@@ -431,7 +431,7 @@ const App = () => {
                     pointerEvents: "auto",
                   }}
                 >
-                  {isLoading ? "Processing..." : "Increment Counter"}
+                  {isLoading ? isIncrementing ? "Processing..." : "Loading..." : "Increment Counter"}
                 </button>
               </div>
             )}
