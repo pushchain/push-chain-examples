@@ -1,0 +1,9 @@
+### GET request to example server
+POST http://localhost:10000
+Content-Type: application/json
+
+{
+  "text": "I want to buy a banana"
+}
+
+###

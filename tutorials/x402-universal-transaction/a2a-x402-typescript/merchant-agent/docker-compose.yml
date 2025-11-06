@@ -1,0 +1,43 @@
+services:
+  merchant-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: x402-merchant-agent
+    ports:
+      - "${PORT:-10000}:10000"
+    environment:
+      # Server Configuration
+      - NODE_ENV=production
+      - PORT=10000
+
+      # Google API Key for Gemini model (REQUIRED)
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+
+      # Merchant Configuration
+      - MERCHANT_PUSH_ADDRESS=${MERCHANT_PUSH_ADDRESS:-0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B}
+      - PUSH_NETWORK=${PUSH_NETWORK:-push-chain-testnet}
+      - PUSH_RPC_URL=${PUSH_RPC_URL:-https://evm.donut.rpc.push.org/}
+      - PUSH_TOKEN_ADDRESS=${PUSH_TOKEN_ADDRESS:-native}
+      - PUSH_TOKEN_SYMBOL=${PUSH_TOKEN_SYMBOL:-PC}
+      - PUSH_TOKEN_DECIMALS=${PUSH_TOKEN_DECIMALS:-18}
+      - PUSH_PRICE=${PUSH_PRICE:-1}
+
+      # Facilitator Configuration
+      - FACILITATOR_MODE=${FACILITATOR_MODE:-mock}
+      - MERCHANT_PUSH_PRIVATE_KEY=${MERCHANT_PUSH_PRIVATE_KEY}
+      - FACILITATOR_URL=${FACILITATOR_URL:-https://x402.org/facilitator}
+      - FACILITATOR_API_KEY=${FACILITATOR_API_KEY}
+
+      # Debug Configuration
+      - X402_DEBUG=${X402_DEBUG:-false}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:10000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    # Optionally mount a local .env file
+    # env_file:
+    #   - .env
