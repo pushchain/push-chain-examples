@@ -59,7 +59,8 @@ async function viemSendTxWithFundsExample() {
   // and execute a function call on Push Chain, funding the call with USDT.
 
   // 1) Create a fresh Sepolia account using viem
-  const RPC_URL = 'https://ethereum-sepolia-rpc.publicnode.com';
+  const SEPOLIA_RPC_URL = 'https://ethereum-sepolia-rpc.publicnode.com';
+  const PUSH_RPC_URL = 'https://evm.donut.rpc.push.org/';
   console.log('1. Create Universal Signer (Sepolia)');
   const privateKey = generatePrivateKey();
   const account = privateKeyToAccount(privateKey);
@@ -67,7 +68,7 @@ async function viemSendTxWithFundsExample() {
 
   const walletClient = createWalletClient({
     account,
-    transport: http(RPC_URL),
+    transport: http(SEPOLIA_RPC_URL),
   });
 
   // Convert to Universal Signer (origin = Sepolia, target = Push Chain)
@@ -87,7 +88,11 @@ async function viemSendTxWithFundsExample() {
   // 3) Prompt to fund the Sepolia account before sending (required to originate the universal tx)
   console.log('3. Fund the Sepolia account to cover the origin transaction');
   await rl.question(
-    `:::prompt:::Please send funds to ${account.address} on Ethereum Sepolia and Press Enter to continue.`
+    `:::prompt:::Please send ETH to ${account.address} on Ethereum Sepolia and Press Enter to continue.`
+  );
+
+  await rl.question(
+    `:::prompt:::Please send 0.1 USDT to ${account.address} on Ethereum Sepolia and Press Enter to continue.`
   );
 
   // 4) Prepare call data for Counter.increment() on Push Chain
@@ -99,7 +104,12 @@ async function viemSendTxWithFundsExample() {
 
   // 5) Create a public client to read the Counter on Push Chain
   const publicClientPush = createPublicClient({
-    transport: http('https://evm.rpc-testnet-donut-node1.push.org/'),
+    transport: http(PUSH_RPC_URL),
+  });
+
+  // Create a public client to read the Ethereum account
+  const publicClientEthereum = createPublicClient({
+    transport: http(SEPOLIA_RPC_URL),
   });
 
   // Ensure the address is a contract on Push chain
@@ -119,7 +129,7 @@ async function viemSendTxWithFundsExample() {
     args: [],
   });
   const balanceBefore = await getErc20Balance({
-    publicClientPush,
+    publicClientEthereum,
     tokenAddress: pushChainClient.moveable.token.USDT.address as `0x${string}`,
     ownerAddress: account.address,
   });
@@ -151,7 +161,7 @@ async function viemSendTxWithFundsExample() {
     });
 
     const balanceAfter = await getErc20Balance({
-      publicClientPush,
+      publicClientEthereum,
       tokenAddress: pushChainClient.moveable.token.USDT.address as `0x${string}`,
       ownerAddress: account.address,
     });
@@ -168,16 +178,16 @@ async function viemSendTxWithFundsExample() {
 }
 
 async function getErc20Balance({
-  publicClientPush,
+  publicClientEthereum,
   tokenAddress,
   ownerAddress,
 }: {
-  publicClientPush: PublicClient;
+  publicClientEthereum: PublicClient;
   tokenAddress: `0x${string}`;
   ownerAddress: `0x${string}`;
 }): Promise<bigint> {
   const erc20Abi = parseAbi(['function balanceOf(address) view returns (uint256)']);
-  return publicClientPush.readContract({
+  return publicClientEthereum.readContract({
     abi: erc20Abi as unknown as Abi,
     address: tokenAddress,
     functionName: 'balanceOf',
