@@ -43,16 +43,15 @@ Together, they enable AI agents to request and receive payments from users acros
 sequenceDiagram
     participant User
     participant AI Agent
-    participant X402 Server
     participant Push Chain
-    participant Target Chain
+    participant X402 Server
 
     User->>AI Agent: Request service
     AI Agent->>User: HTTP 402 Payment Required
-    User->>X402 Server: Submit payment request
-    X402 Server->>Push Chain: Process universal transaction
-    Push Chain->>Target Chain: Execute settlement
-    Target Chain->>Push Chain: Confirm transaction
+    User->>Push Chain: Submit payment universal transaction from any chain
+    Push Chain->>User: Send transaction hash
+    User->>X402 Server: Verify payment request + universal transaction hash
+    X402 Server->>Push Chain: Verify universal transaction
     Push Chain->>X402 Server: Payment confirmed
     X402 Server->>AI Agent: Payment notification
     AI Agent->>User: Service delivered
@@ -93,6 +92,10 @@ sequenceDiagram
 - **Cross-Chain Routing**: Automatic routing of transactions to optimal chains
 - **Gas Optimization**: Intelligent gas management across networks
 - **State Synchronization**: Consistent state across all supported chains
+
+## Future Improvements
+
+- **Signature Based Verification**: Instead of settling payment on Push Chain and then verifying it on X402 server. Enable sending transaction directly to X402 server and verify it there.
 
 ## Use Cases
 
@@ -135,46 +138,6 @@ x402-universal-transaction/
 ├── docs/               # Additional documentation
 ├── tests/              # Test suite
 └── README.md          # This file
-```
-
-## Configuration
-
-### Environment Variables
-```env
-PUSH_CHAIN_API_KEY=your_api_key
-X402_MERCHANT_ID=your_merchant_id
-SUPPORTED_CHAINS=ethereum,solana,polygon
-SETTLEMENT_ADDRESS=your_settlement_address
-```
-
-### Network Configuration
-- **Mainnet**: Production environment with real assets
-- **Testnet**: Development environment for testing
-- **Local**: Local development with mock services
-
-## Examples and Use Cases
-
-### Basic Payment Request
-```typescript
-// AI Agent throws payment exception
-throw new X402Exception({
-  amount: "10.00",
-  currency: "USDC",
-  description: "AI content generation service",
-  merchantId: "ai-agent-123"
-});
-```
-
-### Cross-Chain Settlement
-```typescript
-// Push Chain handles cross-chain execution
-const payment = await pushChain.processPayment({
-  from: userAccount,
-  to: merchantAccount,
-  amount: paymentAmount,
-  sourceChain: "ethereum",
-  targetChain: "solana"
-});
 ```
 
 ## Security Considerations
@@ -252,10 +215,10 @@ This tutorial builds upon the foundational work of several key contributors:
 ### Documentation
 - [Push Chain Documentation](https://push.org/docs)
 - [X402 Protocol Specification](https://x402.org)
-- [Universal Transactions Guide](https://push.org/docs/chain/universal-transactions)
+- [Universal Transactions Guide](https://push.org/docs/chain/build/send-universal-transaction/)
 
 ### Community
-- [Push Protocol Discord](https://discord.gg/pushprotocol)
+- [Push Chain Discord](https://discord.com/pushchain)
 - [X402 Community Forum](https://forum.x402.org)
 - [GitHub Discussions](https://github.com/push-protocol/push-chain-examples/discussions)
 
