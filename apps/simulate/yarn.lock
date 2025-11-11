@@ -1466,9 +1466,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pushchain/core@npm:2.0.19, @pushchain/core@npm:^2.0.19":
-  version: 2.0.19
-  resolution: "@pushchain/core@npm:2.0.19"
+"@pushchain/core@npm:^3.0.5":
+  version: 3.0.5
+  resolution: "@pushchain/core@npm:3.0.5"
   dependencies:
     "@bufbuild/protobuf": "npm:^2.0.0"
     "@coral-xyz/anchor": "npm:^0.31.0"
@@ -1485,17 +1485,17 @@ __metadata:
     tslib: "npm:^2.3.0"
     tweetnacl: "npm:^1.0.3"
     viem: "npm:2.27.2"
-  checksum: 10/c2019bd78cc7fd7adbcd42a299cbc63882f04a37fcb924169356a2efdd519085be33b1c48d6a154f478263aca82214c560bf2641e026330e11bbd1d1324752dd
+  checksum: 10/b7cec4a713e6dba98b403c7ff1014a0d270551f266558ec2c2d02fb742b841e53087a58b29f902f07dc59524664b8aa3d8d779b2c1c62c502b0d17fef88599e0
   languageName: node
   linkType: hard
 
-"@pushchain/ui-kit@npm:^2.0.11":
-  version: 2.0.11
-  resolution: "@pushchain/ui-kit@npm:2.0.11"
+"@pushchain/ui-kit@npm:^2.1.1":
+  version: 2.1.1
+  resolution: "@pushchain/ui-kit@npm:2.1.1"
   dependencies:
     "@coral-xyz/anchor": "npm:^0.31.1"
     "@metamask/sdk": "npm:^0.32.0"
-    "@pushchain/core": "npm:2.0.19"
+    "@pushchain/core": "npm:^3.0.5"
     "@solana/web3.js": "npm:^1.98.2"
     "@walletconnect/ethereum-provider": "npm:^2.21.5"
     buffer: "npm:^6.0.3"
@@ -1507,7 +1507,7 @@ __metadata:
   peerDependencies:
     react: ">=18.3.0 <20.0.0"
     react-dom: ">=18.3.0 <20.0.0"
-  checksum: 10/4316e5add9e002d305593a72065d9ea78d77573adf1072723ab544cb86ea137429061f2223e98c94d191b0e3f146d7ebef75f8950d87df14bd421eaf3b4fe967
+  checksum: 10/ee9471c32109f2db415acf938ee239ed3b80bd1bd186a65567627daa1e7c4b2c67efebd8a565242ebdbede56bedbcdca6f76f94ec79fb3dd91a820c3fe8f0af6
   languageName: node
   linkType: hard
 
@@ -4782,8 +4782,8 @@ __metadata:
   resolution: "core-connection@workspace:."
   dependencies:
     "@eslint/js": "npm:^9.9.0"
-    "@pushchain/core": "npm:^2.0.19"
-    "@pushchain/ui-kit": "npm:^2.0.11"
+    "@pushchain/core": "npm:^3.0.5"
+    "@pushchain/ui-kit": "npm:^2.1.1"
     "@radix-ui/react-popover": "npm:^1.1.2"
     "@types/react": "npm:^18.3.3"
     "@types/react-dom": "npm:^18.3.0"
@@ -9257,7 +9257,7 @@ __metadata:
 
 "shared-components@file:../../packages/shared-components::locator=core-connection%40workspace%3A.":
   version: 0.3.0
-  resolution: "shared-components@file:../../packages/shared-components#../../packages/shared-components::hash=ba9211&locator=core-connection%40workspace%3A."
+  resolution: "shared-components@file:../../packages/shared-components#../../packages/shared-components::hash=2a6ea8&locator=core-connection%40workspace%3A."
   dependencies:
     "@emotion/react": "npm:^11.13.0"
     "@radix-ui/react-dialog": "npm:^1.1.1"
@@ -9278,7 +9278,7 @@ __metadata:
   peerDependencies:
     react: ^18.3.1
     react-dom: ^18.3.1
-  checksum: 10/398d477aa0604664482328f5d1b7444e9ceabc1e8ee6e2265f38230dcb781cf1c402734fcee3f14cdc537e1b5f5c5cd8c764d54e2019094d21935fd1c93318da
+  checksum: 10/9b760771e8cbcff60baa7cf450a30afbc34a47dbecd54d2a108f1848f58538d63d7af3c9a31263caeeda2fff7d3444bbff1f11395f001c607bec89acbdc40363
   languageName: node
   linkType: hard
 
