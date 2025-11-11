@@ -72,7 +72,7 @@ async function viemSendTxWithFundsExample() {
   );
 
   await rl.question(
-    `:::prompt:::Please send 0.1 USDT to ${account.address} on Ethereum Sepolia and Press Enter to continue.`
+    `:::prompt:::Please send 1 USDT to ${account.address} on Ethereum Sepolia and Press Enter to continue.`
   );
   await rl.question(
     `:::prompt:::Please send USDC to ${account.address} on Ethereum Sepolia and Press Enter to continue.`
