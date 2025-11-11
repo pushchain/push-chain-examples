@@ -300,8 +300,10 @@ function formatUnits() {
   const results = {
     integerValue1: PushChain.utils.helpers.formatUnits(BigInt(420), { decimals: 9 }),
     integerValue2: PushChain.utils.helpers.formatUnits(BigInt(15), { decimals: 18 }),
-    decimalValue1: PushChain.utils.helpers.formatUnits(BigInt(0.1), { decimals: 6 }),
-    decimalValue2: PushChain.utils.helpers.formatUnits(BigInt(1.23), { decimals: 6 }),
+    // For 0.1 with 6 decimals: 0.1 * 10^6 = 100000
+    decimalValue1: PushChain.utils.helpers.formatUnits(BigInt(100000), { decimals: 6 }),
+    // For 1.23 with 6 decimals: 1.23 * 10^6 = 1230000
+    decimalValue2: PushChain.utils.helpers.formatUnits(BigInt(1230000), { decimals: 6 }),
   };
 
   return results;
@@ -312,4 +314,3 @@ async function convertExecutorToOriginAccount() {
   const { account, exists } = await PushChain.utils.account.convertExecutorToOriginAccount(testAddress);
   return { account, exists };
 }
-
