@@ -41,7 +41,8 @@ const COUNTER_ABI = [
 ] as const;
 
 // Counter contract address used in examples/tests
-const COUNTER_ADDRESS = '0x5FbDB2315678afecb367f032d93F642f64180aa3' as `0x${string}`;
+const COUNTER_ADDRESS = '0x5FbDB2315678afecb367f032d93F642f64180aa3';
+const USDT_ETH_ADDRESS = '0xCA0C5E6F002A389E1580F0DB7cd06e4549B5F9d3';
 
 // ⭐️ MAIN FUNCTION ⭐️
 async function main() {
@@ -59,7 +60,7 @@ async function viemSendTxWithFundsExample() {
   // and execute a function call on Push Chain, funding the call with USDT.
 
   // 1) Create a fresh Sepolia account using viem
-  const SEPOLIA_RPC_URL = 'https://ethereum-sepolia-rpc.publicnode.com';
+  const SEPOLIA_RPC_URL = 'https://sepolia.infura.io/v3/2Le0OSc4kCoYwnuaRD4xcufSgXP';
   const PUSH_RPC_URL = 'https://evm.donut.rpc.push.org/';
   console.log('1. Create Universal Signer (Sepolia)');
   const privateKey = generatePrivateKey();
@@ -107,20 +108,6 @@ async function viemSendTxWithFundsExample() {
     transport: http(PUSH_RPC_URL),
   });
 
-  // Create a public client to read the Ethereum account
-  const publicClientEthereum = createPublicClient({
-    transport: http(SEPOLIA_RPC_URL),
-  });
-
-  // Ensure the address is a contract on Push chain
-  const bytecode = await publicClientPush.getBytecode({
-    address: COUNTER_ADDRESS,
-  });
-  if (!bytecode || bytecode === '0x') {
-    console.warn(`Skipping test: no contract bytecode at ${COUNTER_ADDRESS} on Push Testnet`);
-    return;
-  }
-
   // Read counter BEFORE
   const beforeCount = await publicClientPush.readContract({
     abi: COUNTER_ABI as unknown as any[],
@@ -129,28 +116,29 @@ async function viemSendTxWithFundsExample() {
     args: [],
   });
   const balanceBefore = await getErc20Balance({
-    publicClientEthereum,
-    tokenAddress: pushChainClient.moveable.token.USDT.address as `0x${string}`,
-    ownerAddress: account.address,
+    publicClientPush,
+    tokenAddress: USDT_ETH_ADDRESS,
+    ownerAddress: COUNTER_ADDRESS,
   });
   console.log('💰 Balance before: ', balanceBefore.toString());
 
   // 6) Build and send a universal transaction with funds (move 1 USDT and call increment)
-  console.log('5. Send universal transaction with funds (1 USDT)');
-  const amountUSDT = PushChain.utils.helpers.parseUnits('0.1', 6); // 0.1 USDT
+  console.log('5. Send universal transaction with funds (0.1 USDT)');
 
   try {
     const txResponse = await pushChainClient.universal.sendTransaction({
       to: COUNTER_ADDRESS, // recipient/contract on Push Chain
-      data, // optional call data to execute on Push Chain
+      // data, // optional call data to execute on Push Chain
       funds: {
-        amount: amountUSDT,
+        amount: PushChain.utils.helpers.parseUnits('0.1', 6), // 0.1 USDT
         token: pushChainClient.moveable.token.USDT,
       },
     });
 
     console.log('📤 Transaction hash:', txResponse.hash);
     await txResponse.wait();
+
+    await new Promise((resolve) => setTimeout(resolve, 5000)); // wait for 5 seconds
 
     // Read counter AFTER
     const afterCount = await publicClientPush.readContract({
@@ -161,9 +149,9 @@ async function viemSendTxWithFundsExample() {
     });
 
     const balanceAfter = await getErc20Balance({
-      publicClientEthereum,
-      tokenAddress: pushChainClient.moveable.token.USDT.address as `0x${string}`,
-      ownerAddress: account.address,
+      publicClientPush,
+      tokenAddress: USDT_ETH_ADDRESS,
+      ownerAddress: COUNTER_ADDRESS,
     });
     console.log('💰 Balance after: ', balanceAfter.toString());
 
@@ -178,16 +166,16 @@ async function viemSendTxWithFundsExample() {
 }
 
 async function getErc20Balance({
-  publicClientEthereum,
+  publicClientPush,
   tokenAddress,
   ownerAddress,
 }: {
-  publicClientEthereum: PublicClient;
+  publicClientPush: PublicClient;
   tokenAddress: `0x${string}`;
   ownerAddress: `0x${string}`;
 }): Promise<bigint> {
   const erc20Abi = parseAbi(['function balanceOf(address) view returns (uint256)']);
-  return publicClientEthereum.readContract({
+  return publicClientPush.readContract({
     abi: erc20Abi as unknown as Abi,
     address: tokenAddress,
     functionName: 'balanceOf',
