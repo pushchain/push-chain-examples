@@ -19,7 +19,7 @@
   "author": "",
   "license": "Apache-2.0",
   "dependencies": {
-    "@pushchain/core": "^2.1.6",
+    "@pushchain/core": "latest",
     "a2a-x402": "file:../x402_a2a",
     "adk-typescript": "^1.0.3",
     "bs58": "^6.0.0",
