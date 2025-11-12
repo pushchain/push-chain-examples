@@ -1342,9 +1342,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pushchain/ui-kit@npm:^2.1.1":
-  version: 2.1.1
-  resolution: "@pushchain/ui-kit@npm:2.1.1"
+"@pushchain/ui-kit@npm:^2.1.2":
+  version: 2.1.2
+  resolution: "@pushchain/ui-kit@npm:2.1.2"
   dependencies:
     "@coral-xyz/anchor": "npm:^0.31.1"
     "@metamask/sdk": "npm:^0.32.0"
@@ -1360,7 +1360,7 @@ __metadata:
   peerDependencies:
     react: ">=18.3.0 <20.0.0"
     react-dom: ">=18.3.0 <20.0.0"
-  checksum: 10c0/966d1a4ed281ef6a308fc1e659715f4075d9ef189ae9366d62667451a28ca62ea8f4fdf0d92e4ab96bef5ee26c1f04e9b59a9864063435136029f28ee27a8dd4
+  checksum: 10c0/42f39e299627ae7df022e75b10f7856bff256302750cef1e9c14ba4d5c96fb3b699b8ad66ad1827e30813e6ede2dffed551fcf9151001417747cf8e7be1600fe
   languageName: node
   linkType: hard
 
@@ -6515,7 +6515,7 @@ __metadata:
   resolution: "universal-counter-app@workspace:."
   dependencies:
     "@eslint/js": "npm:^9.25.0"
-    "@pushchain/ui-kit": "npm:^2.1.1"
+    "@pushchain/ui-kit": "npm:^2.1.2"
     "@types/gh-pages": "npm:^6"
     "@types/matter-js": "npm:^0.19.8"
     "@types/node": "npm:^24.0.10"

@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@pushchain/core": "^3.0.5",
-    "@pushchain/ui-kit": "^2.1.1",
+    "@pushchain/ui-kit": "^2.1.2",
     "@radix-ui/react-popover": "^1.1.2",
     "formik": "^2.4.6",
     "gh-pages": "^6.2.0",
