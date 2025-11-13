@@ -650,7 +650,7 @@ const App = () => {
               }}
             >
               <a
-                href="https://github.com/pushchain/push-chain-examples/tree/main/tutorials/universal-counter/ballsy-app"
+                href="https://github.com/pushchain/push-chain-examples/tree/main/tutorials/universal-counter-dynamic/ballsy-app"
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{ color: "#d548ec" }}
