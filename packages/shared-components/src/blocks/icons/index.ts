@@ -14,6 +14,8 @@ export { default as Asterisk } from './components/Asterisk';
 
 export { default as Back } from './components/Back';
 
+export { default as BaseMonotone } from './components/BaseMonotone';
+
 export { default as BellRingFilled } from './components/BellRingFilled';
 export { default as BellSimple } from './components/BellSimple';
 export { default as BellSimpleSlash } from './components/BellSimpleSlash';
@@ -191,6 +193,7 @@ export { default as VideoCameraFilled } from './components/VideoCameraFilled';
 export { default as VideoCameraSlash } from './components/VideoCameraSlash';
 export { default as VideoCameraslashFilled } from './components/VideoCameraSlashFilled';
 
+export { default as Wallet } from './components/Wallet';
 export { default as WarningCircleFilled } from './components/WarningCircleFilled';
 
 export { default as Waveform } from './components/Waveform';
