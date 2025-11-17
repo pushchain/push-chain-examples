@@ -129,7 +129,6 @@ const App = () => {
     try {
       setIsLoading(true);
 
-      // Create a contract instance for read operations
       const provider = new ethers.JsonRpcProvider(
         "https://evm.donut.rpc.push.org/"
       );
@@ -139,58 +138,62 @@ const App = () => {
         provider
       );
 
-      // Get total counts
-      const [newTotalCount, newTotalUniqueCount] = await contract.getCount();
+      // 1. Collect all valid chainHashes (only chainIds calls are sequential)
+      const chainHashes: string[] = [];
+      for (let chainIndex = 0; ; chainIndex++) {
+        try {
+          const chainHash: string = await contract.chainIds(chainIndex);
 
-      // Get all chain IDs (we need to iterate through the chainIds array)
-      const newChainData: ChainData[] = [];
-      let chainIndex = 0;
-
-      try {
-        // Keep fetching chain IDs until we get an error (array bounds)
-        while (true) {
-          const chainHash = await contract.chainIds(chainIndex);
-
-          // Check if this is a valid chain (not just ":")
+          // Validate / skip ":" or empty
           try {
             const hexString = chainHash.startsWith("0x")
-              ? chainHash.slice(2)
-              : chainHash;
-            const bytes = ethers.getBytes("0x" + hexString);
-            const chainString = ethers.toUtf8String(bytes);
+              ? chainHash
+              : `0x${chainHash}`;
+            const bytes = ethers.getBytes(hexString);
+            const chainString = ethers.toUtf8String(bytes).trim();
 
-            // Skip chains that are just ":" or empty
-            if (chainString === ":" || chainString.trim() === "") {
-              chainIndex++;
+            if (!chainString || chainString === ":") {
               continue;
             }
-          } catch (error) {
+          } catch {
             // Skip invalid chain hashes
-            chainIndex++;
             continue;
           }
 
-          const totalCount = await contract.chainCount(chainHash);
-          const uniqueCount = await contract.chainCountUnique(chainHash);
+          chainHashes.push(chainHash);
+        } catch {
+          // We assume out-of-bounds -> end of array
+          break;
+        }
+      }
+
+      if (chainHashes.length === 0) {
+        setChainData([]);
+        return;
+      }
+
+      // 2. For each chainHash, fetch counts in parallel
+      const newChainData: ChainData[] = await Promise.all(
+        chainHashes.map(async (chainHash) => {
+          const [totalCountBN, uniqueCountBN] = await Promise.all([
+            contract.chainCount(chainHash),
+            contract.chainCountUnique(chainHash),
+          ]);
 
           const chainName = getChainName(chainHash);
           const color = getChainColor(chainHash);
 
-          newChainData.push({
+          return {
             chainHash,
             chainName,
-            totalCount: Number(totalCount),
-            uniqueCount: Number(uniqueCount),
+            totalCount: Number(totalCountBN),
+            uniqueCount: Number(uniqueCountBN),
             color,
-          });
+          };
+        })
+      );
 
-          chainIndex++;
-        }
-      } catch (error) {
-        // Expected error when we reach the end of the array
-      }
-
-      // Check if this is the initial load
+      // 3. Ball logic (unchanged, just reused)
       const isInitialLoad = chainData.length === 0;
 
       if (newChainData.length !== 0) {
@@ -205,8 +208,7 @@ const App = () => {
             }
           });
         } else {
-          // On subsequent loads, keep existing behavior:
-          // drop balls based on TOTAL COUNT increments (per txn)
+          // SUBSEQUENT LOADS: drop balls for TOTAL COUNT increments
           newChainData.forEach((newChain) => {
             const oldChain = chainData.find(
               (c) => c.chainHash === newChain.chainHash
@@ -223,7 +225,6 @@ const App = () => {
         }
       }
 
-      // Update state
       setChainData(newChainData);
     } catch (err) {
       console.error("Error fetching counter values:", err);
