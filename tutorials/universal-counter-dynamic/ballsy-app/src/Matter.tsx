@@ -12,6 +12,12 @@ declare global {
   }
 }
 
+const isMobileViewport = () => {
+  if (typeof window === "undefined") return false;
+  return window.innerWidth < 768;
+};
+
+
 // Access Matter.js from the global window object
 const Matter = window.Matter;
 
@@ -105,6 +111,8 @@ const MatterComponent: React.FC<MatterProps> = ({ physicBodyRefs = [], fullScree
   const engineRef = useRef<any>(null);
   const renderRef = useRef<any>(null);
   const runnerRef = useRef<any>(null);
+
+  const mobile = isMobileViewport();
   
   // Function to update physics body positions based on DOM elements
   const updatePhysicsBodies = () => {
@@ -177,7 +185,7 @@ const MatterComponent: React.FC<MatterProps> = ({ physicBodyRefs = [], fullScree
         height: height,
         wireframes: false, // Enable debug wireframes
         background: 'transparent',
-        pixelRatio: window.devicePixelRatio || 1,
+        pixelRatio: 1,
         showDebug: false, // Enable debug info
         showVelocity: false, // Show velocity vectors
         showAngleIndicator: false, // Show angle indicators
@@ -199,17 +207,6 @@ const MatterComponent: React.FC<MatterProps> = ({ physicBodyRefs = [], fullScree
     
     // Create walls (bottom, left, right) - positioned outside the visible area
     const walls = [
-      // Bottom wall - positioned just below the visible area
-      Matter.Bodies.rectangle(
-        width / 2,
-        height + 25, // 25px below the bottom edge
-        width + 100, // wider than the container
-        50,
-        { 
-          isStatic: true,
-          render: { fillStyle: '#2e2b44' }
-        }
-      ),
       // Left wall - positioned outside the left edge
       Matter.Bodies.rectangle(
         -25, // 25px outside the left edge
@@ -233,6 +230,21 @@ const MatterComponent: React.FC<MatterProps> = ({ physicBodyRefs = [], fullScree
         }
       ),
     ];
+
+    if (!mobile) {
+      walls.push(
+        Matter.Bodies.rectangle(
+          width / 2,
+          height + 25,
+          width + 100,
+          50,
+          {
+            isStatic: true,
+            render: { fillStyle: "#2e2b44" },
+          }
+        )
+      );
+    }
     
     // Add walls to the world
     Matter.Composite.add(engine.world, walls);
@@ -368,50 +380,37 @@ const MatterComponent: React.FC<MatterProps> = ({ physicBodyRefs = [], fullScree
     // Handle window resize
     const handleResize = () => {
       if (!renderRef.current || !engineRef.current || !sceneRef.current) return;
-      
+
       const render = renderRef.current;
       const engine = engineRef.current;
       const container = sceneRef.current;
-      
-      // Get new dimensions
+
       const newWidth = container.clientWidth;
       const newHeight = container.clientHeight;
-      
-      // Update canvas dimensions
+
+      // Update canvas internal resolution
       render.options.width = newWidth;
       render.options.height = newHeight;
       render.canvas.width = newWidth;
       render.canvas.height = newHeight;
-      
+
       // Remove all bodies except balls and HTML element bodies
       const nonWallBodies = engine.world.bodies.filter((body: any) => {
-        // Keep balls and bodies associated with HTML elements
+        // keep balls and HTML-element bodies
         return body.label !== 'Rectangle Body' || body.isHtmlElement === true;
       });
-      
-      // Clear the world and re-add only the non-wall bodies
+
       Matter.Composite.clear(engine.world, false);
       Matter.Composite.add(engine.world, nonWallBodies);
       
       // Create new walls positioned outside the visible area
       const newWalls = [
-        // Bottom wall - positioned at the bottom edge to keep balls fully visible
-        Matter.Bodies.rectangle(
-          newWidth / 2,
-          newHeight - 25, // 25px above the bottom edge to keep balls visible
-          newWidth + 100, // wider than the container
-          50,
-          { 
-            isStatic: true,
-            render: { fillStyle: '#2e2b44' }
-          }
-        ),
         // Left wall - positioned outside the left edge
         Matter.Bodies.rectangle(
-          -25, // 25px outside the left edge
+          -25,
           newHeight / 2,
           50,
-          newHeight + 100, // taller than the container
+          newHeight + 100,
           { 
             isStatic: true,
             render: { fillStyle: '#2e2b44' }
@@ -419,16 +418,31 @@ const MatterComponent: React.FC<MatterProps> = ({ physicBodyRefs = [], fullScree
         ),
         // Right wall - positioned outside the right edge
         Matter.Bodies.rectangle(
-          newWidth + 25, // 25px outside the right edge
+          newWidth + 25,
           newHeight / 2,
           50,
-          newHeight + 100, // taller than the container
+          newHeight + 100,
           { 
             isStatic: true,
             render: { fillStyle: '#2e2b44' }
           }
         ),
       ];
+
+      if (!mobile) {
+        newWalls.push(
+          Matter.Bodies.rectangle(
+            newWidth / 2,
+            newHeight + 25,
+            newWidth + 100,
+            50,
+            {
+              isStatic: true,
+              render: { fillStyle: "#2e2b44" },
+            }
+          )
+        );
+      }
       
       // Add the new walls
       Matter.Composite.add(engine.world, newWalls);
@@ -490,9 +504,9 @@ const MatterComponent: React.FC<MatterProps> = ({ physicBodyRefs = [], fullScree
   }, []);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: fullScreen ? '100vh' : '100%' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div 
-        ref={sceneRef} 
+        ref={sceneRef}
         style={{ 
           flex: 1,
           position: 'relative',
