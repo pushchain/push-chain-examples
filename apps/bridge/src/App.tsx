@@ -23,7 +23,7 @@ const App: React.FC = () => {
         alignItems='center'
         justifyContent='center'
         padding={{ initial: 'spacing-xxxl', tb: 'spacing-xl spacing-sm' }}
-        width='calc(100% - 2 * var(--spacing-sm))'
+        width={{ initial: 'auto', tb: 'calc(100% - 2 * var(--spacing-sm))' }}
       >
         <Bridge />
       </Box>

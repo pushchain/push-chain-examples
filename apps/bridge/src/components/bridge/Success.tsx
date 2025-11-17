@@ -10,6 +10,7 @@ type SuccessProps = {
     chain?: string;
     duration: number;
     txnHash: string;
+    handleBack: () => void;
 }
 
 const Success: React.FC<SuccessProps> = ({
@@ -17,7 +18,8 @@ const Success: React.FC<SuccessProps> = ({
     duration,
     amount,
     token,
-    txnHash
+    txnHash,
+    handleBack,
 }) => {
     const ChainIcon = chainsIconList[chain || ''];
 
@@ -48,9 +50,9 @@ const Success: React.FC<SuccessProps> = ({
                 justifyContent='center'
             >
                 <IconWrapper Icon={ChainIcon} />
-                <Text variant='h3-regular' color='text-brand-medium'>.......</Text>
+                <Text display={{ ml: 'none' }} variant='h3-regular' color='text-brand-medium'>.......</Text>
                 <img height={110} src="/Success.png" alt="Success" />
-                <Text variant='h3-regular' color='text-brand-medium'>.......</Text>
+                <Text display={{ ml: 'none' }} variant='h3-regular' color='text-brand-medium'>.......</Text>
                 <IconWrapper Icon={PushMonotone} />
             </Box>
             <Box
@@ -99,13 +101,21 @@ const Success: React.FC<SuccessProps> = ({
                     border='border-sm solid stroke-secondary'
                     padding='spacing-xs'
                     cursor='pointer'
-                    onClick={() => pushChainClient?.explorer.getTransactionUrl(txnHash)}
+                    onClick={() => {
+                        window.open(pushChainClient?.explorer.getTransactionUrl(txnHash), '_blank')
+                    }}
                 >
                     <Text variant='bm-regular' color='text-brand-medium'>View in Push Explorer</Text>
                     <ArrowUpRight size={16} color='icon-tertiary' />
                 </Box>
             </Box>
-            <Button variant='outline'><PlusSquare color='icon-brand-bold' />Bridge more tokens</Button>
+            <Button
+                variant='outline'
+                onClick={handleBack}
+            >
+                <PlusSquare color='icon-brand-bold' />
+                Bridge more tokens
+            </Button>
         </Box>
     );
 }

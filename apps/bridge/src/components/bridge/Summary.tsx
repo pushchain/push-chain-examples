@@ -54,7 +54,7 @@ const QuoteSummary: React.FC<QuoteSummaryProps> = ({token, amount}) => {
         </Box>
 
         {open && (
-            <Box display="flex" flexDirection="column" gap="spacing-sm">
+            <Box display="flex" flexDirection="column" gap="spacing-xs">
 
                 <Row label="Net fee" value='$0.00' />
 

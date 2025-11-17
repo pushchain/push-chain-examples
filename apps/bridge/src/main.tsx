@@ -30,6 +30,8 @@ const walletConfig: ProviderConfigProps = {
     wallet: {
       excludedChains: [PushUI.CONSTANTS.CHAIN.PUSH],
     },
+    email: false,
+    google: false,
     appPreview: true,
   },
   modal: {

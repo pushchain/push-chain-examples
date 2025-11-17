@@ -35,6 +35,7 @@ const Bridge = () => {
     const [selectedToken, setSelectedToken] = useState<TokenOptions | null>(null);
     const [movableTokensList, setMovableTokensList] = useState<TokenOptions[]>([]);
     const [txnHash, setTxnHash] = useState('');
+    const [txnDuration, setTxnDuration] = useState<number | null>(null);
 
     const { PushChain } = usePushChain();
     const { pushChainClient } = usePushChainClient();
@@ -67,6 +68,10 @@ const Bridge = () => {
         }
         setError('');
         setLoading(true);
+        setTxnDuration(null);
+
+        const start = performance.now();
+    
         try {
             const txnRes = await pushChainClient.universal.sendTransaction({
                 to: address as `0x${string}`,
@@ -75,6 +80,10 @@ const Bridge = () => {
                     token: selectedToken.token,
                 }
             });
+
+            const end = performance.now();
+            const durationSec = (end - start) / 1000;
+            setTxnDuration(Math.round(durationSec));
             setTxnHash(txnRes.hash);
         } catch (error) {
             console.log('Error in bridging:', error);
@@ -155,10 +164,15 @@ const Bridge = () => {
             {(txnHash && selectedToken && selectedChain) ? (
                 <Success
                     chain={selectedChain.value}
-                    amount='10'
+                    amount={amount}
                     token={selectedToken.token}
-                    duration={10}
-                    txnHash='wlkfnln'
+                    duration={txnDuration || 0}
+                    txnHash={txnHash}
+                    handleBack={() => {
+                        setTxnHash('');
+                        setAmount('');
+                        setTxnDuration(null);
+                    }}
                 />
             ) : (
                 <Box
@@ -280,6 +294,7 @@ const Bridge = () => {
                                 gap='spacing-xxs'
                                 alignItems={{ initial: 'center', tb: 'flex-start'}}
                                 flexDirection={{ initial: 'row', tb: 'column'}}
+                                margin='spacing-none spacing-none spacing-xs spacing-none'
                             >
                                 <Box
                                     width='64px'
@@ -294,6 +309,11 @@ const Bridge = () => {
                                         placeholder='Enter Address'
                                         value={address}
                                     />
+                                    <Box position='absolute' margin='spacing-none spacing-xs'>
+                                        <Text variant='bes-regular' color='text-tertiary'>
+                                            Only Push Chain addresses are valid
+                                        </Text>
+                                    </Box>
                                 </Box>
                             </Box>
                         )}
