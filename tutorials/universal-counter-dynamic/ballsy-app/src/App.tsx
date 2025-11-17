@@ -26,6 +26,7 @@ import { ethers } from "ethers";
 
 // Import ABI
 import UniversalCounterABI from "./abi/UniversalCounter.json";
+import { getScaledUniqueCounts } from "./helper";
 
 // Contract address for the Universal Counter
 const CONTRACT_ADDRESS = "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9";
@@ -33,7 +34,7 @@ const CONTRACT_ADDRESS = "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9";
 // Use the imported ABI
 
 // Interface for chain data
-interface ChainData {
+export interface ChainData {
   chainHash: string;
   chainName: string;
   totalCount: number;
@@ -130,7 +131,7 @@ const App = () => {
 
       // Create a contract instance for read operations
       const provider = new ethers.JsonRpcProvider(
-        "https://evm.rpc-testnet-donut-node1.push.org/"
+        "https://evm.donut.rpc.push.org/"
       );
       const contract = new ethers.Contract(
         CONTRACT_ADDRESS,
@@ -144,8 +145,6 @@ const App = () => {
       // Get all chain IDs (we need to iterate through the chainIds array)
       const newChainData: ChainData[] = [];
       let chainIndex = 0;
-
-      console.log(contract);
 
       try {
         // Keep fetching chain IDs until we get an error (array bounds)
@@ -193,25 +192,35 @@ const App = () => {
 
       // Check if this is the initial load
       const isInitialLoad = chainData.length === 0;
-      // Add balls for visual feedback (only when counters increase, not on initial load)
-      if (newChainData.length === 0) {
-        // Initial load - don't add balls for existing counters to avoid spam
-      } else {
-        // On subsequent loads, only add balls if counters have increased
-        newChainData.forEach((newChain) => {
-          const oldChain = chainData.find(
-            (c) => c.chainHash === newChain.chainHash
-          );
-          if (oldChain && newChain.totalCount > oldChain.totalCount) {
-            const diff = newChain.totalCount - oldChain.totalCount;
 
-            addMultipleBlockchainBalls(newChain.color, diff);
-          } else if (!oldChain && newChain.totalCount > 0) {
-            // New chain appeared
+      if (newChainData.length !== 0) {
+        if (isInitialLoad) {
+          // INITIAL LOAD: drop balls for UNIQUE USERS, scaled with viewport limit
+          const allocationMap = getScaledUniqueCounts(newChainData);
 
-            addMultipleBlockchainBalls(newChain.color, newChain.totalCount);
-          }
-        });
+          newChainData.forEach((chain) => {
+            const ballsForChain = allocationMap[chain.chainHash] ?? 0;
+            if (ballsForChain > 0) {
+              addMultipleBlockchainBalls(chain.color, ballsForChain);
+            }
+          });
+        } else {
+          // On subsequent loads, keep existing behavior:
+          // drop balls based on TOTAL COUNT increments (per txn)
+          newChainData.forEach((newChain) => {
+            const oldChain = chainData.find(
+              (c) => c.chainHash === newChain.chainHash
+            );
+
+            if (oldChain && newChain.totalCount > oldChain.totalCount) {
+              const diff = newChain.totalCount - oldChain.totalCount;
+              addMultipleBlockchainBalls(newChain.color, diff);
+            } else if (!oldChain && newChain.totalCount > 0) {
+              // New chain appeared later
+              addMultipleBlockchainBalls(newChain.color, newChain.totalCount);
+            }
+          });
+        }
       }
 
       // Update state
@@ -334,14 +343,18 @@ const App = () => {
   }, [pushChainClient, connectionStatus]);
 
   return (
-    <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+    <div
+      style={{
+        position: "relative",
+        minHeight: "100vh", // page at least one screen tall, grows with content
+        display: "flex",
+        justifyContent: "center",
+      }}
+    >
       <div
         style={{
           position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
+          inset: 0,
           zIndex: 1, // Higher than content (zIndex: 20) to allow ball interaction
           pointerEvents: showMatter ? "auto" : "none", // Enable interaction when physics is active
         }}
@@ -356,15 +369,15 @@ const App = () => {
 
       <div
         style={{
-          position: "absolute",
-          top: "40px",
+          position: "relative",
+          zIndex: 20,
+          padding: "40px 20px 20px",
+          maxWidth: "800px",
+          width: "100%",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          justifyContent: "center",
           gap: "1rem",
-          zIndex: 20,
-          padding: "20px",
         }}
       >
         <h1 ref={headingRef} style={{ pointerEvents: "auto" }}>
