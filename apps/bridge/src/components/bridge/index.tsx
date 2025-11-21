@@ -1,6 +1,6 @@
 import { usePushChain, PushUI, usePushChainClient, usePushWalletContext } from '@pushchain/ui-kit';
 import { useEffect, useState } from 'react';
-import { Box, Text, TextInput, Button, PushMonotone, IconProps, Wallet, css } from 'shared-components';
+import { Box, Text, TextInput, Button, PushMonotone, IconProps, Wallet, css, IllustrationProps } from 'shared-components';
 import { enumKeyToDisplay, fetchTokenBalance } from '../../common/utils';
 import Divider from './Divider';
 import { CHAIN } from '@pushchain/core/src/lib/constants/enums';
@@ -8,7 +8,7 @@ import { MoveableToken } from '@pushchain/core/src/lib/constants';
 import QuoteSummary from './Summary';
 import TermsConsent from './TermsConsent';
 import Select, { SelectOption } from '../../common/components/Select';
-import { chainsIconList } from '../../common/constants';
+import { chainsIconList, tokensIconList } from '../../common/constants';
 import Success from './Success';
 
 export type ChainOptions = {
@@ -18,7 +18,7 @@ export type ChainOptions = {
 };
 
 export type TokenOptions = {
-  icon?: React.FC<IconProps>;
+  icon?: React.FC<IllustrationProps>;
   label: string;
   value: string;
   token: MoveableToken;
@@ -122,12 +122,12 @@ const Bridge = () => {
     useEffect(() => {
         if (selectedChain) {
             const tokens = PushChain.utils.tokens.getMoveableTokens(selectedChain.value as CHAIN).tokens;
-            console.log(tokens);
             const options = tokens.map((token) => ({
                 label: token.symbol,
                 value: token.address,
                 decimals: token.decimals,
                 token: token,
+                icon: Object.keys(tokensIconList).includes(token.symbol) ? tokensIconList[token.symbol] : undefined
             }));
             setMovableTokensList(options);
             setSelectedToken(options[0] || null);

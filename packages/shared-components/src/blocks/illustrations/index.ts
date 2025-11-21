@@ -119,4 +119,8 @@ export { default as Polygon } from './components/Polygon';
 
 export { default as PolygonZK } from './components/PolygonZK';
 
+export { default as USDT } from './components/USDT';
+
+export { default as WEthereum } from './components/WEthereum';
+
 export { default as YellowBonusActivitySubscribers } from './components/YellowBonusActivitySubscribers';

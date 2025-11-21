@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { Box, CaretDown, Cross, css, IconProps, Text } from "shared-components";
+import { Box, CaretDown, Cross, css, IconProps, IllustrationProps, Text } from "shared-components";
 
 export type SelectOption = {
-    icon?: React.FC<IconProps>;
+    icon?: React.FC<IconProps | IllustrationProps>;
     label: string;
     value: string;
 }
