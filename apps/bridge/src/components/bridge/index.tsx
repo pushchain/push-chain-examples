@@ -1,7 +1,7 @@
 import { usePushChain, PushUI, usePushChainClient, usePushWalletContext } from '@pushchain/ui-kit';
 import { useEffect, useState } from 'react';
 import { Box, Text, TextInput, Button, PushMonotone, IconProps, Wallet, css, IllustrationProps } from 'shared-components';
-import { enumKeyToDisplay, fetchTokenBalance } from '../../common/utils';
+import { enumKeyToDisplay, fetchErc20TokenBalance, fetchNativeTokenBalance, fetchSplTokenBalance } from '../../common/utils';
 import Divider from './Divider';
 import { CHAIN } from '@pushchain/core/src/lib/constants/enums';
 import { MoveableToken } from '@pushchain/core/src/lib/constants';
@@ -58,6 +58,11 @@ const Bridge = () => {
             setError('');
             setAmount(v);
         }
+        if (balance !== '' && v > balance) {
+            setError('Insufficient balance');
+        } else {
+            setError('');
+        }
     }
 
     const handleBridge = async () => {
@@ -94,19 +99,53 @@ const Bridge = () => {
 
     useEffect(() => {
         const handleFetchBalance = async () => {
-            if (pushChainClient && selectedToken) {
-                console.log(pushChainClient.universal.origin.address, selectedToken);
-                const tokenBalance = await fetchTokenBalance({
-                    walletAddress: pushChainClient.universal.origin.address as `0x${string}`,
-                    tokenAddress: selectedToken.token.address as `0x${string}`,
-                    decimals: selectedToken.token.decimals,
-                })
-                console.log(tokenBalance);
-                setBalance(tokenBalance);
+            if (!pushChainClient || !selectedToken || !selectedChain) {
+                setBalance('');
+                return;
+            };
+
+            const wallet = pushChainClient.universal.origin;
+            const ns = wallet.chain.split(":")[0];
+
+            let balance = '0';
+
+            try {
+                if (ns === "solana") {
+                    if (selectedToken.token.mechanism === "native") {
+                        balance = await fetchNativeTokenBalance({ wallet, token: selectedToken.token });
+                    } else {
+                        balance = await fetchSplTokenBalance({
+                            owner: wallet.address,
+                            mint: selectedToken.token.address,
+                        });
+                    }
+                }
+
+                if (ns === "eip155") {
+                    if (selectedToken.token.mechanism === "native") {
+                        balance = await fetchNativeTokenBalance({ wallet, token: selectedToken.token });
+                    } else {
+                        balance = await fetchErc20TokenBalance({
+                            wallet,
+                            token: selectedToken.token,
+                        });
+                    }
+                }
+
+            } catch (error) {
+                console.error("Error fetching balance:", error);
+            }
+
+            setBalance(balance);
+
+            if (balance !== '' && amount && amount > balance) {
+                setError('Insufficient balance');
+            } else {
+                setError('');
             }
         };
         handleFetchBalance();
-    }, [pushChainClient, selectedToken])
+    }, [pushChainClient, selectedToken, selectedChain]);
 
     useEffect(() => {
         const chains = PushChain.utils.chains.getSupportedChains(PushUI.CONSTANTS.PUSH_NETWORK.TESTNET).chains;
@@ -120,18 +159,18 @@ const Bridge = () => {
     }, []);
 
     useEffect(() => {
-        if (selectedChain) {
-            const tokens = PushChain.utils.tokens.getMoveableTokens(selectedChain.value as CHAIN).tokens;
-            const options = tokens.map((token) => ({
-                label: token.symbol,
-                value: token.address,
-                decimals: token.decimals,
-                token: token,
-                icon: Object.keys(tokensIconList).includes(token.symbol) ? tokensIconList[token.symbol] : undefined
-            }));
-            setMovableTokensList(options);
-            setSelectedToken(options[0] || null);
-        }
+        if (!selectedChain) return;
+
+        const tokens = PushChain.utils.tokens.getMoveableTokens(selectedChain.value as CHAIN).tokens;
+        const options = tokens.map((token) => ({
+            label: token.symbol,
+            value: token.address,
+            token: token,
+            icon: Object.keys(tokensIconList).includes(token.symbol) ? tokensIconList[token.symbol] : undefined
+        }));
+
+        setMovableTokensList(options);
+        setSelectedToken(options[0] || null);
     }, [selectedChain]);
 
     useEffect(() => {
@@ -211,7 +250,32 @@ const Bridge = () => {
                                     placeholder='Enter Amount'
                                     value={amount}
                                     trailingIcon={
-                                        <Wallet height={16} color='icon-secondary' />
+                                        <Box display='flex' gap='spacing-xxs' alignItems='center' height='24px'>
+                                            <Text variant='bs-regular' color='text-tertiary'>{balance}</Text>
+                                            <Wallet size={18} color='icon-tertiary' style={{ width: '16px', color: 'var(--icon-tertiary)' }} />
+                                            <Box
+                                                display='flex'
+                                                alignItems='center'
+                                                height='100%'
+                                                padding='spacing-none spacing-xxs'
+                                                borderRadius='radius-xxs'
+                                                cursor='pointer'
+                                                border='border-sm solid stroke-tertiary'
+                                                onClick={() => setAmount(balance)}
+                                            >
+                                                <Text
+                                                    variant='ol-regular'
+                                                    color='text-secondary'
+                                                    css={css`
+                                                        :hover {
+                                                            color: var(--text-tertiary);
+                                                        }
+                                                    `}
+                                                >
+                                                    Max
+                                                </Text>
+                                            </Box>
+                                        </Box>
                                     }
                                 />
                                 <Box position='absolute' margin='spacing-none spacing-xs'>

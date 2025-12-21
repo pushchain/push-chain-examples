@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { Box, CaretDown, Cross, css, IconProps, IllustrationProps, Text } from "shared-components";
+import { Box, CaretDown, Cross, css, Text } from "shared-components";
 
 export type SelectOption = {
-    icon?: React.FC<IconProps | IllustrationProps>;
+    icon?: any;
     label: string;
     value: string;
 }
@@ -92,8 +92,8 @@ const Select: React.FC<SelectProps> = ({
                         display='flex'
                         justifyContent='center'
                         alignItems='center'
-                        width='100vw'
                         height='100dvh'
+                        padding={{ initial: 'spacing-sm', tb: 'spacing-sm' }}
                         onMouseDown={(e) => {
                             if (e.target === e.currentTarget) setOpen(false);
                         }}
@@ -113,7 +113,7 @@ const Select: React.FC<SelectProps> = ({
                             borderRadius='radius-md'
                             border='border-sm solid stroke-secondary'
                             backgroundColor='surface-secondary'
-                            minWidth='400px'
+                            minWidth={{ initial: '400px', tb: '100%' }}
                             maxHeight='70dvh'
                             onMouseDown={(e) => e.stopPropagation()}
                             onTouchStart={(e) => e.stopPropagation()}
