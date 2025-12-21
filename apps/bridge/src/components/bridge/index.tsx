@@ -145,6 +145,11 @@ const Bridge = () => {
             }
         };
         handleFetchBalance();
+        const interval = setInterval(() => {
+            handleFetchBalance();
+        }, 10_000);
+
+        return () => clearInterval(interval);
     }, [pushChainClient, selectedToken, selectedChain]);
 
     useEffect(() => {
