@@ -1466,9 +1466,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pushchain/core@npm:^4.0.0":
-  version: 4.0.0
-  resolution: "@pushchain/core@npm:4.0.0"
+"@pushchain/core@npm:^4.0.2":
+  version: 4.0.2
+  resolution: "@pushchain/core@npm:4.0.2"
   dependencies:
     "@bufbuild/protobuf": "npm:^2.0.0"
     "@coral-xyz/anchor": "npm:^0.31.0"
@@ -1485,17 +1485,17 @@ __metadata:
     tslib: "npm:^2.3.0"
     tweetnacl: "npm:^1.0.3"
     viem: "npm:2.27.2"
-  checksum: 10/1025883662b582b448b8dfe9d483ee5f91c916eb02f1d88e00c29b7a0fd3c089b63925c7125ccd41ce7724693b9e9f7615eef1f2871f02013fffb3c9c8bf52af
+  checksum: 10/e4046d34962e12a291e8a496fefb1a7f4f65ad35e6805e5b35397d74e656048c9e578937a3c128da10470c6d932afc3a8034f8d47da9838eb0a70839c110f41b
   languageName: node
   linkType: hard
 
-"@pushchain/ui-kit@npm:^4.0.1":
-  version: 4.0.1
-  resolution: "@pushchain/ui-kit@npm:4.0.1"
+"@pushchain/ui-kit@npm:^4.0.3":
+  version: 4.0.3
+  resolution: "@pushchain/ui-kit@npm:4.0.3"
   dependencies:
     "@coral-xyz/anchor": "npm:^0.31.1"
     "@metamask/sdk": "npm:^0.32.0"
-    "@pushchain/core": "npm:^4.0.0"
+    "@pushchain/core": "npm:^4.0.2"
     "@solana/web3.js": "npm:^1.98.2"
     "@walletconnect/ethereum-provider": "npm:^2.21.5"
     buffer: "npm:^6.0.3"
@@ -1507,7 +1507,7 @@ __metadata:
   peerDependencies:
     react: ">=18.3.0 <20.0.0"
     react-dom: ">=18.3.0 <20.0.0"
-  checksum: 10/b0e773d08938be294386f4222d83495f13018b41fb87152cb70b5c3344caffb2881db1ec35fdb78d8efa22a42ab212ef461c6ee122c973a01c40c4436ba1dfbf
+  checksum: 10/2985ec356f810ebe7c95ac88c688e8a7dd4457f92a50528078191593ba80c0f6a7aa1c4b2ab4a5b187034b755f3101cfc2b3f6f119c9e15ea55e50e7d4e17b12
   languageName: node
   linkType: hard
 
@@ -4782,7 +4782,7 @@ __metadata:
   resolution: "core-connection@workspace:."
   dependencies:
     "@eslint/js": "npm:^9.9.0"
-    "@pushchain/ui-kit": "npm:^4.0.1"
+    "@pushchain/ui-kit": "npm:^4.0.3"
     "@radix-ui/react-popover": "npm:^1.1.2"
     "@types/react": "npm:^18.3.3"
     "@types/react-dom": "npm:^18.3.0"
