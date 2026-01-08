@@ -1451,9 +1451,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pushchain/core@npm:^4.0.2":
-  version: 4.0.2
-  resolution: "@pushchain/core@npm:4.0.2"
+"@pushchain/core@npm:^4.0.3":
+  version: 4.0.3
+  resolution: "@pushchain/core@npm:4.0.3"
   dependencies:
     "@bufbuild/protobuf": "npm:^2.0.0"
     "@coral-xyz/anchor": "npm:^0.31.0"
@@ -1470,17 +1470,17 @@ __metadata:
     tslib: "npm:^2.3.0"
     tweetnacl: "npm:^1.0.3"
     viem: "npm:2.27.2"
-  checksum: 10c0/4b07e04c391b7d50df36a37b333beccba079c60ede18c7fa761d11a3b43c2741a8d50ccd1dc09e817fad6b4b12b0194ad459e4c556e4b2a0c7dae3225d943664
+  checksum: 10c0/9b7952e1ab8955076bf2efe5e17ff02055134d7709fc31e5a77ac90fd052c02a67b34906ba811f10c9742e3630386af10cfb77df18fc238ed1f6ce06be241d7f
   languageName: node
   linkType: hard
 
-"@pushchain/ui-kit@npm:4.0.3":
-  version: 4.0.3
-  resolution: "@pushchain/ui-kit@npm:4.0.3"
+"@pushchain/ui-kit@npm:4.0.4":
+  version: 4.0.4
+  resolution: "@pushchain/ui-kit@npm:4.0.4"
   dependencies:
     "@coral-xyz/anchor": "npm:^0.31.1"
     "@metamask/sdk": "npm:^0.32.0"
-    "@pushchain/core": "npm:^4.0.2"
+    "@pushchain/core": "npm:^4.0.3"
     "@solana/web3.js": "npm:^1.98.2"
     "@walletconnect/ethereum-provider": "npm:^2.21.5"
     buffer: "npm:^6.0.3"
@@ -1492,7 +1492,7 @@ __metadata:
   peerDependencies:
     react: ">=18.3.0 <20.0.0"
     react-dom: ">=18.3.0 <20.0.0"
-  checksum: 10c0/62ad5891fe55675026725a8789b6578e7b094d917033d305adc440ade3155df25c65b0a8beafd6510d16bc0a438eb3e709f8d6d8acc12ac74ae5e56ac2dee432
+  checksum: 10c0/1b4e1184b9cd935096d91c6869579f294f1144fc8f6eed6438a2b04cc760441f8e1428ce90d5fa35aca8f2fe3634e18dc9ed2fbda8252932893d7d8c7cebc3c8
   languageName: node
   linkType: hard
 
@@ -4933,7 +4933,7 @@ __metadata:
   resolution: "core-connection@workspace:."
   dependencies:
     "@eslint/js": "npm:^9.9.0"
-    "@pushchain/ui-kit": "npm:4.0.3"
+    "@pushchain/ui-kit": "npm:4.0.4"
     "@radix-ui/react-popover": "npm:^1.1.2"
     "@solana/spl-token": "npm:^0.4.14"
     "@types/react": "npm:^18.3.3"
