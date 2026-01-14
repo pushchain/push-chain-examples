@@ -609,35 +609,14 @@ function App() {
               for them on Push Chain.
             </p>
 
-            <div
-              style={{
-                marginBottom: "1.5rem",
-                backgroundColor: "#f9f9f9",
-                borderRadius: "12px",
-                padding: "2rem",
-              }}
-            >
-              <label
-                style={{
-                  display: "block",
-                  marginBottom: "0.5rem",
-                  fontWeight: "bold",
-                  color: "#333",
-                }}
-              >
+            <div className="section">
+              <label className="form-label">
                 Chain
               </label>
               <select
                 value={selectedChain}
                 onChange={(e) => setSelectedChain(e.target.value)}
-                style={{
-                  width: "100%",
-                  padding: "0.75rem",
-                  fontSize: "1rem",
-                  borderRadius: "8px",
-                  border: "1px solid #ddd",
-                  marginBottom: "1rem",
-                }}
+                className="form-select"
               >
                 {chains.map((chain) => (
                   <option key={chain.value} value={chain.value}>
@@ -646,14 +625,7 @@ function App() {
                 ))}
               </select>
 
-              <label
-                style={{
-                  display: "block",
-                  marginBottom: "0.5rem",
-                  fontWeight: "bold",
-                  color: "#333",
-                }}
-              >
+              <label className="form-label">
                 Wallet Address
               </label>
               <input
@@ -661,54 +633,23 @@ function App() {
                 value={newWalletAddress}
                 onChange={(e) => setNewWalletAddress(e.target.value)}
                 placeholder="0x..."
-                style={{
-                  width: "100%",
-                  padding: "0.75rem",
-                  fontSize: "1rem",
-                  borderRadius: "8px",
-                  border: "1px solid #ddd",
-                  marginBottom: "1rem",
-                }}
+                className="form-input form-input-large"
               />
 
-              <label
-                style={{
-                  display: "block",
-                  marginBottom: "0.5rem",
-                  fontWeight: "bold",
-                  color: "#333",
-                }}
-              >
-                Airdrop Amount (tokens)
+              <label className="form-label">
+                Amount ($UNICORN)
               </label>
               <input
                 type="number"
                 value={airdropAmount}
                 onChange={(e) => setAirdropAmount(e.target.value)}
                 placeholder="100"
-                style={{
-                  width: "100%",
-                  padding: "0.75rem",
-                  fontSize: "1rem",
-                  borderRadius: "8px",
-                  border: "1px solid #ddd",
-                  marginBottom: "1rem",
-                }}
+                className="form-input form-input-large"
               />
 
               <button
                 onClick={addWalletToList}
-                style={{
-                  width: "100%",
-                  padding: "0.75rem",
-                  fontSize: "1rem",
-                  fontWeight: "bold",
-                  backgroundColor: "#4CAF50",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "8px",
-                  cursor: "pointer",
-                }}
+                className="add-wallet-button"
               >
                 Add to List
               </button>
