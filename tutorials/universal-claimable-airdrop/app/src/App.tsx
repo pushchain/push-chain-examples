@@ -553,38 +553,12 @@ function App() {
   };
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        backgroundColor: "white",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        padding: "2rem",
-        width: "100%",
-      }}
-    >
-      <h1
-        style={{
-          fontSize: "2.5rem",
-          marginBottom: "1rem",
-          color: "#333",
-          textAlign: "center",
-        }}
-      >
+    <div className="app-container">
+      <h1 className="app-title">
         Universal Claimable Airdrop
       </h1>
 
-      <p
-        style={{
-          color: "gray",
-          fontSize: "14px",
-          margin: "0 2rem 2rem 2rem",
-          padding: "0 0 1rem 0",
-          maxWidth: "480px",
-          borderBottom: "1px solid rgba(0, 0, 0, 0.1)",
-        }}
-      >
+      <p className="app-description">
         This tutorial demonstrates a Universal Claimable Airdrop on Push Chain.
         Any user, whether from Ethereum, Solana, Push or any supported chain can
         <b> claim the airdrop allocation</b> dircetly from their existing
@@ -595,62 +569,28 @@ function App() {
         <b>One claim flow. Any wallet. Any chain.</b>
       </p>
 
-      <div style={{ marginBottom: "2rem" }}>
+      <div className="wallet-button-container">
         <PushUniversalAccountButton uid="AirdropDeployer" />
       </div>
 
       {connectionStatus !== "connected" && (
-        <p
-          style={{
-            fontSize: "0.9rem",
-            color: "gray",
-            textAlign: "center",
-            marginBottom: "2rem",
-          }}
-        >
+        <p className="connection-message">
           Please connect your wallet to start the airdrop setup.
         </p>
       )}
 
-      <p
-        style={{
-          fontSize: "0.8rem",
-          marginTop: "0.5rem",
-          marginBottom: "1rem",
-          color: "#333",
-          textAlign: "center",
-          margin: "0 auto",
-          maxWidth: "480px",
-        }}
-      >
+      <p className="optional-text">
         Optional: Add <b>0x0165878A594ca255338adfa4d48449f69242Eb8F</b>{" "}
         ($UNICORN Token Address) to your wallet to see your balance in the
         wallet.
       </p>
 
-      <div
-        style={{
-          display: "flex",
-          gap: "1rem",
-          marginBottom: "2rem",
-          marginTop: "2rem",
-          justifyContent: "center",
-        }}
-      >
+      <div className="step-navigation">
         {[1, 2, 3, 4].map((step) => (
           <button
             key={step}
             onClick={() => setCurrentStep(step)}
-            style={{
-              padding: "0.5rem 1rem",
-              borderRadius: "8px",
-              backgroundColor: currentStep === step ? "#d548ec" : "#f0f0f0",
-              color: currentStep === step ? "white" : "#666",
-              fontWeight: "bold",
-              border: "none",
-              cursor: "pointer",
-              fontSize: "1rem",
-            }}
+            className={`step-button ${currentStep === step ? 'step-button-active' : 'step-button-inactive'}`}
           >
             Step {step}
           </button>
@@ -659,31 +599,11 @@ function App() {
 
       {connectionStatus === "connected" && currentStep === 1 && (
         <>
-          <div
-            style={{
-              maxWidth: "700px",
-              width: "100%",
-              padding: "2rem",
-              marginTop: "1rem",
-              borderTop: "1px solid rgba(0, 0, 0, 0.1)",
-            }}
-          >
-            <h2
-              style={{
-                fontSize: "1.5rem",
-                marginBottom: "1rem",
-                color: "#333",
-              }}
-            >
+          <div className="step-container">
+            <h2 className="step-title">
               Step 1: Add Claimable Wallets
             </h2>
-            <p
-              style={{
-                fontSize: "0.9rem",
-                color: "#666",
-                marginBottom: "2rem",
-              }}
-            >
+            <p className="step-description">
               Add wallet addresses from different chains to create your airdrop
               list. We will use this list to generate deterministic addresses
               for them on Push Chain.
@@ -904,31 +824,11 @@ function App() {
 
       {connectionStatus === "connected" && currentStep === 2 && (
         <>
-          <div
-            style={{
-              maxWidth: "700px",
-              width: "100%",
-              padding: "2rem",
-              marginTop: "1rem",
-              borderTop: "1px solid rgba(0, 0, 0, 0.1)",
-            }}
-          >
-            <h2
-              style={{
-                fontSize: "1.5rem",
-                marginBottom: "1rem",
-                color: "#333",
-              }}
-            >
+          <div className="step-container">
+            <h2 className="step-title">
               Step 2: Generate Merkle Tree
             </h2>
-            <p
-              style={{
-                fontSize: "0.9rem",
-                color: "#666",
-                marginBottom: "2rem",
-              }}
-            >
+            <p className="step-description">
               We now have deterministic addresses from all chains in EVM format on Push Chain.
               Review the converted addresses below and generate the Merkle Tree for the airdrop.
             </p>
@@ -1055,32 +955,11 @@ function App() {
 
       {connectionStatus === "connected" && currentStep === 3 && (
         <>
-          <div
-            style={{
-              maxWidth: "700px",
-              width: "100%",
-              padding: "2rem",
-              marginTop: "1rem",
-              borderTop: "1px solid rgba(0, 0, 0, 0.1)",
-            }}
-          >
-            <h2
-              style={{
-                fontSize: "1.5rem",
-                marginBottom: "1rem",
-                color: "#333",
-              }}
-            >
+          <div className="step-container">
+            <h2 className="step-title">
               Step 3: Deploy Claimable Airdrop Contract
             </h2>
-            <p
-              style={{
-                fontSize: "0.9rem",
-                color: "#666",
-                marginBottom: "2rem",
-                lineHeight: "1.6",
-              }}
-            >
+            <p className="step-description">
               We are now ready to deploy the airdrop contract! We will mint <b>$UNICORN</b> tokens 
               and deploy the contract with the merkle root. We're using the standard OpenZeppelin 
               merkle tree implementation without any modifications.
@@ -1247,32 +1126,11 @@ function App() {
 
       {connectionStatus === "connected" && currentStep === 4 && (
         <>
-          <div
-            style={{
-              maxWidth: "700px",
-              width: "100%",
-              padding: "2rem",
-              marginTop: "1rem",
-              borderTop: "1px solid rgba(0, 0, 0, 0.1)",
-            }}
-          >
-            <h2
-              style={{
-                fontSize: "1.5rem",
-                marginBottom: "1rem",
-                color: "#333",
-              }}
-            >
+          <div className="step-container">
+            <h2 className="step-title">
               Step 4: Claim Airdrop
             </h2>
-            <p
-              style={{
-                fontSize: "0.9rem",
-                color: "#666",
-                marginBottom: "2rem",
-                lineHeight: "1.6",
-              }}
-            >
+            <p className="step-description">
               Your airdrop contract has been successfully deployed! Users from any chain can login and can claim their $UNICORN tokens.
             </p>
 
@@ -1638,29 +1496,13 @@ function App() {
         </>
       )}
 
-      <div
-        style={{
-          position: "fixed",
-          bottom: "0",
-          left: "0",
-          right: "0",
-          margin: "40px 0 0 0",
-          padding: "12px 20px",
-          borderTop: "1px solid rgba(0, 0, 0, 0.1)",
-          background: "#fff",
-        }}
-      >
-        <p
-          style={{
-            color: "gray",
-            fontSize: "12px",
-          }}
-        >
+      <div className="footer">
+        <p className="footer-text">
           <a
-            href="https://github.com/pushchain/push-chain-examples"
+            href="https://github.com/pushchain/push-chain-examples/tree/main/tutorials/universal-claimable-airdrop"
             target="_blank"
             rel="noopener noreferrer"
-            style={{ color: "#d548ec" }}
+            className="footer-link"
           >
             Source Code
           </a> |&nbsp;
@@ -1668,7 +1510,7 @@ function App() {
             href="https://donut.push.network/address/0xa82fF9aFd8f496c3d6ac40E2a0F282E47488CFc9?tab=contract"
             target="_blank"
             rel="noopener noreferrer"
-            style={{ color: "#d548ec" }}
+            className="footer-link"
           >
             Smart Contract
           </a>
