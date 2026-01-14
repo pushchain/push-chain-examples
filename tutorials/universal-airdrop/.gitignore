@@ -1,6 +1,0 @@
-node_modules
-.env
-artifacts
-cache
-.DS_Store
-typechain-types

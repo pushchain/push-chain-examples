@@ -1,29 +1,44 @@
-# Simple Counter Smart Contracts
+# Universal Claimable Airdrop Smart Contracts
 
-This folder contains the smart contracts for the Simple Counter tutorial, a minimal example demonstrating basic smart contract development and deployment on PushChain.
+This folder contains the smart contracts for the Universal Claimable Airdrop tutorial, demonstrating how to create a cross-chain airdrop system using Merkle proofs and Universal Executor Accounts (UEA) on PushChain.
 
-👉 Full Tutorial: [Read the step-by-step guide on Push.org](https://push.org/docs/chain/tutorials/basics/tutorial-simple-counter/)
+👉 Full Tutorial: [Read the step-by-step guide on Push.org](https://push.org/docs/chain/tutorials/token-systems/tutorial-universal-airdrop/)
 
 ## Overview
 
-The Universal Simple Counter is a beginner-friendly tutorial that shows how to create and deploy a simple counter contract on PushChain. This is the perfect starting point for developers new to PushChain development.
+The Universal Claimable Airdrop tutorial shows how to create an airdrop system that works seamlessly across multiple chains using PushChain's Universal Executor Accounts (UEA). Users from any supported chain can claim their airdrop using their deterministic addresses, making it truly universal.
 
 ## Contracts
 
-### Counter.sol
+### UniversalAirdropFactory.sol
 
-The main contract that provides:
-- A simple counter that can be incremented
-- A `countPC` variable to track the current count
-- An `increment()` function to increase the counter
-- Event emission when the counter is incremented
+This file contains two main contracts:
+
+#### UniversalAirdrop
+
+The airdrop contract that provides:
+- **Hardcoded $UNICORN Token**: Uses the $UNICORN ERC-20 token at `0x0165878A594ca255338adfa4d48449f69242Eb8F`
+- **Automatic Minting**: Mints the total airdrop amount upon deployment
+- **Merkle Proof Verification**: Uses OpenZeppelin's MerkleProof library for secure claim verification
+- **Claim Tracking**: Prevents double-claiming with a mapping of claimed addresses
+- **Owner Controls**: Allows merkle root updates and token withdrawal
+
+#### UniversalAirdropFactory
+
+The factory contract that:
+- Deploys new `UniversalAirdrop` instances
+- Automatically mints the specified amount of $UNICORN tokens to each airdrop
+- Emits events for tracking deployed airdrops
+- Simplifies the deployment process
 
 ## Key Features
 
-- **Simple Functionality**: Basic counter operations (increment, reset, read)
-- **Event Emission**: Emits `CountIncremented` events for frontend integration
-- **Minimal Design**: Clean, easy-to-understand code perfect for learning
-- **PushChain Compatible**: Deployed and verified on PushChain testnet
+- **Universal Executor Accounts (UEA)**: Users interact from deterministic addresses across all chains
+- **Merkle Tree Verification**: Efficient and secure claim verification using OpenZeppelin's implementation
+- **Automatic Token Minting**: $UNICORN tokens are minted directly to the airdrop contract on deployment
+- **Factory Pattern**: Easy deployment of multiple airdrop campaigns
+- **Cross-Chain Compatible**: Works seamlessly with users from any supported chain
+- **Gas Efficient**: Merkle proofs minimize on-chain storage requirements
 
 ## Development
 
@@ -47,40 +62,78 @@ forge test
 
 ### Deployment
 
-Deploy to PushChain testnet:
+Deploy the factory contract to PushChain testnet:
 
 ```bash
-forge script script/Deploy.s.sol --rpc-url push_testnet --broadcast
+forge create src/UniversalAirdropFactory.sol:UniversalAirdropFactory \
+  --rpc-url push_testnet \
+  --chain 42101 \
+  --account myKeystore \
+  --broadcast
 ```
 
 Or deploy with a specific private key:
 
 ```bash
-forge script script/Deploy.s.sol --rpc-url push_testnet --private-key <YOUR_PRIVATE_KEY> --broadcast
+forge create src/UniversalAirdropFactory.sol:UniversalAirdropFactory \
+  --rpc-url push_testnet \
+  --chain 42101 \
+  --private-key <YOUR_PRIVATE_KEY> \
+  --broadcast
 ```
 
 ### Contract Verification
 
-After deployment, verify your contract:
+After deployment, verify your factory contract on Blockscout:
 
 ```bash
-forge verify-contract <CONTRACT_ADDRESS> src/Counter.sol:Counter --rpc-url push_testnet
+forge verify-contract \
+  --chain 42101 \
+  --verifier blockscout \
+  <FACTORY_CONTRACT_ADDRESS> \
+  src/UniversalAirdropFactory.sol:UniversalAirdropFactory
 ```
 
 ## Integration with Frontend
 
-The frontend application in the `../app` directory connects to this contract to display and update the counter. It uses the contract's ABI to interact with the deployed contract on PushChain.
+The frontend application in the `../app` directory provides a 4-step tutorial interface:
+
+1. **Step 1**: Add wallets with chain selection and convert to Universal Executor Addresses (UEA)
+2. **Step 2**: Preview converted addresses and generate Merkle tree and proofs
+3. **Step 3**: Deploy the airdrop contract via the factory
+4. **Step 4**: Users claim their airdrop tokens
 
 ## Example Usage
 
-Once deployed, you can interact with the contract:
+### Creating an Airdrop
 
-1. **Read Counter**: Call `countPC()` to get the current counter value
-2. **Increment**: Call `increment()` to increase the counter by 1
+Once the factory is deployed, create a new airdrop campaign:
 
-## Contract Address
+```solidity
+// Call the factory's createAirdrop function
+UniversalAirdropFactory.createAirdrop(
+  totalAmount,  // Total amount of $UNICORN tokens to mint (sum of all allocations)
+  merkleRoot    // Root of the merkle tree containing all eligible addresses and amounts
+)
+```
 
-Update the contract address in your frontend application after deployment:
+### Claiming Tokens
+
+Users can claim their allocated tokens:
+
+```solidity
+// Call the airdrop contract's claim function
+UniversalAirdrop.claim(
+  amount,       // Amount allocated to the claimer
+  merkleProof   // Array of merkle proof hashes
+)
+```
+
+## Contract Addresses
+
+**$UNICORN Token**: `0x0165878A594ca255338adfa4d48449f69242Eb8F`
+
+Update the factory contract address in your frontend application after deployment:
 
 ```typescript
-const COUNTER_CONTRACT_ADDRESS = 'YOUR_DEPLOYED_CONTRACT_ADDRESS'
+const FACTORY_CONTRACT_ADDRESS = 'YOUR_DEPLOYED_FACTORY_ADDRESS'
