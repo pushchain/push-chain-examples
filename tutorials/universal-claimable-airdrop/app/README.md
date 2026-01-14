@@ -1,29 +1,29 @@
-# Universal Counter App
+# Universal Claimable Airdrop App
 
-A clean React application demonstrating cross-chain interaction with the Universal Counter smart contract on PushChain. This implementation shows cross-chain counters with a simple, professional interface.
+A comprehensive React application demonstrating a cross-chain claimable airdrop system using Merkle proofs and Universal Executor Accounts (UEA) on PushChain. This tutorial shows how users from any supported chain can claim their airdrop allocation seamlessly.
 
-👉 Full Tutorial: [Read the step-by-step guide on Push.org](https://push.org/docs/chain/tutorials/universal-counter/)
+👉 Full Tutorial: [Read the step-by-step guide on Push.org](https://push.org/docs/chain/tutorials/token-systems/tutorial-universal-airdrop/)
 
 ## Overview
 
-This frontend application provides a clean, minimal interface for the Universal Counter contract. It demonstrates cross-chain user attribution by showing separate counters for Ethereum, Solana, and Push Chain users, with a focus on simplicity and clarity.
+This frontend application provides a complete 4-step tutorial interface for creating and managing a universal claimable airdrop. It demonstrates how to convert addresses from multiple chains to Universal Executor Addresses (UEA), generate Merkle trees for efficient verification, deploy airdrop contracts, and enable cross-chain claiming.
 
 ## Features
 
-- **Cross-Chain Attribution**: Automatically detects user's origin chain (Ethereum, Solana, Push Chain)
-- **Clean UI**: Minimal interface with centered layout matching the provided design
-- **Total Universal Count**: Displays the total count across all chains
-- **Individual Chain Counters**: Shows separate counters for ETH, Sol, and PC
-- **Wallet Integration**: Connect wallet using Push Universal Account Button
-- **Transaction Support**: Increment counter using PushChain transactions
-- **Error Handling**: Proper error messages and loading states
-- **TypeScript**: Fully typed for better development experience
+- **Multi-Wallet Support**: Separate wallet connections for deployer and claimer roles
+- **Cross-Chain Address Conversion**: Convert addresses from Ethereum, Solana, Base, and other chains to UEA
+- **Merkle Tree Generation**: Uses OpenZeppelin's StandardMerkleTree for secure proof generation
+- **Factory Contract Deployment**: Deploy airdrop contracts via the UniversalAirdropFactory
+- **Claim Verification**: Check eligibility and claim status before attempting transactions
+- **Manual Address Lookup**: Query eligibility for any address from any supported chain
+- **Collapsible UI**: Clean interface with expandable Merkle tree data section
+- **Real-time Status Updates**: Automatic claim status checking and UI updates
 
 ## Prerequisites
 
 - Node.js (v16 or higher)
 - npm or yarn
-- A deployed Universal Counter contract on PushChain testnet
+- A deployed UniversalAirdropFactory contract on PushChain testnet
 
 ## Installation
 
@@ -32,9 +32,9 @@ This frontend application provides a clean, minimal interface for the Universal 
 npm install
 ```
 
-2. Update the contract address in `src/App.tsx`:
+2. Update the factory contract address in `src/App.tsx`:
 ```typescript
-const COUNTER_CONTRACT_ADDRESS = 'YOUR_DEPLOYED_CONTRACT_ADDRESS'
+const FACTORY_ADDRESS = '0xa82fF9aFd8f496c3d6ac40E2a0F282E47488CFc9'
 ```
 
 3. Start the development server:
@@ -47,72 +47,150 @@ npm run dev
 ```
 app/
 ├── src/
-│   ├── App.tsx          # Main application component
-│   ├── App.css          # Application styles
-│   ├── index.css        # Global styles
+│   ├── App.tsx                          # Main application component
+│   ├── main.tsx                         # App entry with nested wallet providers
 │   └── abi/
-│       └── Counter.json # Contract ABI
-├── package.json         # Dependencies and scripts
-└── README.md           # This file
+│       ├── UniversalAirdropFactory.json # Factory contract ABI
+│       └── UniversalAirdrop.json        # Airdrop contract ABI
+├── package.json                         # Dependencies and scripts
+└── README.md                           # This file
 ```
+
+## Tutorial Steps
+
+### Step 1: Add Wallets
+
+- Select chain (Ethereum, Solana, Base, etc.)
+- Enter wallet addresses with allocation amounts
+- Automatically converts to Universal Executor Addresses (UEA)
+- Preview converted addresses with their deterministic UEA addresses
+
+### Step 2: Generate Merkle Tree
+
+- Reviews all eligible addresses and amounts
+- Generates Merkle tree using OpenZeppelin's StandardMerkleTree
+- Creates Merkle root for contract deployment
+- Displays tree data with collapsible interface
+
+### Step 3: Deploy Airdrop Contract
+
+- Connect deployer wallet
+- Deploy via UniversalAirdropFactory
+- Automatically mints $UNICORN tokens to the airdrop contract
+- Extracts deployed contract address from event logs
+
+### Step 4: Claim Airdrop
+
+- **Deployment Successful Section**:
+  - Shows deployed contract address
+  - Collapsible Merkle tree data (root + eligible addresses JSON)
+  
+- **Test Claim Section**:
+  - Connect claimer wallet
+  - Automatic eligibility check with claim status
+  - Manual address lookup for any chain
+  - Claim button (disabled if already claimed)
 
 ## Key Components
 
-### App.tsx
+### Nested Wallet Providers
 
-The main application component that includes:
-
-- **PushChain Hooks**: Uses `usePushWalletContext`, `usePushChainClient`, and `usePushChain`
-- **State Management**: Manages counter value, loading states, and errors
-- **Contract Interaction**: Reads counter value and sends increment transactions
-- **UI Components**: Clean, centered layout with wallet connection and counter display
-
-### Contract Integration
-
-The app demonstrates proper PushChain integration patterns:
+The app uses nested `PushUniversalWalletProvider` components for separate deployer and claimer wallets:
 
 ```typescript
-// Reading contract state
-const provider = new ethers.JsonRpcProvider(
-  "https://evm.rpc-testnet-donut-node1.push.org/"
-);
-const contract = new ethers.Contract(CONTRACT_ADDRESS, CounterABI, provider);
-const currentCount = await contract.countPC();
+<PushUniversalWalletProvider uid="AirdropDeployer">
+  <PushUniversalWalletProvider uid="AirdropClaimer">
+    <App />
+  </PushUniversalWalletProvider>
+</PushUniversalWalletProvider>
+```
 
-// Sending transactions
-const tx = await pushChainClient.universal.sendTransaction({
-  to: CONTRACT_ADDRESS,
-  data: getTxData(),
-  value: BigInt(0),
-});
+### Address Conversion
+
+Converts origin addresses to Universal Executor Addresses:
+
+```typescript
+const account = PushChain.utils.account.toUniversal(address, { chain });
+const executorAddress = await PushChain.utils.account.convertOriginToExecutor(account);
+```
+
+### Merkle Tree Generation
+
+Uses OpenZeppelin's StandardMerkleTree with double hashing to match contract verification:
+
+```typescript
+const tree = StandardMerkleTree.of(
+  convertedAddresses.map(([addr, amt]) => [addr, amt]),
+  ["address", "uint256"]
+);
+const merkleRoot = tree.root;
+```
+
+### Claim Verification
+
+Checks if address has already claimed before attempting transaction:
+
+```typescript
+const provider = new ethers.JsonRpcProvider("https://evm.donut.rpc.push.org/");
+const contract = new ethers.Contract(deployedAirdropAddress, UniversalAirdropABI, provider);
+const hasClaimed = await contract.hasClaimed(claimerAddress);
+```
+
+### Merkle Proof Generation
+
+Generates proof for specific address and amount:
+
+```typescript
+for (const [i, v] of merkleTree.tree.entries()) {
+  if (v[0].toLowerCase() === claimAddr.toLowerCase()) {
+    proof = merkleTree.tree.getProof(i);
+    break;
+  }
+}
 ```
 
 ## Configuration
 
-### Contract Address
+### Contract Addresses
 
-Update the contract address after deploying your Counter contract:
-
-```typescript
-const COUNTER_CONTRACT_ADDRESS = '0x9F95857e43d25Bb9DaFc6376055eFf63bC0887C1'
-```
+**Factory Contract**: `0xa82fF9aFd8f496c3d6ac40E2a0F282E47488CFc9`  
+**$UNICORN Token**: `0x0165878A594ca255338adfa4d48449f69242Eb8F`
 
 ### RPC Endpoint
 
 The app uses the PushChain testnet RPC endpoint:
 
 ```typescript
-const provider = new ethers.JsonRpcProvider(
-  "https://evm.rpc-testnet-donut-node1.push.org/"
-);
+const provider = new ethers.JsonRpcProvider("https://evm.donut.rpc.push.org/");
 ```
+
+### Supported Chains
+
+- Push Chain Testnet
+- Ethereum Sepolia
+- Solana Devnet
+- Base Sepolia
+- Arbitrum Sepolia
+- Optimism Sepolia
+- Polygon Amoy
 
 ## User Experience
 
-1. **Page Load**: Counter value displays immediately
-2. **Wallet Connection**: Click "Connect Account" to connect wallet
-3. **Counter Interaction**: Click "Increment Counter" to increase the value
-4. **Real-time Updates**: Counter updates automatically after transactions
+### Deployer Flow
+
+1. Navigate through Steps 1-3
+2. Add eligible addresses with amounts
+3. Generate Merkle tree
+4. Deploy airdrop contract
+5. Share contract address with claimers
+
+### Claimer Flow
+
+1. Go to Step 4
+2. Connect wallet from any supported chain
+3. Check eligibility (automatic or manual lookup)
+4. Claim tokens if eligible and not already claimed
+5. See "Already Claimed ✓" status after successful claim
 
 ## Development
 
@@ -124,17 +202,19 @@ const provider = new ethers.JsonRpcProvider(
 
 ### Styling
 
-The app uses inline styles for simplicity, with a focus on:
+The app uses inline styles with:
 - Clean white background
-- Centered layout
+- Step-based navigation
+- Color-coded sections (blue for deployment, orange for claiming)
 - Responsive design
-- Clear visual hierarchy
+- Collapsible sections for advanced data
 
 ## Dependencies
 
 Key dependencies include:
 
 - **@pushchain/ui-kit**: PushChain UI components and hooks
+- **@openzeppelin/merkle-tree**: Merkle tree generation and proof verification
 - **ethers**: Ethereum library for blockchain interactions
 - **react**: Frontend framework
 - **typescript**: Type safety
@@ -144,9 +224,10 @@ Key dependencies include:
 
 ### Common Issues
 
-1. **Contract not found**: Ensure the contract address is correct
-2. **Transaction fails**: Check wallet connection and network
-3. **Counter not updating**: Verify RPC endpoint and contract deployment
+1. **Invalid proof error**: Ensure Merkle tree uses same format as contract (double hashing)
+2. **Already claimed error**: Check claim status before attempting transaction
+3. **Address not found**: Verify address was included in original Merkle tree
+4. **Transaction fails**: Check wallet connection and network
 
 ### Error Messages
 
@@ -154,19 +235,22 @@ The app provides clear error messages for:
 - Wallet connection issues
 - Transaction failures
 - Contract interaction problems
+- Claim status verification
 
 ## Next Steps
 
-After running this tutorial, you can:
+After completing this tutorial, you can:
 
-- Explore the more advanced Universal Counter tutorial
-- Add more contract functions (reset, custom increment values)
-- Enhance the UI with additional features
-- Deploy to other networks supported by PushChain
+- Deploy your own airdrop campaigns
+- Customize token amounts and eligibility criteria
+- Add more supported chains
+- Implement time-based claiming windows
+- Create multi-phase airdrops
 
 ## Resources
 
 - [PushChain Documentation](https://push.org/docs)
 - [PushChain UI Kit](https://www.npmjs.com/package/@pushchain/ui-kit)
-- [React Documentation](https://react.dev/)
-- [Vite Documentation](https://vitejs.dev/)
+- [OpenZeppelin Merkle Tree](https://www.npmjs.com/package/@openzeppelin/merkle-tree)
+- [Smart Contract Source Code](https://github.com/pushchain/push-chain-examples/tree/main/tutorials/universal-claimable-airdrop/contracts)
+- [Factory Contract on Blockscout](https://donut.push.network/address/0xa82fF9aFd8f496c3d6ac40E2a0F282E47488CFc9?tab=contract)
