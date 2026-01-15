@@ -4,36 +4,25 @@ import {
   usePushChainClient,
   usePushWalletContext,
 } from "@pushchain/ui-kit";
-import { ethers } from "ethers";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import "./App.css";
 
-// Contract address for the deployed Counter contract
-const CONTRACT_ADDRESS = "0x0165878A594ca255338adfa4d48449f69242Eb8F";
-
-// Global provider for Push Chain testnet
-const provider = new ethers.JsonRpcProvider(
-  "https://evm.rpc-testnet-donut-node1.push.org/"
-);
-
 function App() {
+  // Push Chain hooks for wallet connection and utilities
   const { connectionStatus } = usePushWalletContext();
   const { pushChainClient } = usePushChainClient();
   const { PushChain } = usePushChain();
 
-  const [balance, setBalance] = useState<number>(-1);
-
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string>("");
-  const [txHash, setTxHash] = useState<string>("");
-
+  // State for manual UEA lookup
   const [manualLookupAddress, setManualLookupAddress] = useState<string>("");
   const [manualLookupChain, setManualLookupChain] = useState<string>(
     PushChain.CONSTANTS.CHAIN.ETHEREUM_SEPOLIA
   );
   const [manualLookupResult, setManualLookupResult] = useState<string>("");
   const [isCheckingUEA, setIsCheckingUEA] = useState<boolean>(false);
+  const [error, setError] = useState<string>("");
 
+  // Supported chains for UEA derivation
   const chains = [
     { value: PushChain.CONSTANTS.CHAIN.PUSH_TESTNET, label: "Push Chain" },
     {
@@ -49,116 +38,47 @@ function App() {
     { value: PushChain.CONSTANTS.CHAIN.BNB_TESTNET, label: "BNB Testnet" },
   ];
 
-  // Function to read the $UNICORN Balance
-  const readBalance = async () => {
-    if (connectionStatus === "connected" && pushChainClient) {
-      try {
-        const contract = new ethers.Contract(
-          CONTRACT_ADDRESS,
-          ERC20ABI,
-          provider
-        );
-
-        const balance = await contract.balanceOf(
-          pushChainClient.universal.account
-        );
-
-        // Convert from wei to human readable format (18 decimals)
-        const formattedBalance = ethers.formatUnits(balance, 18);
-        setBalance(Number(formattedBalance));
-      } catch (err) {
-        console.error("Error reading balance:", err);
-        setError("Failed to read user balance");
-      }
-    }
-  };
-
-  // Read balance when account is connected
-  useEffect(() => {
-    if (connectionStatus === "connected" && pushChainClient) {
-      readBalance();
+  // Handler to derive UEA from any wallet address
+  const handleDeriveUEA = async () => {
+    if (!manualLookupAddress.trim()) {
+      setError("Please enter an address");
+      return;
     }
 
-    // status reset
-    // reset balance
-    if (!pushChainClient) {
-      setBalance(-1);
-    }
-  }, [connectionStatus, pushChainClient]);
+    setIsCheckingUEA(true);
+    setError("");
+    setManualLookupResult("");
 
-  // Function to increment the counter
-  const mintToken = async () => {
-    if (connectionStatus === "connected" && pushChainClient) {
-      try {
-        setIsLoading(true);
-        setError("");
+    try {
+      // Convert the origin address to a Universal Account
+      const account = PushChain.utils.account.toUniversal(
+        manualLookupAddress,
+        {
+          chain: manualLookupChain as any,
+        }
+      );
 
-        // Send transaction to mint tokens
-        const tx = await pushChainClient.universal.sendTransaction({
-          to: CONTRACT_ADDRESS,
-          data: PushChain.utils.helpers.encodeTxData({
-            abi: ERC20ABI,
-            functionName: "mint",
-            args: [
-              pushChainClient.universal.account,
-              PushChain.utils.helpers.parseUnits("100", 18),
-            ], // Mint 100 tokens
-          }),
-          value: BigInt(0),
-        });
-
-        setTxHash(tx.hash);
-
-        // Wait for transaction to be mined
-        await tx.wait();
-
-        // Refresh counter values
-        await readBalance();
-
-        setIsLoading(false);
-      } catch (err) {
-        console.error("Transaction error:", err);
-        setError("Failed to mint token");
-        setIsLoading(false);
-      }
-    } else {
-      setError("Please connect your wallet first");
+      // Derive the Universal Executor Account (UEA) address
+      const executorAddress =
+        await PushChain.utils.account.convertOriginToExecutor(account);
+      setManualLookupResult(executorAddress.address);
+    } catch (err) {
+      console.error("Error deriving UEA:", err);
+      setError("Failed to derive Universal Executor Account");
+    } finally {
+      setIsCheckingUEA(false);
     }
   };
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        backgroundColor: "white",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "2rem",
-        width: "100%",
-      }}
-    >
-      <h1
-        style={{
-          fontSize: "2.5rem",
-          marginBottom: "2rem",
-          color: "#333",
-          textAlign: "center",
-        }}
-      >
+    <div className="app-container">
+      {/* Main title */}
+      <h1 className="app-title">
         Derive Universal Executor Account Example
       </h1>
-      <p
-        style={{
-          color: "gray",
-          fontSize: "14px",
-          margin: "-1rem 0 3rem 0",
-          padding: "0 0 1rem 0",
-          maxWidth: "480px",
-          borderBottom: "1px solid rgba(0, 0, 0, 0.1)",
-        }}
-      >
+      
+      {/* Description section */}
+      <p className="app-description">
         <p>
           This example demonstrates how any wallet, from Ethereum, Solana, or
           any supported chain, can deterministically derive a{" "}
@@ -171,225 +91,70 @@ function App() {
         </p>
         &nbsp;
         <p>
-          The origin wallet remains the user’s identity and No new keys are
-          created.
-        </p>
-        &nbsp;
-        <p>
-          This derived UEA becomes the execution surface for all future
+          The origin wallet remains the user’s identity and 
+          the derived UEA becomes the execution surface for all future
           interactions, regardless of the user’s origin chain.
         </p>
       </p>
 
+      {/* Wallet connection button */}
       <div style={{ marginBottom: "2rem" }}>
         <PushUniversalAccountButton />
       </div>
 
+      {/* Connection prompt */}
       {connectionStatus !== "connected" && (
-        <p
-          style={{
-            fontSize: "0.9rem",
-            color: "gray",
-            textAlign: "center",
-            marginTop: "-1rem",
-            marginBottom: "2rem",
-          }}
-        >
+        <p style={{ fontSize: "0.9rem", color: "gray", textAlign: "center", marginTop: "-1rem", marginBottom: "2rem" }}>
           Please connect your wallet to see it in action.
         </p>
       )}
 
+      {/* Display connected wallet's UEA information */}
       {connectionStatus === "connected" && pushChainClient && (
-        <div
-          style={{
-            marginBottom: "2rem",
-            padding: "1.5rem",
-            backgroundColor: "#f9f9f9",
-            borderRadius: "12px",
-            maxWidth: "600px",
-            width: "100%",
-          }}
-        >
-          <h3
-            style={{
-              fontSize: "1rem",
-              marginBottom: "1rem",
-              color: "#0066cc",
-              fontWeight: "bold",
-            }}
-          >
+        <div className="info-box">
+          <h3 style={{ fontSize: "1rem", marginBottom: "1rem", color: "#0066cc", fontWeight: "bold" }}>
             🔑 Your Universal Executor Account (UEA)
           </h3>
-          <div
-            style={{
-              backgroundColor: "white",
-              borderRadius: "8px",
-              padding: "1rem",
-              marginBottom: "0.75rem",
-            }}
-          >
-            <p
-              style={{
-                margin: "0 0 0.5rem 0",
-                fontSize: "0.85rem",
-                color: "#666",
-                fontWeight: "bold",
-              }}
-            >
-              Origin Wallet:
-            </p>
-            <p
-              style={{
-                margin: "0 0 0.5rem 0",
-                fontSize: "0.8rem",
-                color: "#333",
-                fontFamily: "monospace",
-                wordBreak: "break-all",
-              }}
-            >
-              {pushChainClient.universal.origin.address}
-            </p>
-            <p
-              style={{
-                margin: 0,
-                fontSize: "0.75rem",
-                color: "#999",
-              }}
-            >
-              Chain:{" "}
-              {PushChain.utils.chains.getChainName(
-                pushChainClient.universal.origin.chain
-              )}
+          
+          {/* Origin wallet information */}
+          <div className="info-card">
+            <p className="label-text">Origin Wallet:</p>
+            <p className="address-text">{pushChainClient.universal.origin.address}</p>
+            <p className="chain-label">
+              Chain: {PushChain.utils.chains.getChainName(pushChainClient.universal.origin.chain)}
             </p>
           </div>
-          <div
-            style={{
-              backgroundColor: "white",
-              borderRadius: "8px",
-              padding: "1rem",
-            }}
-          >
-            <p
-              style={{
-                margin: "0 0 0.5rem 0",
-                fontSize: "0.85rem",
-                color: "#666",
-                fontWeight: "bold",
-              }}
-            >
-              Universal Executor Account (UEA):
-            </p>
-            <p
-              style={{
-                margin: 0,
-                fontSize: "0.8rem",
-                color: "#d548ec",
-                fontFamily: "monospace",
-                wordBreak: "break-all",
-                fontWeight: "bold",
-              }}
-            >
-              {pushChainClient.universal.account}
-            </p>
+          
+          {/* Derived UEA address */}
+          <div className="info-card">
+            <p className="label-text">Universal Executor Account (UEA):</p>
+            <p className="uea-address">{pushChainClient.universal.account}</p>
           </div>
         </div>
       )}
 
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          margin: "1rem 0 1rem 0",
-          maxWidth: "600px",
-          width: "100%",
-        }}
-      >
-        <div
-          style={{
-            flex: 1,
-            height: "1px",
-            background: "linear-gradient(to right, transparent, #d548ec)",
-          }}
-        />
-        <div
-          style={{
-            padding: "0 1.5rem",
-            textAlign: "center",
-          }}
-        >
-          <div
-            style={{
-              fontSize: "1.2rem",
-              fontWeight: "bold",
-              color: "#d548ec",
-              marginBottom: "0.25rem",
-            }}
-          >
-            OR
-          </div>
-          <div
-            style={{
-              fontSize: "0.85rem",
-              color: "#666",
-              fontWeight: "500",
-            }}
-          >
-            Derive UEA from Any Wallet
-          </div>
+      {/* Divider */}
+      <div className="divider-container">
+        <div className="divider-line-left" />
+        <div className="divider-content">
+          <div className="divider-or">OR</div>
+          <div className="divider-subtitle">Derive UEA from Any Wallet</div>
         </div>
-        <div
-          style={{
-            flex: 1,
-            height: "1px",
-            background: "linear-gradient(to left, transparent, #d548ec)",
-          }}
-        />
+        <div className="divider-line-right" />
       </div>
 
-      <div
-        style={{
-          marginTop: "3rem",
-          marginBottom: "2rem",
-          padding: "1.5rem",
-          backgroundColor: "#f9f9f9",
-          borderRadius: "12px",
-          maxWidth: "600px",
-          width: "100%",
-        }}
-      >
-        <p
-          style={{
-            fontSize: "0.85rem",
-            color: "#666",
-            marginBottom: "1rem",
-          }}
-        >
-          Enter any wallet address and chain to derive its Universal Executor
-          Account:
+      {/* Manual UEA derivation form */}
+      <div className="info-box" style={{ marginTop: "3rem" }}>
+        <p style={{ fontSize: "0.85rem", color: "#666", marginBottom: "1rem" }}>
+          Enter any wallet address and chain to derive its Universal Executor Account:
         </p>
 
-        <label
-          style={{
-            display: "block",
-            fontSize: "0.85rem",
-            color: "#666",
-            marginBottom: "0.5rem",
-            fontWeight: "bold",
-          }}
-        >
-          Chain:
-        </label>
+        {/* Chain selector */}
+        <label className="form-label">Chain:</label>
         <select
           value={manualLookupChain}
           onChange={(e) => setManualLookupChain(e.target.value)}
-          style={{
-            width: "100%",
-            padding: "0.75rem",
-            fontSize: "0.9rem",
-            borderRadius: "8px",
-            border: "1px solid #ddd",
-            marginBottom: "1rem",
-          }}
+          className="form-select"
         >
           {chains.map((chain) => (
             <option key={chain.value} value={chain.value}>
@@ -398,207 +163,49 @@ function App() {
           ))}
         </select>
 
-        <label
-          style={{
-            display: "block",
-            fontSize: "0.85rem",
-            color: "#666",
-            marginBottom: "0.5rem",
-            fontWeight: "bold",
-          }}
-        >
-          Wallet Address:
-        </label>
+        {/* Address input */}
+        <label className="form-label">Wallet Address:</label>
         <input
           type="text"
           value={manualLookupAddress}
           onChange={(e) => setManualLookupAddress(e.target.value)}
           placeholder="Enter address (e.g., 0x...)"
-          style={{
-            width: "100%",
-            padding: "0.75rem",
-            fontSize: "0.9rem",
-            borderRadius: "8px",
-            border: "1px solid #ddd",
-            marginBottom: "1rem",
-            fontFamily: "monospace",
-          }}
+          className="form-input"
         />
 
-        <button
-          onClick={async () => {
-            if (!manualLookupAddress.trim()) {
-              setError("Please enter an address");
-              return;
-            }
-
-            setIsCheckingUEA(true);
-            setError("");
-            setManualLookupResult("");
-
-            try {
-              const account = PushChain.utils.account.toUniversal(
-                manualLookupAddress,
-                {
-                  chain: manualLookupChain as any,
-                }
-              );
-
-              const executorAddress =
-                await PushChain.utils.account.convertOriginToExecutor(account);
-              setManualLookupResult(executorAddress.address);
-            } catch (err) {
-              console.error("Error deriving UEA:", err);
-              setError("Failed to derive Universal Executor Account");
-            } finally {
-              setIsCheckingUEA(false);
-            }
-          }}
-          disabled={isCheckingUEA}
-          style={{
-            width: "100%",
-            padding: "0.75rem",
-            fontSize: "1rem",
-            fontWeight: "bold",
-            backgroundColor: isCheckingUEA ? "#999" : "#2196f3",
-            color: "white",
-            border: "none",
-            borderRadius: "8px",
-            cursor: isCheckingUEA ? "not-allowed" : "pointer",
-            marginBottom: "1rem",
-          }}
-        >
+        {/* Derive button */}
+        <button onClick={handleDeriveUEA} disabled={isCheckingUEA} className="btn-primary">
           {isCheckingUEA ? "Deriving..." : "Derive UEA"}
         </button>
 
+        {/* Display derived UEA result */}
         {manualLookupResult && (
-          <div
-            style={{
-              padding: "1rem",
-              backgroundColor: "#e8f5e9",
-              borderRadius: "8px",
-              border: "1px solid #4caf50",
-            }}
-          >
-            <p
-              style={{
-                margin: "0 0 0.5rem 0",
-                fontSize: "0.9rem",
-                fontWeight: "bold",
-                color: "#333",
-              }}
-            >
-              ✅ Universal Executor Account (UEA):
-            </p>
-            <p
-              style={{
-                margin: 0,
-                fontSize: "0.8rem",
-                color: "#d548ec",
-                fontFamily: "monospace",
-                wordBreak: "break-all",
-                fontWeight: "bold",
-              }}
-            >
-              {manualLookupResult}
-            </p>
+          <div className="result-box">
+            <p className="result-title">✅ Universal Executor Account (UEA):</p>
+            <p className="uea-address">{manualLookupResult}</p>
           </div>
         )}
       </div>
 
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          margin: "1rem 0 1rem 0",
-          maxWidth: "600px",
-          width: "100%",
-        }}
-      >
-        <div
-          style={{
-            flex: 1,
-            height: "1px",
-            background: "linear-gradient(to right, transparent, #d548ec)",
-          }}
-        />
-        <div
-          style={{
-            padding: "0 1.5rem",
-            textAlign: "center",
-          }}
-        >
-          <div
-            style={{
-              fontSize: "1.2rem",
-              fontWeight: "bold",
-              color: "#d548ec",
-              marginBottom: "0.25rem",
-            }}
-          >
-            OR
-          </div>
-          <div
-            style={{
-              fontSize: "0.85rem",
-              color: "#666",
-              fontWeight: "500",
-            }}
-          >
-            Derive UEA from Smart Contract
-          </div>
+      {/* Second divider */}
+      <div className="divider-container">
+        <div className="divider-line-left" />
+        <div className="divider-content">
+          <div className="divider-or">OR</div>
+          <div className="divider-subtitle">Derive UEA from Smart Contract</div>
         </div>
-        <div
-          style={{
-            flex: 1,
-            height: "1px",
-            background: "linear-gradient(to left, transparent, #d548ec)",
-          }}
-        />
+        <div className="divider-line-right" />
       </div>
 
-      <div
-        style={{
-          marginTop: "3rem",
-          marginBottom: "6rem",
-          padding: "1.5rem",
-          backgroundColor: "#f9f9f9",
-          borderRadius: "12px",
-          maxWidth: "600px",
-          width: "100%",
-        }}
-      >
-        <p
-          style={{
-            fontSize: "0.85rem",
-            color: "#666",
-            marginBottom: "1rem",
-            lineHeight: "1.6",
-          }}
-        >
-          You can also derive UEA addresses directly in your smart contracts
-          using the <b>UEAFactory</b> contract:
+      {/* Smart contract derivation section */}
+      <div className="info-box" style={{ marginTop: "3rem", marginBottom: "6rem" }}>
+        <p style={{ fontSize: "0.85rem", color: "#666", marginBottom: "1rem", lineHeight: "1.6" }}>
+          You can also derive UEA addresses directly in your smart contracts using the <b>UEAFactory</b> contract:
         </p>
 
-        <div
-          style={{
-            backgroundColor: "#1e1e1e",
-            borderRadius: "8px",
-            padding: "1rem",
-            marginBottom: "1rem",
-            overflow: "auto",
-          }}
-        >
-          <pre
-            style={{
-              margin: 0,
-              fontSize: "0.75rem",
-              color: "#d4d4d4",
-              fontFamily: "monospace",
-              lineHeight: "1.5",
-              textAlign: "left",
-            }}
-          >
+        {/* Solidity code example */}
+        <div className="code-container">
+          <pre className="code-block">
             {`// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
@@ -630,107 +237,40 @@ contract MyContract {
           </pre>
         </div>
 
-        <div
-          style={{
-            backgroundColor: "white",
-            borderRadius: "8px",
-            padding: "1rem",
-            border: "1px solid #e0e0e0",
-          }}
-        >
-          <p
-            style={{
-              margin: "0 0 0.75rem 0",
-              fontSize: "0.85rem",
-              fontWeight: "bold",
-              color: "#333",
-            }}
-          >
-            UEAFactory Address:
-          </p>
-          <code
-            style={{
-              fontSize: "0.75rem",
-              color: "#d548ec",
-              fontFamily: "monospace",
-              wordBreak: "break-all",
-              fontWeight: "bold",
-            }}
-          >
+        {/* Contract information */}
+        <div className="contract-info">
+          <p className="label-text">UEAFactory Address:</p>
+          <code className="contract-address">
             0x00000000000000000000000000000000000000eA
           </code>
-          <p
-            style={{
-              margin: "1rem 0 0.5rem 0",
-              fontSize: "0.85rem",
-              fontWeight: "bold",
-              color: "#333",
-            }}
-          >
-            Key Methods:
-          </p>
-          <ul
-            style={{
-              margin: "0.5rem 0 0 0",
-              paddingLeft: "1.5rem",
-              fontSize: "0.8rem",
-              color: "#666",
-              lineHeight: "1.8",
-            }}
-          >
+          
+          <p className="label-text" style={{ marginTop: "1rem" }}>Key Methods:</p>
+          <ul className="method-list">
             <li>
-              <code style={{ color: "#d548ec" }}>getUEAForOrigin()</code> - Get
-              UEA address for any wallet
+              <code className="method-code">getUEAForOrigin()</code> - Get UEA address for any wallet
             </li>
             <li>
-              <code style={{ color: "#d548ec" }}>getOriginForUEA()</code> - Get
-              origin wallet from UEA
+              <code className="method-code">getOriginForUEA()</code> - Get origin wallet from UEA
             </li>
           </ul>
-          <p
-            style={{
-              margin: "1rem 0 0 0",
-              fontSize: "0.75rem",
-              color: "#999",
-              fontStyle: "italic",
-            }}
-          >
+          
+          <p className="doc-link">
             Learn more in the{" "}
-            <a
-              href="https://push.org/docs/chain/build/contract-helpers"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ color: "#d548ec", textDecoration: "none" }}
-            >
+            <a href="https://push.org/docs/chain/build/contract-helpers" target="_blank" rel="noopener noreferrer">
               Contract Helpers documentation
             </a>
           </p>
         </div>
       </div>
 
-      <div
-        style={{
-          position: "fixed",
-          bottom: "0",
-          left: "0",
-          right: "0",
-          margin: "40px 0 0 0",
-          padding: "12px 20px",
-          borderTop: "1px solid rgba(0, 0, 0, 0.1)",
-          background: "#fff",
-        }}
-      >
-        <p
-          style={{
-            color: "gray",
-            fontSize: "12px",
-          }}
-        >
+      {/* Footer */}
+      <div className="footer">
+        <p className="footer-text">
           <a
             href="https://github.com/pushchain/push-chain-examples/tree/main/tutorials/derive-universal-executor-account/app"
             target="_blank"
             rel="noopener noreferrer"
-            style={{ color: "#d548ec" }}
+            className="footer-link"
           >
             Source Code
           </a>
