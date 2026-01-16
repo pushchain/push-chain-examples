@@ -1,42 +1,31 @@
-# Universal ERC-20 Mint Tutorial
+# Derive Universal Executor Account Tutorial
 
-A comprehensive tutorial demonstrating how to create and interact with a universal ERC-20 token ($UNICORN) that can be minted by users from any blockchain using PushChain's Universal External Accounts (UEA).
+A comprehensive tutorial demonstrating how to derive Universal Executor Accounts (UEA) from any wallet address on any supported blockchain using PushChain's deterministic account mapping system.
 
-👉 **Live Demo**: Experience the power of universal token minting across chains!
+👉 **[Live Playground](https://push.org/docs/chain/tutorials/power-features/tutorial-derive-universal-executor-account/#live-playground)**: Try deriving UEAs from any wallet!
 
 ## 🌟 Overview
 
-This tutorial showcases a complete ERC-20 token minting system that enables users from different blockchain networks (Ethereum, Solana, etc.) to mint $UNICORN tokens on PushChain. The system demonstrates:
+This tutorial showcases PushChain's Universal Executor Account (UEA) derivation system, which enables any wallet from Ethereum, Solana, or other supported chains to deterministically map to a single executor account on Push Chain. The system demonstrates:
 
-- **Universal Token Access**: Users from any supported chain can mint tokens
-- **Standard ERC-20 Functionality**: Full compatibility with existing tools and wallets
-- **Beautiful UI/UX**: Modern React frontend with animated rainbow balance display
-- **Real-time Updates**: Live balance tracking and transaction status
+- **Universal Account Mapping**: Derive UEAs from any blockchain wallet
+- **Deterministic Derivation**: Same origin wallet always maps to the same UEA
+- **No New Keys**: Users keep their existing wallet identity
+- **Smart Contract Integration**: Derive UEAs directly in Solidity contracts
+- **Multi-Chain Support**: Works with Ethereum, Solana, Base, Arbitrum, BNB Chain, and more
 
 ## 🎯 What You'll Learn
 
-- How to deploy and interact with ERC-20 contracts on PushChain
-- Universal External Account (UEA) integration patterns
-- Token minting mechanics and user experience design
-- Real-time blockchain interaction with React and ethers.js
-- Modern UI/UX patterns for DeFi applications
+- How Universal Executor Accounts (UEA) work on PushChain
+- Deriving UEAs from connected wallets using `@pushchain/ui-kit`
+- Manual UEA derivation from any chain and address
+- Using the `IUEAFactory` contract for on-chain UEA derivation
+- Building user-friendly UEA derivation interfaces
+- Understanding the relationship between origin wallets and executor accounts
 
 ## 🚀 Quick Start
 
-### 1. Smart Contract Setup
-
-```bash
-# Navigate to contracts directory
-cd contracts
-
-# Install dependencies
-forge install
-
-# Deploy the contract
-forge script script/Deploy.s.sol --rpc-url push_testnet --broadcast
-```
-
-### 2. Frontend Application
+### Frontend Application
 
 ```bash
 # Navigate to app directory
@@ -49,131 +38,158 @@ npm install
 npm run dev
 ```
 
-### 3. Try It Out!
+### Try It Out!
 
-1. Open the app in your browser
-2. Connect your wallet using the Universal Account Button
-3. Click "Mint 100 $UNICORN" to mint tokens
-4. Watch your balance update with a beautiful rainbow animation!
+1. **Connect Your Wallet**: Click the Universal Account Button to connect
+2. **View Your UEA**: See your origin wallet and derived UEA address
+3. **Manual Derivation**: Enter any wallet address and chain to derive its UEA
+4. **Smart Contract Example**: Learn how to derive UEAs in Solidity
 
 ## 📁 Project Structure
 
 ```
-universal-erc-20-mint/
+derive-universal-executor-account/
 ├── app/                    # React frontend application
 │   ├── src/
-│   │   ├── App.tsx         # Main app component with minting UI
-│   │   ├── App.css         # Styles including rainbow animation
-│   │   └── abi/
-│   │       └── ERC20.json  # Contract ABI for frontend integration
+│   │   ├── App.tsx         # Main app with UEA derivation UI
+│   │   ├── App.css         # Styled components
+│   │   ├── main.tsx        # Entry point with PushChain providers
+│   │   └── index.css       # Global styles
 │   ├── package.json        # Frontend dependencies
 │   └── README.md           # Frontend-specific documentation
-├── contracts/              # Smart contract code
-│   ├── src/
-│   │   └── UniversalERC20.sol  # ERC-20 token contract
-│   ├── script/
-│   │   └── Deploy.s.sol    # Deployment script
-│   ├── foundry.toml        # Foundry configuration
-│   └── README.md           # Contract-specific documentation
 └── README.md               # This file
 ```
 
 ## 🎨 Key Features
 
-### Smart Contract Features
-- **Standard ERC-20**: Full compatibility with wallets and DeFi protocols
-- **Minting Functionality**: Owner-controlled token minting
-- **Universal Access**: Works with PushChain's Universal External Accounts
-- **Security**: Built with OpenZeppelin standards
-
 ### Frontend Features
 - **Wallet Integration**: Seamless connection with Push Universal Account Button
-- **Real-time Balance**: Live token balance display with rainbow animation
-- **Transaction Handling**: Proper loading states and error handling
-- **Modern UI**: Clean, responsive design with beautiful animations
-- **Explorer Integration**: Direct links to view transactions
+- **Automatic UEA Display**: Shows your UEA when wallet is connected
+- **Manual Derivation Tool**: Derive UEAs from any wallet address
+- **Multi-Chain Support**: Select from different supported blockchains (EVM + non-EVM)
+- **Smart Contract Examples**: Solidity code snippets for on-chain derivation
+- **Modern UI**: Clean, responsive design with gradient dividers
 
-## 🔧 Configuration
+### Supported Chains
+- Push Chain (Testnet)
+- Ethereum Sepolia
+- Solana Devnet
+- Base Sepolia
+- Arbitrum Sepolia
+- BNB Testnet
 
-### Contract Address
-The deployed $UNICORN token contract:
+For an exhaustive list of supported chains, see the [Get Supported Chains](https://push.org/docs/chain/build/utility-functions/#get-supported-chains) utility function.
+
+## 🔧 How It Works
+
+### Client-Side Derivation
+
+```typescript
+// Convert origin address to Universal Account
+const account = PushChain.utils.account.toUniversal(
+  walletAddress,
+  { chain: chainId }
+);
+
+// Derive the Universal Executor Account (UEA)
+const executorAddress = await PushChain.utils.account.convertOriginToExecutor(account);
 ```
-0x0165878A594ca255338adfa4d48449f69242Eb8F
+
+### Smart Contract Derivation
+
+```solidity
+import "push-chain-core-contracts/src/Interfaces/IUEAFactory.sol";
+
+IUEAFactory constant FACTORY = 
+    IUEAFactory(0x00000000000000000000000000000000000000eA);
+
+// Get UEA for any origin wallet
+function getUEA(UniversalAccountId memory account) 
+    public view returns (address uea, bool isDeployed) {
+    return FACTORY.getUEAForOrigin(account);
+}
+
+// Get origin wallet from UEA
+function getOrigin(address uea) 
+    public view returns (UniversalAccountId memory, bool) {
+    return FACTORY.getOriginForUEA(uea);
+}
 ```
 
-### Minting Parameters
-- **Amount**: 100 tokens per mint (18 decimals)
-- **Recipient**: Connected wallet address
-- **Network**: PushChain testnet
+### UEAFactory Contract
 
-### Add Token to Wallet
-To see your $UNICORN balance in your wallet, add the token:
-- **Contract Address**: `0x0165878A594ca255338adfa4d48449f69242Eb8F`
-- **Symbol**: `UNICORN`
-- **Decimals**: `18`
+**Address**: `0x00000000000000000000000000000000000000eA`
 
-## 🌈 Special Features
+**Key Methods**:
+- `getUEAForOrigin(UniversalAccountId)` - Get UEA address for any wallet
+- `getOriginForUEA(address)` - Get origin wallet from UEA
 
-### Rainbow Balance Animation
-The app features a beautiful animated rainbow gradient on the token balance display, created with:
-- CSS linear gradients with 7 rainbow colors
-- Smooth background-position animation
-- WebKit text clipping for gradient text effect
+## 💡 Understanding UEAs
 
-### User Experience Highlights
-- **Instant Feedback**: Loading states and success messages
-- **Error Handling**: Clear error messages for failed transactions
-- **Responsive Design**: Works on desktop and mobile
-- **Accessibility**: Proper contrast and readable fonts
+### What is a Universal Executor Account?
+
+A Universal Executor Account (UEA) is a deterministic address on Push Chain that is derived from any external wallet address on any supported blockchain. Key properties:
+
+1. **Deterministic**: Same origin wallet always derives the same UEA
+2. **Universal**: Works across all supported blockchains
+3. **No New Keys**: Users don't need to manage new private keys
+4. **Execution Surface**: The UEA signs, pays fees, and executes transactions on Push Chain
+5. **Identity Preservation**: The origin wallet remains the user's identity
+
+### Why UEAs Matter
+
+- **Seamless Cross-Chain**: Users can interact with Push Chain using their existing wallets
+- **No Bridging**: No need to bridge assets or create new accounts
+- **Unified Identity**: One UEA per origin wallet across all interactions
+- **Developer Friendly**: Easy to integrate and reason about
 
 ## 🚨 Troubleshooting
 
 ### Common Issues
 
-1. **"Transaction failed"**:
-   - Ensure you have sufficient gas (ETH) for the transaction
-   - Check that you're connected to PushChain testnet
+1. **"Failed to derive UEA"**:
+   - Ensure the wallet address format is correct for the selected chain
+   - Check that the chain is supported
+   - Verify network connection
 
-2. **"Balance not updating"**:
-   - Wait for transaction confirmation
-   - Refresh the page if needed
-
-3. **"Wallet connection issues"**:
+2. **"Wallet connection issues"**:
    - Make sure you have a compatible wallet installed
    - Try refreshing and reconnecting
+   - Check that your wallet supports the selected chain
 
-4. **"Contract interaction failed"**:
-   - Verify the contract address is correct
-   - Check network connection
+3. **"UEA not displaying"**:
+   - Ensure wallet is fully connected
+   - Check browser console for errors
+   - Refresh the page
 
 ## 📚 Prerequisites
 
-- **For Contracts**: Foundry, basic Solidity knowledge
 - **For Frontend**: Node.js (v16+), React/TypeScript familiarity
-- **For Users**: Compatible wallet (MetaMask, etc.)
+- **For Users**: Compatible wallet (MetaMask, Phantom, etc.)
+- **For Smart Contracts**: Basic Solidity knowledge
 
 ## 🔗 Resources
 
-- [ERC-20 Token Standard](https://eips.ethereum.org/EIPS/eip-20)
+- [Tutorial Documentation](https://push.org/docs/chain/tutorials/power-features/tutorial-derive-universal-executor-account/)
 - [PushChain Documentation](https://push.org/docs)
+- [Contract Helpers Documentation](https://push.org/docs/chain/build/contract-helpers)
 - [PushChain UI Kit](https://www.npmjs.com/package/@pushchain/ui-kit)
-- [Foundry Documentation](https://book.getfoundry.sh/)
 - [React Documentation](https://react.dev/)
 
 ## 🚀 Next Steps
 
 After completing this tutorial, you can:
 
-- **Enhance the Token**: Add burning, pausing, or governance features
-- **Improve the UI**: Add more animations, charts, or analytics
-- **Add Features**: Implement token vesting, airdrops, or staking
-- **Deploy Mainnet**: Move to production with proper security audits
-- **Build DeFi**: Create DEX pools, lending protocols, or yield farming
+- **Build Universal Apps**: Create apps that work with any wallet
+- **Implement Airdrops**: Use UEAs for cross-chain token distribution
+- **Add Authentication**: Use UEAs for universal user authentication
+- **Create Multi-Chain DeFi**: Build protocols accessible from any chain
+- **Explore Advanced Features**: Batch transactions, gasless transactions, and more
 
 ## 🎉 Congratulations!
 
-You've successfully built a universal ERC-20 token minting system! This tutorial demonstrates the power of PushChain's Universal External Accounts and provides a solid foundation for building more complex DeFi applications.
+You've successfully learned how to derive and work with Universal Executor Accounts! This powerful feature enables true cross-chain interoperability and provides a foundation for building universal blockchain applications.
 
 ---
 
-**Happy Building with $UNICORN! 🦄✨**
+**Happy Building with PushChain! 🚀**

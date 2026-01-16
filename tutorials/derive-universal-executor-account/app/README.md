@@ -1,30 +1,27 @@
-# Universal ERC-20 Mint App
+# Derive Universal Executor Account App
 
-A beautiful React application demonstrating universal ERC-20 token minting with PushChain's Universal External Accounts. Users can mint $UNICORN tokens with an engaging UI featuring animated rainbow balance display.
+A beautiful React application demonstrating how to derive Universal Executor Accounts (UEA) from any wallet address on any supported blockchain using PushChain's deterministic account mapping system.
 
-👉 **Live Demo**: Experience cross-chain token minting in action!
+👉 **[Live Playground](https://push.org/docs/chain/tutorials/power-features/tutorial-derive-universal-executor-account/#live-playground)**: Try deriving UEAs from any wallet!
 
 ## Overview
 
-This frontend application provides an intuitive interface for minting $UNICORN tokens on PushChain. It showcases how users from any blockchain can seamlessly interact with ERC-20 tokens using Universal External Accounts, with a focus on beautiful user experience and real-time feedback.
+This frontend application provides an intuitive interface for deriving Universal Executor Accounts (UEA) from any wallet address on any supported blockchain. It showcases three methods of UEA derivation: automatic derivation from connected wallets, manual derivation from any address, and smart contract-based derivation examples.
 
 ## ✨ Features
 
-- **Universal Token Minting**: Mint $UNICORN tokens from any supported blockchain
-- **Animated Rainbow Balance**: Beautiful gradient animation on token balance display
-- **Real-time Updates**: Live balance tracking after successful mints
+- **Automatic UEA Display**: Shows your UEA when you connect your wallet
+- **Manual Derivation Tool**: Derive UEAs from any wallet address and chain
+- **Multi-Chain Support**: Works with 6+ blockchains (Ethereum, Solana, Base, Arbitrum, BNB, Push Chain)
+- **Smart Contract Examples**: Solidity code snippets for on-chain UEA derivation
 - **Wallet Integration**: Seamless connection with Push Universal Account Button
-- **Transaction Handling**: Proper loading states, error handling, and success feedback
-- **Explorer Integration**: Direct links to view transactions on PushChain explorer
-- **Responsive Design**: Clean, modern UI that works on desktop and mobile
-- **TypeScript**: Fully typed for better development experience and reliability
 
 ## Prerequisites
 
 - Node.js (v16 or higher)
 - npm or yarn
-- A deployed Universal ERC-20 contract on PushChain testnet
-- Compatible wallet (MetaMask, etc.) for testing
+- Compatible wallet (MetaMask, Phantom, etc.) for testing
+- Basic understanding of blockchain addresses
 
 ## Installation
 
@@ -33,29 +30,23 @@ This frontend application provides an intuitive interface for minting $UNICORN t
 npm install
 ```
 
-2. Update the contract address in `src/App.tsx` (if needed):
-```typescript
-const CONTRACT_ADDRESS = '0x0165878A594ca255338adfa4d48449f69242Eb8F'
-```
-
-3. Start the development server:
+2. Start the development server:
 ```bash
 npm run dev
 ```
 
-4. Open your browser and navigate to the local development URL
-5. Connect your wallet and start minting $UNICORN tokens!
+3. Open your browser and navigate to the local development URL
+4. Connect your wallet to see your UEA or manually derive UEAs from any address!
 
 ## Project Structure
 
 ```
 app/
 ├── src/
-│   ├── App.tsx          # Main application component
-│   ├── App.css          # Application styles with rainbow animation
-│   ├── index.css        # Global styles
-│   └── abi/
-│       └── ERC20.json   # ERC-20 contract ABI
+│   ├── App.tsx          # Main application component with UEA derivation
+│   ├── App.css          # Application styles with CSS classes
+│   ├── index.css        # Global styles and body layout
+│   └── main.tsx         # Entry point with PushChain providers
 ├── package.json         # Dependencies and scripts
 ├── vite.config.ts       # Vite configuration
 ├── tsconfig.json        # TypeScript configuration
@@ -69,88 +60,71 @@ app/
 The main application component that includes:
 
 - **PushChain Hooks**: Uses `usePushWalletContext`, `usePushChainClient`, and `usePushChain`
-- **State Management**: Manages token balance, loading states, errors, and transaction hashes
-- **Contract Interaction**: Reads ERC-20 balance and sends mint transactions
-- **UI Components**: Beautiful interface with animated balance display and minting controls
-- **Rainbow Animation**: Stunning gradient animation on the token balance
+- **State Management**: Manages manual lookup state, loading states, and derived UEA results
+- **UEA Derivation**: Implements client-side UEA derivation using PushChain utilities
+- **Multi-Chain Support**: Chain selector for deriving UEAs from different blockchains
 
-### Contract Integration
+### UEA Derivation Logic
 
-The app demonstrates proper ERC-20 and PushChain integration patterns:
+The app demonstrates proper UEA derivation patterns:
 
 ```typescript
-// Reading ERC-20 balance
-const provider = new ethers.JsonRpcProvider(
-  "https://evm.rpc-testnet-donut-node1.push.org/"
+// Convert origin address to Universal Account
+const account = PushChain.utils.account.toUniversal(
+  walletAddress,
+  { chain: chainId }
 );
-const contract = new ethers.Contract(CONTRACT_ADDRESS, ERC20ABI, provider);
-const balance = await contract.balanceOf(userAddress);
-const formattedBalance = ethers.formatUnits(balance, 18);
 
-// Minting tokens
-const tx = await pushChainClient.universal.sendTransaction({
-  to: CONTRACT_ADDRESS,
-  data: PushChain.utils.helpers.encodeTxData({
-    abi: ERC20ABI,
-    functionName: "mint",
-    args: [userAddress, PushChain.utils.helpers.parseUnits("100", 18)]
-  }),
-  value: BigInt(0),
-});
+// Derive the Universal Executor Account (UEA)
+const executorAddress = await PushChain.utils.account.convertOriginToExecutor(account);
+
+// Display the derived UEA address
+setManualLookupResult(executorAddress.address);
 ```
+
+### Supported Chains
+
+The app supports UEA derivation from:
+- Push Chain (Testnet)
+- Ethereum Sepolia
+- Solana Devnet
+- Base Sepolia
+- Arbitrum Sepolia
+- BNB Testnet
+
+For an exhaustive list of supported chains, see the [Get Supported Chains](https://push.org/docs/chain/build/utility-functions/#get-supported-chains) utility function.
 
 ## Configuration
 
-### Contract Address
+### UEAFactory Contract
 
-The $UNICORN token contract is deployed at:
-
-```typescript
-const CONTRACT_ADDRESS = '0x0165878A594ca255338adfa4d48449f69242Eb8F'
-```
-
-### RPC Endpoint
-
-The app uses the PushChain testnet RPC endpoint:
+The app references the UEAFactory contract for smart contract examples:
 
 ```typescript
-const provider = new ethers.JsonRpcProvider(
-  "https://evm.rpc-testnet-donut-node1.push.org/"
-);
+const UEA_FACTORY_ADDRESS = '0x00000000000000000000000000000000000000eA'
 ```
 
-### Minting Configuration
+### Chain Configuration
 
-- **Mint Amount**: 100 $UNICORN tokens per transaction
-- **Token Decimals**: 18 (standard ERC-20)
-- **Gas**: Automatically estimated by the wallet
+The app uses PushChain constants for chain selection:
+
+```typescript
+const chains = [
+  { value: PushChain.CONSTANTS.CHAIN.PUSH_TESTNET, label: "Push Chain" },
+  { value: PushChain.CONSTANTS.CHAIN.ETHEREUM_SEPOLIA, label: "Ethereum Sepolia" },
+  { value: PushChain.CONSTANTS.CHAIN.SOLANA_DEVNET, label: "Solana Devnet" },
+  // ... more chains
+];
+```
 
 ## User Experience
 
-1. **Page Load**: Token balance displays immediately (shows 0 for new users)
+1. **Page Load**: View tutorial description and connect wallet button
 2. **Wallet Connection**: Click "Connect Account" to connect your wallet
-3. **Token Minting**: Click "Mint 100 $UNICORN" to mint tokens
-4. **Rainbow Animation**: Watch your balance animate with beautiful rainbow colors
-5. **Real-time Updates**: Balance updates automatically after successful mints
-6. **Transaction Tracking**: View transaction details on PushChain explorer
-
-## 🌈 Rainbow Animation Feature
-
-The app includes a stunning rainbow gradient animation on the token balance:
-
-```css
-@keyframes rainbow {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-```
-
-The animation uses:
-- 7-color rainbow gradient (red → orange → yellow → green → blue → indigo → violet)
-- Smooth 3-second animation cycle
-- WebKit text clipping for gradient text effect
-- Bold font weight for enhanced visibility
+3. **Automatic UEA Display**: See your origin wallet and derived UEA immediately
+4. **Manual Derivation**: Enter any wallet address and select a chain
+5. **Derive UEA**: Click "Derive UEA" to see the deterministic UEA address
+6. **Smart Contract Examples**: View Solidity code for on-chain UEA derivation
 
 ## Development
 
@@ -161,23 +135,12 @@ The animation uses:
 - `npm run preview` - Preview production build
 - `npm run lint` - Run ESLint for code quality
 
-### Styling
-
-The app uses a combination of inline styles and CSS classes:
-- **Inline Styles**: Component-specific styling for layout and colors
-- **CSS Classes**: Global animations and reusable styles in `App.css`
-- **Design Principles**: Clean white background, centered layout, responsive design
-- **Animations**: CSS keyframes for smooth rainbow gradient effects
-- **Typography**: Clear visual hierarchy with proper font sizes and weights
-
 ## Dependencies
 
 Key dependencies include:
 
-- **@pushchain/ui-kit**: PushChain UI components and hooks for wallet connection
-- **ethers**: Ethereum library for blockchain interactions and ERC-20 operations
+- **@pushchain/ui-kit**: PushChain UI components and hooks for wallet connection and UEA derivation
 - **react**: Frontend framework for building the user interface
-- **typescript**: Type safety and better development experience
 - **vite**: Fast build tool and development server
 
 ### Development Dependencies
@@ -191,66 +154,66 @@ Key dependencies include:
 
 ### Common Issues
 
-1. **"Transaction failed"**:
-   - Ensure you have sufficient gas (ETH) for the transaction
-   - Check that you're connected to PushChain testnet
-   - Verify the contract address is correct
+1. **"Failed to derive Universal Executor Account"**:
+   - Ensure the wallet address format is correct for the selected chain
+   - Verify the chain is supported
+   - Check your network connection
 
-2. **"Balance not updating"**:
-   - Wait for transaction confirmation (usually 1-2 blocks)
-   - Refresh the page if the balance doesn't update automatically
-   - Check the transaction hash on the explorer
+2. **"UEA not displaying after wallet connection"**:
+   - Ensure your wallet is fully connected
+   - Check browser console for errors
+   - Try refreshing the page and reconnecting
 
 3. **"Wallet connection issues"**:
-   - Make sure you have a compatible wallet installed (MetaMask recommended)
+   - Make sure you have a compatible wallet installed (MetaMask, Phantom, etc.)
    - Try refreshing the page and reconnecting
    - Clear browser cache if connection persists to fail
 
-4. **"Rainbow animation not showing"**:
-   - Ensure your browser supports CSS gradients and animations
-   - Check if you have reduced motion settings enabled
-   - Try a different browser if issues persist
+4. **"Invalid address format"**:
+   - Ensure you're entering the correct address format for the selected chain
+   - Ethereum addresses start with 0x
+   - Solana addresses are base58 encoded
 
 ### Error Messages
 
 The app provides clear error messages for:
-- Wallet connection failures
-- Transaction rejections
+- Invalid wallet addresses
+- Unsupported chains
 - Network connectivity issues
-- Contract interaction problems
+- UEA derivation failures
 
 ## Next Steps
 
 After running this tutorial, you can:
 
-- **Add More Features**: Implement token burning, transfer functionality, or allowances
-- **Enhance UI/UX**: Add more animations, charts showing mint history, or user analytics
-- **Token Utilities**: Create staking mechanisms, governance voting, or reward systems
-- **DeFi Integration**: Build DEX pools, lending protocols, or yield farming features
-- **Multi-chain Support**: Extend to other chains supported by PushChain
-- **Production Deployment**: Deploy to mainnet with proper security audits
+- **Build Universal Apps**: Create applications that work with any wallet from any chain
+- **Implement Airdrops**: Use UEAs for cross-chain token distribution
+- **Add Authentication**: Build universal authentication systems using UEAs
+- **Create Multi-Chain DeFi**: Build protocols accessible from any blockchain
+- **Smart Contract Integration**: Implement on-chain UEA derivation in your contracts
+- **Production Deployment**: Deploy to mainnet and support more chains
 
 ## 🎯 Learning Outcomes
 
 By completing this tutorial, you've learned:
 
-- How to integrate ERC-20 tokens with React applications
-- PushChain Universal External Account patterns
-- Modern UI/UX design with CSS animations
-- Real-time blockchain interaction patterns
-- Error handling and user feedback in DeFi applications
-- Transaction lifecycle management in web3 apps
+- How Universal Executor Accounts (UEA) work on PushChain
+- Client-side UEA derivation using `@pushchain/ui-kit`
+- Building multi-chain wallet interfaces
+- Modern UI/UX design with CSS classes and gradients
+- Error handling and user feedback in web3 applications
+- Smart contract integration patterns for UEA derivation
 
 ## Resources
 
+- [Tutorial Documentation](https://push.org/docs/chain/tutorials/power-features/tutorial-derive-universal-executor-account/)
 - [PushChain Documentation](https://push.org/docs)
+- [Contract Helpers Documentation](https://push.org/docs/chain/build/contract-helpers)
 - [PushChain UI Kit](https://www.npmjs.com/package/@pushchain/ui-kit)
-- [ERC-20 Token Standard](https://eips.ethereum.org/EIPS/eip-20)
-- [Ethers.js Documentation](https://docs.ethers.org/)
 - [React Documentation](https://react.dev/)
 - [Vite Documentation](https://vitejs.dev/)
-- [CSS Animations Guide](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Animations)
+- [TypeScript Documentation](https://www.typescriptlang.org/docs/)
 
 ---
 
-**Happy Minting with $UNICORN! 🦄✨**
+**Happy Building with PushChain! 🚀**
