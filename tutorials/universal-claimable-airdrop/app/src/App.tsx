@@ -60,7 +60,7 @@ function App() {
 
   const [error, setError] = useState<string>("");
 
-  const FACTORY_ADDRESS = "0xa82fF9aFd8f496c3d6ac40E2a0F282E47488CFc9";
+  const FACTORY_ADDRESS = "0xf5059a5D33d5853360D16C683c16e67980206f36";
 
   const chains = [
     { value: PushChain.CONSTANTS.CHAIN.PUSH_TESTNET, label: "Push Chain" },
@@ -1448,7 +1448,7 @@ function App() {
             Source Code
           </a> |&nbsp;
           <a
-            href="https://donut.push.network/address/0xa82fF9aFd8f496c3d6ac40E2a0F282E47488CFc9?tab=contract"
+            href="https://donut.push.network/address/0xf5059a5D33d5853360D16C683c16e67980206f36?tab=contract"
             target="_blank"
             rel="noopener noreferrer"
             className="footer-link"

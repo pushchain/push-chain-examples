@@ -36,8 +36,19 @@
       { "internalType": "bytes32", "name": "_merkleRoot", "type": "bytes32" }
     ],
     "name": "createAirdrop",
-    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "outputs": [
+      { "internalType": "address", "name": "", "type": "address" }
+    ],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "token",
+    "outputs": [
+      { "internalType": "contract IUnicornToken", "name": "", "type": "address" }
+    ],
+    "stateMutability": "view",
     "type": "function"
   }
 ]

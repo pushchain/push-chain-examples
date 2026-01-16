@@ -34,7 +34,7 @@ npm install
 
 2. Update the factory contract address in `src/App.tsx`:
 ```typescript
-const FACTORY_ADDRESS = '0xa82fF9aFd8f496c3d6ac40E2a0F282E47488CFc9'
+const FACTORY_ADDRESS = '0xf5059a5D33d5853360D16C683c16e67980206f36'
 ```
 
 3. Start the development server:
@@ -153,7 +153,7 @@ for (const [i, v] of merkleTree.tree.entries()) {
 
 ### Contract Addresses
 
-**Factory Contract**: `0xa82fF9aFd8f496c3d6ac40E2a0F282E47488CFc9`  
+**Factory Contract**: `0xf5059a5D33d5853360D16C683c16e67980206f36`  
 **$UNICORN Token**: `0x0165878A594ca255338adfa4d48449f69242Eb8F`
 
 ### RPC Endpoint
@@ -253,4 +253,4 @@ After completing this tutorial, you can:
 - [PushChain UI Kit](https://www.npmjs.com/package/@pushchain/ui-kit)
 - [OpenZeppelin Merkle Tree](https://www.npmjs.com/package/@openzeppelin/merkle-tree)
 - [Smart Contract Source Code](https://github.com/pushchain/push-chain-examples/tree/main/tutorials/universal-claimable-airdrop/contracts)
-- [Factory Contract on Blockscout](https://donut.push.network/address/0xa82fF9aFd8f496c3d6ac40E2a0F282E47488CFc9?tab=contract)
+- [Factory Contract on Blockscout](https://donut.push.network/address/0xf5059a5D33d5853360D16C683c16e67980206f36?tab=contract)
