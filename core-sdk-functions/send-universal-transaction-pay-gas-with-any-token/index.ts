@@ -2,13 +2,13 @@
 import { PushChain } from '@pushchain/core';
 
 // Import viem for wallet/public client
-import { createWalletClient, createPublicClient, http, parseAbi, PublicClient, Abi } from 'viem';
+import { Abi, createPublicClient, createWalletClient, http, parseAbi, PublicClient } from 'viem';
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
 
 // Readline for input
+import 'dotenv/config';
 import * as readline from 'node:readline/promises';
 import { COUNTER_ABI } from './counter-abi';
-import 'dotenv/config';
 
 // Enable User Input
 const rl = readline.createInterface({
@@ -37,7 +37,7 @@ async function viemSendTxWithFundsExample() {
 
   // 1) Create a fresh Sepolia account using viem
   const SEPOLIA_RPC_URL = 'https://gateway.tenderly.co/public/sepolia';
-  const PUSH_RPC_URL = 'https://evm.rpc-testnet-donut-node1.push.org/';
+  const PUSH_RPC_URL = 'https://evm.donut.rpc.push.org/';
   console.log('1. Create Universal Signer (Sepolia)');
   const privateKey = generatePrivateKey();
   if (!privateKey) {

@@ -50,7 +50,7 @@ async function quickstartExample() {
 
   // Replace it with different JsonRpcProvider to target Ethereum Account, BNB Account, etc
   // const provider = new ethers.JsonRpcProvider('https://gateway.tenderly.co/public/sepolia');
-  const provider = new ethers.JsonRpcProvider('https://evm.rpc-testnet-donut-node1.push.org/');
+  const provider = new ethers.JsonRpcProvider('https://evm.donut.rpc.push.org/');
   const signer = wallet.connect(provider);
 
   // Convert ethers signer to Universal Signer and Initialize Push Chain SDK
@@ -84,7 +84,7 @@ async function ethersV6() {
   // Set provider based on chain selection
   const PROVIDER =
     chainSelection === '1'
-      ? 'https://evm.rpc-testnet-donut-node1.push.org/'
+      ? 'https://evm.donut.rpc.push.org/'
       : 'https://ethereum-sepolia-rpc.publicnode.com';
 
   // LFG!!
@@ -117,7 +117,7 @@ async function ethersV6() {
     // Example: Send 0.001 ETH to a random address
     const txResponse = await pushChainClient.universal.sendTransaction({
       to: '0x0000000000000000000000000000000000042101', // receiver address
-      value: ethers.parseEther('0.001'), // 0.001 PC
+      value: PushChain.utils.helpers.parseUnits('0.001', 18), // 0.001 PC in uPC (wei)
     });
     console.log('📤 Transaction Response:', txResponse);
 
@@ -152,7 +152,7 @@ async function viemExample() {
   // Set RPC based on chain selection
   const RPC_URL =
     chainSelection === '1'
-      ? 'https://evm.rpc-testnet-donut-node1.push.org/'
+      ? 'https://evm.donut.rpc.push.org/'
       : 'https://ethereum-sepolia-rpc.publicnode.com';
 
   // LFG!!
@@ -186,7 +186,7 @@ async function viemExample() {
   try {
     const txResponse = await pushChainClient.universal.sendTransaction({
       to: '0x0000000000000000000000000000000000042101',
-      value: BigInt(1000000000000000), // 0.001 ETH in wei
+      value: BigInt(1000000000000000), // 0.001 PC in wei
     });
     console.log('📤 Transaction Response:', txResponse);
 

@@ -72,7 +72,7 @@ The app demonstrates proper PushChain integration patterns:
 ```typescript
 // Reading contract state
 const provider = new ethers.JsonRpcProvider(
-  "https://evm.rpc-testnet-donut-node1.push.org/"
+  "https://evm.donut.rpc.push.org/"
 );
 const contract = new ethers.Contract(CONTRACT_ADDRESS, CounterABI, provider);
 const currentCount = await contract.countPC();
@@ -101,7 +101,7 @@ The app uses the PushChain testnet RPC endpoint:
 
 ```typescript
 const provider = new ethers.JsonRpcProvider(
-  "https://evm.rpc-testnet-donut-node1.push.org/"
+  "https://evm.donut.rpc.push.org/"
 );
 ```
 

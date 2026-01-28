@@ -1,8 +1,8 @@
 import {
-  PushUniversalAccountButton,
-  usePushChain,
-  usePushChainClient,
-  usePushWalletContext,
+    PushUniversalAccountButton,
+    usePushChain,
+    usePushChainClient,
+    usePushWalletContext,
 } from "@pushchain/ui-kit";
 import { ethers } from "ethers";
 import { useEffect, useState } from "react";
@@ -14,7 +14,7 @@ const COUNTER_CONTRACT_ADDRESS = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
 
 // Global provider for Push Chain testnet
 const provider = new ethers.JsonRpcProvider(
-  "https://evm.rpc-testnet-donut-node1.push.org/"
+  "https://evm.donut.rpc.push.org/"
 );
 
 function App() {

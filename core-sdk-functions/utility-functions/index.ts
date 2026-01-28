@@ -132,7 +132,7 @@ async function toUniversalFromKeypair() {
 // pushChainClient.explorer.getTransactionUrl(txHash: string)
 async function getTransactionUrl() {
   // ethers
-  const provider = new ethers.JsonRpcProvider('https://evm.rpc-testnet-donut-node1.push.org/');
+  const provider = new ethers.JsonRpcProvider('https://evm.donut.rpc.push.org/');
   const wallet = new ethers.Wallet(ethers.Wallet.createRandom().privateKey, provider);
 
   const universalSigner = await PushChain.utils.signer.toUniversal(wallet.connect(provider));
@@ -148,7 +148,7 @@ async function getTransactionUrl() {
 // pushChainClient.explorer.listUrls()
 async function listUrls() {
   // ethers
-  const provider = new ethers.JsonRpcProvider('https://evm.rpc-testnet-donut-node1.push.org/');
+  const provider = new ethers.JsonRpcProvider('https://evm.donut.rpc.push.org/');
   const wallet = new ethers.Wallet(ethers.Wallet.createRandom().privateKey, provider);
 
   const universalSigner = await PushChain.utils.signer.toUniversal(wallet.connect(provider));

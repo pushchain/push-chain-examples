@@ -43,7 +43,7 @@ async function createUniversalSigner_EthersV6_PushChain() {
   const wallet = ethers.Wallet.createRandom();
 
   // Set up provider
-  const provider = new ethers.JsonRpcProvider('https://evm.rpc-testnet-donut-node1.push.org/');
+  const provider = new ethers.JsonRpcProvider('https://evm.donut.rpc.push.org/');
   const signer = wallet.connect(provider);
 
   // Convert ethers signer to Universal Signer
@@ -76,7 +76,7 @@ async function createUniversalSigner_Viem_PushChain() {
   // set chain to sepolia
   const walletClient = createWalletClient({
     account,
-    transport: http('https://evm.rpc-testnet-donut-node1.push.org/'),
+    transport: http('https://evm.donut.rpc.push.org/'),
   });
 
   // Convert viem signer to Universal Signer

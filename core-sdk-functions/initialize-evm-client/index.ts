@@ -29,7 +29,7 @@ main().catch(console.error);
 
 // Initialize Ethers Provider
 async function initializeEthersProvider() {
-  const provider = new ethers.JsonRpcProvider('https://evm.rpc-testnet-donut-node1.push.org/');
+  const provider = new ethers.JsonRpcProvider('https://evm.donut.rpc.push.org/');
   console.log('🔑 Got provider instance');
   return provider;
 }
@@ -58,7 +58,7 @@ async function initializeViemClient() {
     },
     rpcUrls: {
       default: {
-        http: ['https://evm.rpc-testnet-donut-node1.push.org/', 'https://evm.rpc-testnet-donut-node2.push.org/'],
+        http: ['https://evm.donut.rpc.push.org/'],
       },
     },
     blockExplorers: {

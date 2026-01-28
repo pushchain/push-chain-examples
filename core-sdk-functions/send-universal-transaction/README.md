@@ -19,7 +19,7 @@ This example demonstrates sending universal transactions using three different c
 ```javascript
 // Create random wallet
 const wallet = ethers.Wallet.createRandom();
-const provider = new ethers.JsonRpcProvider('https://evm.rpc-testnet-donut-node1.push.org/');
+const provider = new ethers.JsonRpcProvider('https://evm.donut.rpc.push.org/');
 const signer = wallet.connect(provider);
 
 // Create universal signer

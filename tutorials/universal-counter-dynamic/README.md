@@ -141,7 +141,7 @@ const CONTRACT_ADDRESS = 'YOUR_DEPLOYED_CONTRACT_ADDRESS'
 All apps use the PushChain testnet:
 ```typescript
 const provider = new ethers.JsonRpcProvider(
-  "https://evm.rpc-testnet-donut-node1.push.org/"
+  "https://evm.donut.rpc.push.org/"
 );
 ```
 

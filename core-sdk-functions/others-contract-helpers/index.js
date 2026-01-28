@@ -1,7 +1,7 @@
 import { ethers } from 'ethers';
 
 // ——— CONFIG ———
-const RPC_URL = 'https://evm.rpc-testnet-donut-node1.push.org/';
+const RPC_URL = 'https://evm.donut.rpc.push.org/';
 const FACTORY_ADDRESS = '0x00000000000000000000000000000000000000eA';
 
 console.log('🚀 Starting PushChain Contract Helper');

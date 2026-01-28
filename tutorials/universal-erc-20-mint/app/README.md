@@ -81,7 +81,7 @@ The app demonstrates proper ERC-20 and PushChain integration patterns:
 ```typescript
 // Reading ERC-20 balance
 const provider = new ethers.JsonRpcProvider(
-  "https://evm.rpc-testnet-donut-node1.push.org/"
+  "https://evm.donut.rpc.push.org/"
 );
 const contract = new ethers.Contract(CONTRACT_ADDRESS, ERC20ABI, provider);
 const balance = await contract.balanceOf(userAddress);
@@ -115,7 +115,7 @@ The app uses the PushChain testnet RPC endpoint:
 
 ```typescript
 const provider = new ethers.JsonRpcProvider(
-  "https://evm.rpc-testnet-donut-node1.push.org/"
+  "https://evm.donut.rpc.push.org/"
 );
 ```
 

@@ -39,7 +39,7 @@ The example shows how to:
 ### HTTP Clients
 ```javascript
 // Ethers
-const provider = new ethers.JsonRpcProvider('https://evm.rpc-testnet-donut-node1.push.org/')
+const provider = new ethers.JsonRpcProvider('https://evm.donut.rpc.push.org/')
 
 // Viem
 const viemClient = createPublicClient({

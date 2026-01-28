@@ -14,7 +14,7 @@ const pushTestnet = defineChain({
   },
   rpcUrls: {
     default: {
-      http: ['https://evm.rpc-testnet-donut-node1.push.org/', 'https://evm.rpc-testnet-donut-node2.push.org/'],
+      http: ['https://evm.donut.rpc.push.org/'],
     },
   },
   blockExplorers: {
@@ -26,7 +26,7 @@ const pushTestnet = defineChain({
 });
 
 // Initialize HTTP clients for Ethers
-const provider = new ethers.JsonRpcProvider('https://evm.rpc-testnet-donut-node1.push.org/');
+const provider = new ethers.JsonRpcProvider('https://evm.donut.rpc.push.org/');
 const viemClient = createPublicClient({
   chain: pushTestnet,
   transport: http(),

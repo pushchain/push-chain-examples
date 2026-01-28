@@ -123,7 +123,7 @@ The app uses the PushChain testnet RPC endpoint:
 
 ```typescript
 const provider = new ethers.JsonRpcProvider(
-  "https://evm.rpc-testnet-donut-node1.push.org/"
+  "https://evm.donut.rpc.push.org/"
 );
 ```
 

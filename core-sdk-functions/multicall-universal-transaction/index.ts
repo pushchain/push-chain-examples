@@ -4,7 +4,7 @@
 import { PushChain } from '@pushchain/core';
 
 // Import viem for wallet/public client
-import { createWalletClient, createPublicClient, http } from 'viem';
+import { createPublicClient, createWalletClient, http } from 'viem';
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
 
 // Readline for input
@@ -114,7 +114,7 @@ async function viemMulticallExample() {
   try {
     // Create a public client to read the Counter on Push Chain
     const publicClientPush = createPublicClient({
-      transport: http('https://evm.rpc-testnet-donut-node1.push.org/'),
+      transport: http('https://evm.donut.rpc.push.org/'),
     });
 
     // Read counter BEFORE
