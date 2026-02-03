@@ -1451,9 +1451,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pushchain/core@npm:^4.0.5":
-  version: 4.0.5
-  resolution: "@pushchain/core@npm:4.0.5"
+"@pushchain/core@npm:^4.0.8":
+  version: 4.0.8
+  resolution: "@pushchain/core@npm:4.0.8"
   dependencies:
     "@bufbuild/protobuf": "npm:^2.0.0"
     "@coral-xyz/anchor": "npm:^0.31.0"
@@ -1470,17 +1470,17 @@ __metadata:
     tslib: "npm:^2.3.0"
     tweetnacl: "npm:^1.0.3"
     viem: "npm:2.27.2"
-  checksum: 10c0/bf2705ef48eff19dddab19ed1ee2e2bd055ef57ca3f26cf1c25a384c4cc90a081c86b1db55ae1f0f04f9677e5b7cb212658004e2d0f765b30d79b8b544d50823
+  checksum: 10c0/efd984ca88ae63aad81a8cf722242aface88e8b65e5e97cb63f3c1848bd7fbd5c7667ac661211da731f0d74ea19aaf1ddea0bee6d3354f5f5da493616055bbe8
   languageName: node
   linkType: hard
 
-"@pushchain/ui-kit@npm:4.0.5":
-  version: 4.0.5
-  resolution: "@pushchain/ui-kit@npm:4.0.5"
+"@pushchain/ui-kit@npm:4.0.10":
+  version: 4.0.10
+  resolution: "@pushchain/ui-kit@npm:4.0.10"
   dependencies:
     "@coral-xyz/anchor": "npm:^0.31.1"
     "@metamask/sdk": "npm:^0.32.0"
-    "@pushchain/core": "npm:^4.0.5"
+    "@pushchain/core": "npm:^4.0.8"
     "@solana/web3.js": "npm:^1.98.2"
     "@walletconnect/ethereum-provider": "npm:^2.21.5"
     buffer: "npm:^6.0.3"
@@ -1492,7 +1492,7 @@ __metadata:
   peerDependencies:
     react: ">=18.3.0 <20.0.0"
     react-dom: ">=18.3.0 <20.0.0"
-  checksum: 10c0/ca05bc2895f8b96d4261407bd1740d276ff1f3cd14ae9ffdf64aed539281cb0319ca2e2a8a8f57409653a5bd5fa4266aee5a3abdc6be4656fdd123923e8a5f64
+  checksum: 10c0/e8f433fcef298b4a92be21cf82ec242b81ac4e3ab606beb776846e16b7d99b5b74277d4c02ce1111cc1b25c3eeb8e24e0a4f75f418c3f63cbd46458f5957ef12
   languageName: node
   linkType: hard
 
@@ -4933,7 +4933,7 @@ __metadata:
   resolution: "core-connection@workspace:."
   dependencies:
     "@eslint/js": "npm:^9.9.0"
-    "@pushchain/ui-kit": "npm:4.0.5"
+    "@pushchain/ui-kit": "npm:4.0.10"
     "@radix-ui/react-popover": "npm:^1.1.2"
     "@solana/spl-token": "npm:^0.4.14"
     "@types/react": "npm:^18.3.3"

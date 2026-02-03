@@ -1,5 +1,5 @@
 import { usePushChain, PushUI, usePushChainClient, usePushWalletContext } from '@pushchain/ui-kit';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Box, Text, TextInput, Button, PushMonotone, IconProps, Wallet, css, IllustrationProps } from 'shared-components';
 import { enumKeyToDisplay, fetchErc20TokenBalance, fetchNativeTokenBalance, fetchSplTokenBalance } from '../../common/utils';
 import Divider from './Divider';
@@ -10,6 +10,7 @@ import TermsConsent from './TermsConsent';
 import Select, { SelectOption } from '../../common/components/Select';
 import { chainsIconList, tokensIconList } from '../../common/constants';
 import Success from './Success';
+import { PROGRESS_HOOK } from '@pushchain/core/src/lib/progress-hook/progress-hook.types';
 
 export type ChainOptions = {
   icon?: React.FC<IconProps>;
@@ -36,10 +37,11 @@ const Bridge = () => {
     const [movableTokensList, setMovableTokensList] = useState<TokenOptions[]>([]);
     const [txnHash, setTxnHash] = useState('');
     const [txnDuration, setTxnDuration] = useState<number | null>(null);
+    const startRef = useRef<number | null>(null);
 
     const { PushChain } = usePushChain();
     const { pushChainClient } = usePushChainClient();
-    const { handleConnectToPushWallet } = usePushWalletContext();
+    const { handleConnectToPushWallet, progress } = usePushWalletContext();
 
     const handleSelectChain = (option: SelectOption) => {
         const chain = supportedChainsList.find((opt) => opt.value === option.value) || null;
@@ -74,8 +76,6 @@ const Bridge = () => {
         setError('');
         setLoading(true);
         setTxnDuration(null);
-
-        const start = performance.now();
     
         try {
             const txnRes = await pushChainClient.universal.sendTransaction({
@@ -85,10 +85,6 @@ const Bridge = () => {
                     token: selectedToken.token,
                 }
             });
-
-            const end = performance.now();
-            const durationSec = (end - start) / 1000;
-            setTxnDuration(Math.round(durationSec));
             setTxnHash(txnRes.hash);
         } catch (error) {
             console.log('Error in bridging:', error);
@@ -96,6 +92,20 @@ const Bridge = () => {
             setLoading(false);
         }
     }
+
+    useEffect(() => {
+        if (!progress) return;
+        if (progress.id === PROGRESS_HOOK.SEND_TX_06_02) {
+            startRef.current = performance.now();
+            setTxnDuration(null);
+            return;
+        }
+        if (progress.id === PROGRESS_HOOK.SEND_TX_06_05 && startRef.current !== null) {
+            const end = performance.now();
+            setTxnDuration(Math.round((end - startRef.current) / 1000));
+            startRef.current = null;
+        }
+    }, [progress]);
 
     useEffect(() => {
         const handleFetchBalance = async () => {
@@ -256,7 +266,7 @@ const Bridge = () => {
                                     value={amount}
                                     trailingIcon={
                                         <Box display='flex' gap='spacing-xxs' alignItems='center' height='24px'>
-                                            <Text variant='bs-regular' color='text-tertiary'>{balance}</Text>
+                                            <Text variant='bs-regular' color='text-tertiary'>{Number(balance).toFixed(1)}</Text>
                                             <Wallet size={18} color='icon-tertiary' style={{ width: '16px', color: 'var(--icon-tertiary)' }} />
                                             <Box
                                                 display='flex'
