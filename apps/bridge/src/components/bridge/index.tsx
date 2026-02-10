@@ -164,7 +164,7 @@ const Bridge = () => {
 
     useEffect(() => {
         const chains = PushChain.utils.chains.getSupportedChains(PushUI.CONSTANTS.PUSH_NETWORK.TESTNET).chains;
-        const options = chains.map((chain) => ({
+        const options = chains.filter((chain) => chain !== PushChain.CONSTANTS.CHAIN.PUSH_TESTNET_DONUT).map((chain) => ({
             label: enumKeyToDisplay(PushChain.utils.chains.getChainName(chain) || ''),
             value: chain,
             icon: Object.keys(chainsIconList).includes(chain) ? chainsIconList[chain] : undefined,
@@ -259,51 +259,96 @@ const Bridge = () => {
                             >
                                 <Text variant='bm-regular' color='text-secondary'>Send</Text>
                             </Box>
-                            <Box width={{initial: '60%', tb: '100%'}} position='relative'>
-                                <TextInput
-                                    onChange={handleAmountChange}
-                                    placeholder='Enter Amount'
-                                    value={amount}
-                                    trailingIcon={
-                                        <Box display='flex' gap='spacing-xxs' alignItems='center' height='24px'>
-                                            <Text variant='bs-regular' color='text-tertiary'>{Number(balance).toFixed(1)}</Text>
-                                            <Wallet size={18} color='icon-tertiary' style={{ width: '16px', color: 'var(--icon-tertiary)' }} />
-                                            <Box
-                                                display='flex'
-                                                alignItems='center'
-                                                height='100%'
-                                                padding='spacing-none spacing-xxs'
-                                                borderRadius='radius-xxs'
-                                                cursor='pointer'
-                                                border='border-sm solid stroke-tertiary'
-                                                onClick={() => setAmount(balance)}
-                                            >
-                                                <Text
-                                                    variant='ol-regular'
-                                                    color='text-secondary'
-                                                    css={css`
-                                                        :hover {
-                                                            color: var(--text-tertiary);
-                                                        }
-                                                    `}
-                                                >
-                                                    Max
-                                                </Text>
-                                            </Box>
+                            <Box width={{initial: 'calc(100% - 72px)', tb: '100%'}} position='relative'>
+                                <Box
+                                    display='flex'
+                                    flexDirection='column'
+                                    borderRadius='radius-xs'
+                                    border='border-xmd solid stroke-secondary'
+                                    backgroundColor='surface-secondary'
+                                    padding='spacing-xs'
+                                    gap='spacing-xs'
+                                    css={css`
+                                        &:hover {
+                                            border-color: var(--stroke-tertiary);
+                                        }
+                                        &:focus-within {
+                                            border-color: var(--stroke-brand-bold);
+                                            outline: none;
+                                        }
+                                    `}
+                                >
+                                    <Box display='flex' gap='spacing-xs' alignItems='center'>
+                                        <Box
+                                            css={css`
+                                                input::placeholder {
+                                                    color: var(--text-tertiary);
+                                                }
+                                            `}
+                                        >
+                                            <input
+                                                style={{
+                                                    background: 'transparent',
+                                                    border: 'none',
+                                                    color: 'var(--text-primary)',
+                                                    outline: 'none',
+                                                    width: '100%',
+                                                    fontSize: '34px',
+                                                    lineHeight: '42px',
+                                                }}
+                                                onChange={handleAmountChange}
+                                                placeholder='0'
+                                                value={amount}
+                                            />
                                         </Box>
-                                    }
-                                />
+                                        <Box width="30%" display={{ initial: 'block', tb: 'none'}}>
+                                            <Select
+                                                onChange={handleSelectToken} 
+                                                selected={selectedToken} 
+                                                options={movableTokensList}
+                                            />
+                                        </Box>
+                                    </Box>
+                                    <Box display='flex' gap='spacing-xxs' alignItems='center' height='24px' justifyContent='flex-end'>
+                                        <Text variant='bs-regular' color='text-tertiary'>{Number(balance).toFixed(1)}</Text>
+                                        <Wallet size={18} color='icon-tertiary' style={{ width: '16px', color: 'var(--icon-tertiary)' }} />
+                                        <Box
+                                            display='flex'
+                                            alignItems='center'
+                                            height='100%'
+                                            padding='spacing-none spacing-xxs'
+                                            borderRadius='radius-xxs'
+                                            cursor='pointer'
+                                            border='border-sm solid stroke-tertiary'
+                                            onClick={() => setAmount(balance)}
+                                        >
+                                            <Text
+                                                variant='ol-regular'
+                                                color='text-secondary'
+                                                css={css`
+                                                    :hover {
+                                                        color: var(--text-tertiary);
+                                                    }
+                                                `}
+                                            >
+                                                Max
+                                            </Text>
+                                        </Box>
+                                    </Box>
+                                </Box>
                                 <Box position='absolute' margin='spacing-none spacing-xs'>
                                     <Text variant='bes-regular' color='text-state-danger-subtle'>
                                         {error}
                                     </Text>
                                 </Box>
                             </Box>
-                            <Box width={{initial: 'calc(40% - 72px)', tb: '100%'}}>
+                            <Box width="100%" display={{ initial: 'none', tb: 'block'}}>
                                 <Select
                                     onChange={handleSelectToken} 
                                     selected={selectedToken} 
                                     options={movableTokensList}
+                                    placeholder='Select Token'
+                                    disabled={!selectedChain}
                                 />
                             </Box>
                         </Box>
@@ -326,6 +371,7 @@ const Bridge = () => {
                                     selected={selectedChain} 
                                     options={supportedChainsList}
                                     disabled={!!pushChainClient && !!selectedChain}
+                                    placeholder='Select Chain'
                                 />
                             </Box>  
                         </Box>
@@ -364,6 +410,7 @@ const Bridge = () => {
                                     disabled 
                                     selected={selectedToken} 
                                     options={movableTokensList}
+                                    placeholder='Select Token'
                                 />
                             </Box>
                         </Box>   

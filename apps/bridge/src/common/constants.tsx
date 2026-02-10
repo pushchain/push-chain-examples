@@ -1,6 +1,6 @@
 import { PushChain } from "@pushchain/core";
 import { CHAIN } from "@pushchain/core/src/lib/constants/enums";
-import { ArbitrumMonotone, EthereumMonotone, SolanaMonotone, BaseMonotone, BnbMonotone, IllustrationProps, IconProps, Ethereum, Solana, USDT, WEthereum } from "shared-components";
+import { ArbitrumMonotone, EthereumMonotone, SolanaMonotone, BaseMonotone, BnbMonotone, IllustrationProps, IconProps, Ethereum, Solana, USDT, WEthereum, PushMonotone } from "shared-components";
 import { mainnet, sepolia, baseSepolia, arbitrumSepolia, bscTestnet } from 'viem/chains';
 
 export const chainsIconList: Record<string, React.FC<IconProps>> = {
@@ -9,6 +9,7 @@ export const chainsIconList: Record<string, React.FC<IconProps>> = {
   [PushChain.CONSTANTS.CHAIN.BASE_SEPOLIA]: BaseMonotone,
   [PushChain.CONSTANTS.CHAIN.BNB_TESTNET]: BnbMonotone,
   [PushChain.CONSTANTS.CHAIN.SOLANA_DEVNET]: SolanaMonotone,
+  [PushChain.CONSTANTS.CHAIN.PUSH_TESTNET_DONUT]: PushMonotone,
 }
 
 export const tokensIconList: Record<string, React.FC<IllustrationProps>> = {

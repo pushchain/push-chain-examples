@@ -36,6 +36,7 @@ const Select: React.FC<SelectProps> = ({
                 border='border-xmd solid stroke-secondary'
                 backgroundColor='surface-secondary'
                 padding='spacing-xs'
+                height='51px'
                 cursor={disabled ? 'not-allowed' : 'pointer'}
                 onClick={() => !disabled && setOpen(true)}
                 data-disabled={disabled || undefined}
