@@ -1,5 +1,5 @@
 import { usePushChain, PushUI, usePushChainClient, usePushWalletContext } from '@pushchain/ui-kit';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Text, TextInput, Button, PushMonotone, IconProps, Wallet, css, IllustrationProps } from 'shared-components';
 import { enumKeyToDisplay, fetchErc20TokenBalance, fetchNativeTokenBalance, fetchSplTokenBalance } from '../../common/utils';
 import Divider from './Divider';
@@ -41,7 +41,13 @@ const Bridge = () => {
 
     const { PushChain } = usePushChain();
     const { pushChainClient } = usePushChainClient();
-    const { handleConnectToPushWallet, progress } = usePushWalletContext();
+    const { handleConnectToPushWallet, progress, handleUserLogOutEvent } = usePushWalletContext();
+
+    const buttonText = useMemo(() => {
+        if (!pushChainClient) return 'Connect Wallet';
+        if (pushChainClient.universal.origin.chain === selectedChain?.value) return 'Confirm Transaction';
+        return `Switch to ${selectedChain?.label || 'Selected Chain'}`;
+    }, [pushChainClient, selectedChain]);
 
     const handleSelectChain = (option: SelectOption) => {
         const chain = supportedChainsList.find((opt) => opt.value === option.value) || null;
@@ -90,6 +96,15 @@ const Bridge = () => {
             console.log('Error in bridging:', error);
         } finally {
             setLoading(false);
+        }
+    }
+
+    const handleClick = async () => {
+        if (!pushChainClient) handleConnectToPushWallet();
+        else if (pushChainClient.universal.origin.chain === selectedChain?.value) handleBridge();
+        else {
+            await handleUserLogOutEvent();
+            handleConnectToPushWallet();
         }
     }
 
@@ -370,7 +385,7 @@ const Bridge = () => {
                                     onChange={handleSelectChain} 
                                     selected={selectedChain} 
                                     options={supportedChainsList}
-                                    disabled={!!pushChainClient && !!selectedChain}
+                                    // disabled={!!pushChainClient && !!selectedChain}
                                     placeholder='Select Chain'
                                 />
                             </Box>  
@@ -446,10 +461,16 @@ const Bridge = () => {
                         <QuoteSummary token={selectedToken?.token} amount={amount} />
                         <Button
                             loading={loading}
-                            onClick={pushChainClient ? handleBridge : handleConnectToPushWallet}
+                            onClick={handleClick}
                         >
-                            {pushChainClient ? 'Confirm Transaction' : 'Connect Wallet'}
-                        </Button>   
+                            {buttonText}
+                        </Button>
+                        {pushChainClient && pushChainClient.universal.origin.chain !== selectedChain?.value && (
+                            <Text variant='bes-regular' color='text-tertiary'>
+                                You’re currently connected to <strong>{enumKeyToDisplay(PushChain.utils.chains.getChainName(pushChainClient.universal.origin.chain) || '')}</strong>. 
+                                To proceed with this transaction, you’ll need to switch your wallet to <strong>{selectedChain?.label}</strong>.
+                            </Text>
+                    )}
                     </Box>
                 </Box>
             )}
