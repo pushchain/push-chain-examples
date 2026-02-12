@@ -4,11 +4,12 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
-    "start": "ts-node index.ts"
+    "start": "NODE_NO_WARNINGS=1 ts-node index.ts"
   },
   "dependencies": {
-    "@pushchain/core": "latest",
+    "@pushchain/core": "4.0.12-alpha.0",
     "@solana/web3.js": "^1.91.1",
+    "@solana/spl-token": "^0.3.8",
     "ethers": "^6.14.4",
     "bs58": "^5.0.0"
   },

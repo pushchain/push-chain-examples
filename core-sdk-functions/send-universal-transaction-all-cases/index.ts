@@ -80,20 +80,29 @@ const COUNTER_ADDRESS = '0x5FbDB2315678afecb367f032d93F642f64180aa3';
 // TRANSACTION ROUTES
 // ==============================================
 const TRANSACTION_ROUTES = [
-  { id: 1, name: 'Value to self', hasValue: true, hasFunds: false, hasData: false, toSelf: true },
-  { id: 2, name: 'Value to others', hasValue: true, hasFunds: false, hasData: false, toSelf: false },
-  { id: 3, name: 'Funds to self', hasValue: false, hasFunds: true, hasData: false, toSelf: true },
-  { id: 4, name: 'Funds to others', hasValue: false, hasFunds: true, hasData: false, toSelf: false },
-  { id: 5, name: 'Data to self', hasValue: false, hasFunds: false, hasData: true, toSelf: true, skip: true },
-  { id: 6, name: 'Data to others', hasValue: false, hasFunds: false, hasData: true, toSelf: false },
-  { id: 7, name: 'Value + Funds to self', hasValue: true, hasFunds: true, hasData: false, toSelf: true },
-  { id: 8, name: 'Value + Funds to others', hasValue: true, hasFunds: true, hasData: false, toSelf: false },
-  { id: 9, name: 'Value + Data to self', hasValue: true, hasFunds: false, hasData: true, toSelf: true, skip: true },
-  { id: 10, name: 'Value + Data to others', hasValue: true, hasFunds: false, hasData: true, toSelf: false },
-  { id: 11, name: 'Funds + Data to self', hasValue: false, hasFunds: true, hasData: true, toSelf: true, skip: true },
-  { id: 12, name: 'Funds + Data to others', hasValue: false, hasFunds: true, hasData: true, toSelf: false },
-  { id: 13, name: 'Value + Funds + Data to self', hasValue: true, hasFunds: true, hasData: true, toSelf: true, skip: true },
-  { id: 14, name: 'Value + Funds + Data to others', hasValue: true, hasFunds: true, hasData: true, toSelf: false },
+  { id: 1, name: 'Value to self', hasValue: true, hasFunds: false, hasNativeFunds: false, hasData: false, toSelf: true },
+  { id: 2, name: 'Value to others', hasValue: true, hasFunds: false, hasNativeFunds: false, hasData: false, toSelf: false },
+  { id: 3, name: 'Funds to self', hasValue: false, hasFunds: true, hasNativeFunds: false, hasData: false, toSelf: true },
+  { id: 4, name: 'Funds to others', hasValue: false, hasFunds: true, hasNativeFunds: false, hasData: false, toSelf: false },
+  { id: 5, name: 'Data to self', hasValue: false, hasFunds: false, hasNativeFunds: false, hasData: true, toSelf: true, skip: true },
+  { id: 6, name: 'Data to others', hasValue: false, hasFunds: false, hasNativeFunds: false, hasData: true, toSelf: false },
+  { id: 7, name: 'Value + Funds to self', hasValue: true, hasFunds: true, hasNativeFunds: false, hasData: false, toSelf: true },
+  { id: 8, name: 'Value + Funds to others', hasValue: true, hasFunds: true, hasNativeFunds: false, hasData: false, toSelf: false },
+  { id: 9, name: 'Value + Data to self', hasValue: true, hasFunds: false, hasNativeFunds: false, hasData: true, toSelf: true, skip: true },
+  { id: 10, name: 'Value + Data to others', hasValue: true, hasFunds: false, hasNativeFunds: false, hasData: true, toSelf: false },
+  { id: 11, name: 'Funds + Data to self', hasValue: false, hasFunds: true, hasNativeFunds: false, hasData: true, toSelf: true, skip: true },
+  { id: 12, name: 'Funds + Data to others', hasValue: false, hasFunds: true, hasNativeFunds: false, hasData: true, toSelf: false },
+  { id: 13, name: 'Value + Funds + Data to self', hasValue: true, hasFunds: true, hasNativeFunds: false, hasData: true, toSelf: true, skip: true },
+  { id: 14, name: 'Value + Funds + Data to others', hasValue: true, hasFunds: true, hasNativeFunds: false, hasData: true, toSelf: false },
+  // Native Funds routes
+  { id: 15, name: 'Native Funds to self', hasValue: false, hasFunds: false, hasNativeFunds: true, hasData: false, toSelf: true },
+  { id: 16, name: 'Native Funds to others', hasValue: false, hasFunds: false, hasNativeFunds: true, hasData: false, toSelf: false },
+  { id: 17, name: 'Value + Native Funds to self', hasValue: true, hasFunds: false, hasNativeFunds: true, hasData: false, toSelf: true },
+  { id: 18, name: 'Value + Native Funds to others', hasValue: true, hasFunds: false, hasNativeFunds: true, hasData: false, toSelf: false },
+  { id: 19, name: 'Native Funds + Data to self', hasValue: false, hasFunds: false, hasNativeFunds: true, hasData: true, toSelf: true, skip: true },
+  { id: 20, name: 'Native Funds + Data to others', hasValue: false, hasFunds: false, hasNativeFunds: true, hasData: true, toSelf: false },
+  { id: 21, name: 'Value + Funds + Native Funds to self', hasValue: true, hasFunds: true, hasNativeFunds: true, hasData: false, toSelf: true },
+  { id: 22, name: 'Value + Funds + Native Funds to others', hasValue: true, hasFunds: true, hasNativeFunds: true, hasData: false, toSelf: false },
 ];
 
 // ==============================================
@@ -101,18 +110,76 @@ const TRANSACTION_ROUTES = [
 // ==============================================
 async function main() {
   console.log('╔════════════════════════════════════════════════════════════════╗');
-  console.log('║   Universal Transaction Test Suite - All 14 Routes            ║');
+  console.log('║   Universal Transaction Test Suite - All 22 Routes            ║');
   console.log('╚════════════════════════════════════════════════════════════════╝\n');
 
+  // Step 1: Chain selection
   const chainType = await rl.question('Select chain type (1 = Ethereum, 2 = Solana): ');
-
-  if (chainType === '1') {
-    await testEthereumRoutes();
-  } else if (chainType === '2') {
-    await testSolanaRoutes();
-  } else {
+  
+  if (chainType !== '1' && chainType !== '2') {
     console.log('❌ Invalid selection');
     process.exit(1);
+  }
+  
+  const chainName = chainType === '1' ? 'Ethereum' : 'Solana';
+  console.log(`✅ Selected: ${chainName}\n`);
+
+  // Step 2: Display all available routes
+  console.log('📋 Available Test Routes:\n');
+  TRANSACTION_ROUTES.forEach((route) => {
+    const skipLabel = route.skip ? ' (SKIPPED - Cannot execute data on own UEA)' : '';
+    console.log(`   ${route.id.toString().padStart(2, ' ')}. ${route.name}${skipLabel}`);
+  });
+  
+  console.log('\n' + '─'.repeat(70) + '\n');
+  
+  // Step 3: Route selection
+  const routeSelection = (await rl.question('Run all routes or specific route? (route number or hit enter for all): ')).trim();
+  
+  let selectedRoutes: typeof TRANSACTION_ROUTES;
+  
+  if (routeSelection === '' || routeSelection.toLowerCase() === 'all') {
+    selectedRoutes = TRANSACTION_ROUTES;
+    console.log('✅ Running all 22 routes\n');
+  } else {
+    const routeNum = parseInt(routeSelection);
+    if (isNaN(routeNum) || routeNum < 1 || routeNum > 22) {
+      console.log('❌ Invalid route number. Please enter a number between 1 and 22.');
+      process.exit(1);
+    }
+    selectedRoutes = TRANSACTION_ROUTES.filter(r => r.id === routeNum);
+    console.log(`✅ Running Route ${routeNum}: ${selectedRoutes[0].name}\n`);
+  }
+
+  // Step 4: Wallet setup
+  const masterPrivateKey = chainType === '1' ? ETHEREUM_MASTER_PRIVATE_KEY : SOLANA_MASTER_PRIVATE_KEY;
+  let providedPrivateKey: string | null = null;
+  
+  if (masterPrivateKey !== null) {
+    // Automatically use configured master wallet
+    console.log('✅ Using configured master wallet\n');
+    providedPrivateKey = masterPrivateKey;
+  } else {
+    // Ask user to provide private key or hit enter to generate new
+    const keyPrompt = chainType === '1' 
+      ? 'Enter Ethereum private key (with 0x prefix) or hit Enter to generate new wallet: '
+      : 'Enter Solana private key (base58 format) or hit Enter to generate new wallet: ';
+    
+    const walletInput = (await rl.question(keyPrompt)).trim();
+    
+    if (walletInput === '') {
+      console.log('✅ Generating new wallet\n');
+      providedPrivateKey = null;
+    } else {
+      console.log('✅ Using provided wallet\n');
+      providedPrivateKey = walletInput;
+    }
+  }
+
+  if (chainType === '1') {
+    await testEthereumRoutes(selectedRoutes, providedPrivateKey);
+  } else {
+    await testSolanaRoutes(selectedRoutes, providedPrivateKey);
   }
 
   rl.close();
@@ -124,15 +191,15 @@ main().catch(console.error);
 // ==============================================
 // ETHEREUM TEST SUITE
 // ==============================================
-async function testEthereumRoutes() {
+async function testEthereumRoutes(selectedRoutes: typeof TRANSACTION_ROUTES, providedPrivateKey: string | null) {
   console.log('\n🔷 ETHEREUM TEST SUITE\n');
 
   // Setup master wallet
   let masterWallet: ethers.Wallet;
   
-  if (ETHEREUM_MASTER_PRIVATE_KEY) {
-    masterWallet = new ethers.Wallet(ETHEREUM_MASTER_PRIVATE_KEY);
-    console.log('🔑 Using existing Ethereum master wallet');
+  if (providedPrivateKey) {
+    masterWallet = new ethers.Wallet(providedPrivateKey);
+    console.log('🔑 Using provided Ethereum master wallet');
   } else {
     masterWallet = ethers.Wallet.createRandom();
     console.log('🔑 Generated new Ethereum master wallet');
@@ -150,11 +217,11 @@ async function testEthereumRoutes() {
 
   // Get USDT token address
   const usdtAddress = masterPushChainClient.moveable.token.USDT.address;
-  console.log(`💵 USDT Token Address: ${usdtAddress}\n`);
 
   console.log('📋 Please complete the following steps:');
-  console.log(`   1. Send 0.01 Sepolia ETH to ${masterWallet.address}`);
+  console.log(`   1. Send 0.06 Sepolia ETH to ${masterWallet.address}`);
   console.log(`   2. Mint 1 USDT from: https://sepolia.etherscan.io/address/${usdtAddress}#writeContract#F6`);
+  console.log(`      💵 USDT Token Address: ${usdtAddress}\n`);
   console.log(`      (Connect wallet and call mint function)\n`);
   
   await rl.question('⚠️  Press Enter once you have completed both steps...');
@@ -200,9 +267,13 @@ async function testEthereumRoutes() {
   console.log('PART 2: NEW USER TESTS (Fresh wallets for each test)');
   console.log('═'.repeat(70) + '\n');
 
-  for (const route of TRANSACTION_ROUTES) {
+  for (const route of selectedRoutes) {
+    console.log(`\n${'='.repeat(70)}`);
+    console.log(`🧪 NEW USER - Testing Route ${route.id}: ${route.name}`);
+    console.log(`${'='.repeat(70)}`);
+
     if (route.skip) {
-      console.log(`\n⏭️  Route ${route.id}: ${route.name} - SKIPPED (Can't execute data on your own UEA)`);
+      console.log(`⏭️  Route ${route.id}: ${route.name} - SKIPPED (Can't execute data on your own UEA)`);
       allTransactions.push({
         description: `NEW USER - Route ${route.id}: ${route.name} - SKIPPED`,
         walletAddress: 'N/A',
@@ -214,10 +285,6 @@ async function testEthereumRoutes() {
       continue;
     }
 
-    console.log(`\n${'='.repeat(70)}`);
-    console.log(`🧪 NEW USER - Testing Route ${route.id}: ${route.name}`);
-    console.log(`${'='.repeat(70)}`);
-
     try {
       // Generate fresh wallet for this test
       const newWallet = ethers.Wallet.createRandom();
@@ -227,14 +294,28 @@ async function testEthereumRoutes() {
       // Generate random other address for this test
       const otherAddress = ethers.Wallet.createRandom().address;
 
-      // Transfer funds from master to new wallet
-      console.log('   💸 Transferring funds from master wallet...');
+      // Transfer ETH from master to new wallet
+      console.log('   💸 Transferring ETH from master wallet...');
       const fundTx = await masterSigner.sendTransaction({
         to: newWallet.address,
-        value: PushChain.utils.helpers.parseUnits('0.00001', 18),
+        value: PushChain.utils.helpers.parseUnits('0.002', 18),
       });
       await fundTx.wait();
-      console.log('   ✅ Funds transferred');
+      console.log('   ✅ ETH transferred');
+
+      // Transfer USDT from master to new wallet if route requires funds
+      if (route.hasFunds) {
+        console.log('   💵 Transferring USDT from master wallet...');
+        const usdtContract = new ethers.Contract(
+          usdtAddress,
+          ['function transfer(address to, uint256 amount) returns (bool)'],
+          masterSigner
+        );
+        const usdtTransferAmount = PushChain.utils.helpers.parseUnits('0.0001', 6); // Transfer 0.0001 USDT
+        const usdtTx = await usdtContract.transfer(newWallet.address, usdtTransferAmount);
+        await usdtTx.wait();
+        console.log('   ✅ USDT transferred');
+      }
 
       // Initialize Push Chain client for new wallet
       const newUniversalSigner = await PushChain.utils.signer.toUniversal(newSigner);
@@ -252,7 +333,9 @@ async function testEthereumRoutes() {
 
       // Dynamic amounts based on route ID
       const ethAmount = `0.000000${route.id}`;
-      const usdtAmount = `0.000000${route.id}`;
+      const usdtAmountRaw = route.id * 0.000001; // Proper 6 decimal calculation
+      const usdtAmount = usdtAmountRaw.toFixed(6);
+      const nativeEthAmount = `0.000000${route.id}`; // Native funds amount
 
       if (route.hasValue) {
         txParams.value = PushChain.utils.helpers.parseUnits(ethAmount, 18);
@@ -267,11 +350,27 @@ async function testEthereumRoutes() {
         console.log(`   💵 Funds: ${usdtAmount} USDT`);
       }
 
+      if (route.hasNativeFunds) {
+        txParams.funds = {
+          amount: PushChain.utils.helpers.parseUnits(nativeEthAmount, 18), // ETH has 18 decimals
+          token: newPushChainClient.moveable.token.ETH,
+        };
+        console.log(`   💎 Native Funds: ${nativeEthAmount} ETH`);
+      }
+
       if (route.hasData) {
-        const iface = new ethers.Interface(COUNTER_ABI);
-        txParams.data = iface.encodeFunctionData('increment');
+        // Read counter before increment
+        const donutProvider = new ethers.JsonRpcProvider(PUSH_DONUT_RPC);
+        const counterContract = new ethers.Contract(COUNTER_ADDRESS, COUNTER_ABI, donutProvider);
+        const countBefore = await counterContract.countPC();
+        
+        const data = PushChain.utils.helpers.encodeTxData({
+          abi: COUNTER_ABI as unknown as any[],
+          functionName: 'increment',
+        }) as `0x${string}`;
+        txParams.data = data;
         txParams.to = COUNTER_ADDRESS;
-        console.log('   📦 Data: increment()');
+        console.log(`   📦 Data: increment() | Counter before: ${countBefore.toString()}`);
       }
 
       console.log(`   🎯 To: ${txParams.to}`);
@@ -295,6 +394,14 @@ async function testEthereumRoutes() {
 
       await txResponse.wait();
       console.log('   ✅ Transaction confirmed on Donut');
+      
+      // Read counter after increment if data transaction
+      if (route.hasData) {
+        const donutProvider = new ethers.JsonRpcProvider(PUSH_DONUT_RPC);
+        const counterContract = new ethers.Contract(COUNTER_ADDRESS, COUNTER_ABI, donutProvider);
+        const countAfter = await counterContract.countPC();
+        console.log(`   📊 Counter after: ${countAfter.toString()}`);
+      }
 
     } catch (error: any) {
       console.log(`   ❌ Error: ${error.message}`);
@@ -321,8 +428,13 @@ async function runTestRoutes(
   for (const route of TRANSACTION_ROUTES) {
     // Generate random other address for each test
     const otherAddress = ethers.Wallet.createRandom().address;
+
+    console.log(`\n${'='.repeat(70)}`);
+    console.log(`🧪 ${userType} - Testing Route ${route.id}: ${route.name}`);
+    console.log(`${'='.repeat(70)}`);
+
     if (route.skip) {
-      console.log(`\n⏭️  Route ${route.id}: ${route.name} - SKIPPED (Can't execute data on your own UEA)`);
+      console.log(`⏭️  Route ${route.id}: ${route.name} - SKIPPED (Can't execute data on your own UEA)`);
       allTransactions.push({
         description: `Route ${route.id}: ${route.name} - SKIPPED`,
         walletAddress: wallet.address,
@@ -334,10 +446,6 @@ async function runTestRoutes(
       continue;
     }
 
-    console.log(`\n${'='.repeat(70)}`);
-    console.log(`🧪 ${userType} - Testing Route ${route.id}: ${route.name}`);
-    console.log(`${'='.repeat(70)}`);
-
     try {
       const txParams: any = {
         to: route.toSelf ? wallet.address : otherAddress,
@@ -345,7 +453,9 @@ async function runTestRoutes(
 
       // Dynamic amounts based on route ID
       const ethAmount = `0.00000${route.id}`;
-      const usdtAmount = `0.00000${route.id}`;
+      const usdtAmountRaw = route.id * 0.000001; // Proper 6 decimal calculation
+      const usdtAmount = usdtAmountRaw.toFixed(6);
+      const nativeEthAmount = `0.00000${route.id}`; // Native funds amount
 
       if (route.hasValue) {
         txParams.value = PushChain.utils.helpers.parseUnits(ethAmount, 18);
@@ -360,11 +470,27 @@ async function runTestRoutes(
         console.log(`   💵 Funds: ${usdtAmount} USDT`);
       }
 
+      if (route.hasNativeFunds) {
+        txParams.funds = {
+          amount: PushChain.utils.helpers.parseUnits(nativeEthAmount, 18), // ETH has 18 decimals
+          token: pushChainClient.moveable.token.ETH,
+        };
+        console.log(`   💎 Native Funds: ${nativeEthAmount} ETH`);
+      }
+
       if (route.hasData) {
-        const iface = new ethers.Interface(COUNTER_ABI);
-        txParams.data = iface.encodeFunctionData('increment');
+        // Read counter before increment
+        const donutProvider = new ethers.JsonRpcProvider(PUSH_DONUT_RPC);
+        const counterContract = new ethers.Contract(COUNTER_ADDRESS, COUNTER_ABI, donutProvider);
+        const countBefore = await counterContract.countPC();
+        
+        const data = PushChain.utils.helpers.encodeTxData({
+          abi: COUNTER_ABI as unknown as any[],
+          functionName: 'increment',
+        }) as `0x${string}`;
+        txParams.data = data;
         txParams.to = COUNTER_ADDRESS;
-        console.log('   📦 Data: increment()');
+        console.log(`   📦 Data: increment() | Counter before: ${countBefore.toString()}`);
       }
 
       console.log(`   🎯 To: ${txParams.to}`);
@@ -388,6 +514,14 @@ async function runTestRoutes(
 
       await txResponse.wait();
       console.log('   ✅ Transaction confirmed on Donut');
+      
+      // Read counter after increment if data transaction
+      if (route.hasData) {
+        const donutProvider = new ethers.JsonRpcProvider(PUSH_DONUT_RPC);
+        const counterContract = new ethers.Contract(COUNTER_ADDRESS, COUNTER_ABI, donutProvider);
+        const countAfter = await counterContract.countPC();
+        console.log(`   📊 Counter after: ${countAfter.toString()}`);
+      }
 
     } catch (error: any) {
       console.log(`   ❌ Error: ${error.message}`);
@@ -400,16 +534,16 @@ async function runTestRoutes(
 // ==============================================
 // SOLANA TEST SUITE
 // ==============================================
-async function testSolanaRoutes() {
+async function testSolanaRoutes(selectedRoutes: typeof TRANSACTION_ROUTES, providedPrivateKey: string | null) {
   console.log('\n🟣 SOLANA TEST SUITE\n');
 
   // Setup master wallet
   let masterKeypair: Keypair;
   
-  if (SOLANA_MASTER_PRIVATE_KEY) {
-    const secretKey = bs58.decode(SOLANA_MASTER_PRIVATE_KEY);
+  if (providedPrivateKey) {
+    const secretKey = bs58.decode(providedPrivateKey);
     masterKeypair = Keypair.fromSecretKey(secretKey);
-    console.log('🔑 Using existing Solana master wallet');
+    console.log('🔑 Using provided Solana master wallet');
   } else {
     masterKeypair = Keypair.generate();
     console.log('🔑 Generated new Solana master wallet');
@@ -432,7 +566,7 @@ async function testSolanaRoutes() {
   console.log(`💵 USDT Token Address: ${usdtAddress}\n`);
 
   console.log('📋 Please complete the following steps:');
-  console.log(`   1. Send 0.01 Devnet SOL to ${masterKeypair.publicKey.toBase58()}`);
+  console.log(`   1. Send 0.06 Devnet SOL to ${masterKeypair.publicKey.toBase58()}`);
   console.log(`   2. Mint 1 USDT (Note: Solana minting process may vary - check token documentation)\n`);
   
   await rl.question('⚠️  Press Enter once you have completed both steps...');
@@ -479,9 +613,13 @@ async function testSolanaRoutes() {
   console.log('PART 2: NEW USER TESTS (Fresh wallets for each test)');
   console.log('═'.repeat(70) + '\n');
 
-  for (const route of TRANSACTION_ROUTES) {
+  for (const route of selectedRoutes) {
+    console.log(`\n${'='.repeat(70)}`);
+    console.log(`🧪 NEW USER - Testing Route ${route.id}: ${route.name}`);
+    console.log(`${'='.repeat(70)}`);
+
     if (route.skip) {
-      console.log(`\n⏭️  Route ${route.id}: ${route.name} - SKIPPED (Can't execute data on your own UEA)`);
+      console.log(`⏭️  Route ${route.id}: ${route.name} - SKIPPED (Can't execute data on your own UEA)`);
       allTransactions.push({
         description: `NEW USER - Route ${route.id}: ${route.name} - SKIPPED`,
         walletAddress: 'N/A',
@@ -493,10 +631,6 @@ async function testSolanaRoutes() {
       continue;
     }
 
-    console.log(`\n${'='.repeat(70)}`);
-    console.log(`🧪 NEW USER - Testing Route ${route.id}: ${route.name}`);
-    console.log(`${'='.repeat(70)}`);
-
     try {
       // Generate fresh wallet for this test
       const newKeypair = Keypair.generate();
@@ -505,20 +639,57 @@ async function testSolanaRoutes() {
       // Generate random other address for this test
       const otherAddress = ethers.Wallet.createRandom().address;
 
-      // Transfer funds from master to new wallet (using Solana native transfer)
-      console.log('   💸 Transferring funds from master wallet...');
+      // Transfer SOL from master to new wallet (using Solana native transfer)
+      console.log('   💸 Transferring SOL from master wallet...');
       const { Connection, SystemProgram, Transaction, sendAndConfirmTransaction } = await import('@solana/web3.js');
       const connection = new Connection(SOLANA_DEVNET_RPC, 'confirmed');
       
       const transferIx = SystemProgram.transfer({
         fromPubkey: masterKeypair.publicKey,
         toPubkey: newKeypair.publicKey,
-        lamports: 10000000, // 0.01 SOL
+        lamports: 2000000, // 0.002 SOL
       });
       
       const transaction = new Transaction().add(transferIx);
       await sendAndConfirmTransaction(connection, transaction, [masterKeypair]);
-      console.log('   ✅ Funds transferred');
+      console.log('   ✅ SOL transferred');
+
+      // Transfer USDT from master to new wallet if route requires funds
+      if (route.hasFunds) {
+        console.log('   💵 Transferring USDT from master wallet...');
+        // Use SPL token transfer for Solana USDT
+        const { getOrCreateAssociatedTokenAccount, transfer, getMint } = await import('@solana/spl-token');
+        const { PublicKey } = await import('@solana/web3.js');
+        
+        const usdtMintAddress = new PublicKey(usdtAddress);
+        
+        // Get or create associated token accounts
+        const fromTokenAccount = await getOrCreateAssociatedTokenAccount(
+          connection,
+          masterKeypair,
+          usdtMintAddress,
+          masterKeypair.publicKey
+        );
+        
+        const toTokenAccount = await getOrCreateAssociatedTokenAccount(
+          connection,
+          masterKeypair,
+          usdtMintAddress,
+          newKeypair.publicKey
+        );
+        
+        // Transfer 0.0001 USDT (100000 with 6 decimals)
+        await transfer(
+          connection,
+          masterKeypair,
+          fromTokenAccount.address,
+          toTokenAccount.address,
+          masterKeypair.publicKey,
+          100000 // 0.0001 USDT with 6 decimals
+        );
+        
+        console.log('   ✅ USDT transferred');
+      }
 
       // Initialize Push Chain client for new wallet
       const newUniversalSigner = await PushChain.utils.signer.toUniversalFromKeypair(newKeypair, {
@@ -540,7 +711,9 @@ async function testSolanaRoutes() {
 
       // Dynamic amounts based on route ID (smaller amounts for Solana)
       const solAmountStr = `0.000000${route.id}`; // 0.0000001 to 0.0000014 SOL
-      const usdtAmount = `0.000000${route.id}`;
+      const usdtAmountRaw = route.id * 0.000001; // Proper 6 decimal calculation
+      const usdtAmount = usdtAmountRaw.toFixed(6);
+      const nativeSolAmount = `0.000000${route.id}`; // Native funds amount
 
       if (route.hasValue) {
         txParams.value = PushChain.utils.helpers.parseUnits(solAmountStr, 9); // SOL has 9 decimals
@@ -555,11 +728,27 @@ async function testSolanaRoutes() {
         console.log(`   💵 Funds: ${usdtAmount} USDT`);
       }
 
+      if (route.hasNativeFunds) {
+        txParams.funds = {
+          amount: PushChain.utils.helpers.parseUnits(nativeSolAmount, 9), // SOL has 9 decimals
+          token: newPushChainClient.moveable.token.SOL,
+        };
+        console.log(`   💎 Native Funds: ${nativeSolAmount} SOL`);
+      }
+
       if (route.hasData) {
-        const iface = new ethers.Interface(COUNTER_ABI);
-        txParams.data = iface.encodeFunctionData('increment');
+        // Read counter before increment
+        const donutProvider = new ethers.JsonRpcProvider(PUSH_DONUT_RPC);
+        const counterContract = new ethers.Contract(COUNTER_ADDRESS, COUNTER_ABI, donutProvider);
+        const countBefore = await counterContract.countPC();
+        
+        const data = PushChain.utils.helpers.encodeTxData({
+          abi: COUNTER_ABI as unknown as any[],
+          functionName: 'increment',
+        }) as `0x${string}`;
+        txParams.data = data;
         txParams.to = COUNTER_ADDRESS;
-        console.log('   📦 Data: increment()');
+        console.log(`   📦 Data: increment() | Counter before: ${countBefore.toString()}`);
       }
 
       console.log(`   🎯 To: ${txParams.to}`);
@@ -589,6 +778,14 @@ async function testSolanaRoutes() {
 
       await txResponse.wait();
       console.log('   ✅ Transaction confirmed on Donut');
+      
+      // Read counter after increment if data transaction
+      if (route.hasData) {
+        const donutProvider = new ethers.JsonRpcProvider(PUSH_DONUT_RPC);
+        const counterContract = new ethers.Contract(COUNTER_ADDRESS, COUNTER_ABI, donutProvider);
+        const countAfter = await counterContract.countPC();
+        console.log(`   📊 Counter after: ${countAfter.toString()}`);
+      }
 
     } catch (error: any) {
       console.log(`   ❌ Error: ${error.message}`);
@@ -614,8 +811,13 @@ async function runTestRoutesSolana(
   for (const route of TRANSACTION_ROUTES) {
     // Generate random other address for each test
     const otherAddress = ethers.Wallet.createRandom().address;
+
+    console.log(`\n${'='.repeat(70)}`);
+    console.log(`🧪 ${userType} - Testing Route ${route.id}: ${route.name}`);
+    console.log(`${'='.repeat(70)}`);
+
     if (route.skip) {
-      console.log(`\n⏭️  Route ${route.id}: ${route.name} - SKIPPED (Can't execute data on your own UEA)`);
+      console.log(`⏭️  Route ${route.id}: ${route.name} - SKIPPED (Can't execute data on your own UEA)`);
       allTransactions.push({
         description: `Route ${route.id}: ${route.name} - SKIPPED`,
         walletAddress: keypair.publicKey.toBase58(),
@@ -627,10 +829,6 @@ async function runTestRoutesSolana(
       continue;
     }
 
-    console.log(`\n${'='.repeat(70)}`);
-    console.log(`🧪 ${userType} - Testing Route ${route.id}: ${route.name}`);
-    console.log(`${'='.repeat(70)}`);
-
     try {
       const txParams: any = {
         to: route.toSelf ? ueaAddress : otherAddress,
@@ -638,7 +836,9 @@ async function runTestRoutesSolana(
 
       // Dynamic amounts based on route ID (smaller amounts for Solana)
       const solAmountStr = `0.000000${route.id}`; // 0.0000001 to 0.0000014 SOL
-      const usdtAmount = `0.000000${route.id}`;
+      const usdtAmountRaw = route.id * 0.000001; // Proper 6 decimal calculation
+      const usdtAmount = usdtAmountRaw.toFixed(6);
+      const nativeSolAmount = `0.000000${route.id}`; // Native funds amount
 
       if (route.hasValue) {
         txParams.value = PushChain.utils.helpers.parseUnits(solAmountStr, 9); // SOL has 9 decimals
@@ -653,11 +853,27 @@ async function runTestRoutesSolana(
         console.log(`   💵 Funds: ${usdtAmount} USDT`);
       }
 
+      if (route.hasNativeFunds) {
+        txParams.funds = {
+          amount: PushChain.utils.helpers.parseUnits(nativeSolAmount, 9), // SOL has 9 decimals
+          token: pushChainClient.moveable.token.SOL,
+        };
+        console.log(`   💎 Native Funds: ${nativeSolAmount} SOL`);
+      }
+
       if (route.hasData) {
-        const iface = new ethers.Interface(COUNTER_ABI);
-        txParams.data = iface.encodeFunctionData('increment');
+        // Read counter before increment
+        const donutProvider = new ethers.JsonRpcProvider(PUSH_DONUT_RPC);
+        const counterContract = new ethers.Contract(COUNTER_ADDRESS, COUNTER_ABI, donutProvider);
+        const countBefore = await counterContract.countPC();
+        
+        const data = PushChain.utils.helpers.encodeTxData({
+          abi: COUNTER_ABI as unknown as any[],
+          functionName: 'increment',
+        }) as `0x${string}`;
+        txParams.data = data;
         txParams.to = COUNTER_ADDRESS;
-        console.log('   📦 Data: increment()');
+        console.log(`   📦 Data: increment() | Counter before: ${countBefore.toString()}`);
       }
 
       console.log(`   🎯 To: ${txParams.to}`);
@@ -687,6 +903,14 @@ async function runTestRoutesSolana(
 
       await txResponse.wait();
       console.log('   ✅ Transaction confirmed on Donut');
+      
+      // Read counter after increment if data transaction
+      if (route.hasData) {
+        const donutProvider = new ethers.JsonRpcProvider(PUSH_DONUT_RPC);
+        const counterContract = new ethers.Contract(COUNTER_ADDRESS, COUNTER_ABI, donutProvider);
+        const countAfter = await counterContract.countPC();
+        console.log(`   📊 Counter after: ${countAfter.toString()}`);
+      }
 
     } catch (error: any) {
       console.log(`   ❌ Error: ${error.message}`);
