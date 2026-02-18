@@ -1451,9 +1451,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pushchain/core@npm:^4.0.9":
-  version: 4.0.9
-  resolution: "@pushchain/core@npm:4.0.9"
+"@pushchain/core@npm:^4.0.13":
+  version: 4.0.13
+  resolution: "@pushchain/core@npm:4.0.13"
   dependencies:
     "@bufbuild/protobuf": "npm:^2.0.0"
     "@coral-xyz/anchor": "npm:^0.31.0"
@@ -1470,17 +1470,17 @@ __metadata:
     tslib: "npm:^2.3.0"
     tweetnacl: "npm:^1.0.3"
     viem: "npm:2.27.2"
-  checksum: 10c0/ec1b86bd238c4982fc113127a66be0e7b1ef6833364b005372aec01316b9e362a2cf0f35ac2628677a9342c4c54583186554ff393547e0fb0af387c6b0ed64c1
+  checksum: 10c0/4f58dab3d2252f03f31035f1b49a8984b868ba36f55cbe4f90bcf07141f23ff7b507036892d7546710b26fcbb508ca1a6df2d1f5e3cf21df96cb63164784e5ca
   languageName: node
   linkType: hard
 
-"@pushchain/ui-kit@npm:4.0.12":
-  version: 4.0.12
-  resolution: "@pushchain/ui-kit@npm:4.0.12"
+"@pushchain/ui-kit@npm:4.0.14":
+  version: 4.0.14
+  resolution: "@pushchain/ui-kit@npm:4.0.14"
   dependencies:
     "@coral-xyz/anchor": "npm:^0.31.1"
     "@metamask/sdk": "npm:^0.32.0"
-    "@pushchain/core": "npm:^4.0.9"
+    "@pushchain/core": "npm:^4.0.13"
     "@solana/web3.js": "npm:^1.98.2"
     "@walletconnect/ethereum-provider": "npm:^2.21.5"
     buffer: "npm:^6.0.3"
@@ -1492,7 +1492,7 @@ __metadata:
   peerDependencies:
     react: ">=18.3.0 <20.0.0"
     react-dom: ">=18.3.0 <20.0.0"
-  checksum: 10c0/17ad2d1ac9c1c43f1ed67576ecb69d8333e61ee6485684b4ef0ca9cf02439b5e0be479fe9907750b7a3a6fc5d0aefa5a3a0174b3359b5a853dd8ffa62d6231e7
+  checksum: 10c0/d6f9b8904aaec12e6e243e5655059961a2b2abed492ef3de4425b30b61f9e20b7a695402f7adaa8eb4f26909b90109dca3259ef67914748d4386cb9c82735c3b
   languageName: node
   linkType: hard
 
@@ -4927,36 +4927,6 @@ __metadata:
   checksum: 10c0/fd25fe79e8fbcfcaf6aa61cd081c55d144eeeba755206c058682257cb38c4bd6795c6620de3f064c740695bb65b7949ebb1db7a95e4636efb8357a335ad3f54b
   languageName: node
   linkType: hard
-
-"core-connection@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "core-connection@workspace:."
-  dependencies:
-    "@eslint/js": "npm:^9.9.0"
-    "@pushchain/ui-kit": "npm:4.0.12"
-    "@radix-ui/react-popover": "npm:^1.1.2"
-    "@solana/spl-token": "npm:^0.4.14"
-    "@types/react": "npm:^18.3.3"
-    "@types/react-dom": "npm:^18.3.0"
-    "@vitejs/plugin-react-swc": "npm:^3.10.2"
-    eslint: "npm:^9.9.0"
-    eslint-plugin-react: "npm:^7.37.2"
-    eslint-plugin-react-hooks: "npm:^5.1.0"
-    eslint-plugin-react-refresh: "npm:^0.4.9"
-    gh-pages: "npm:^6.2.0"
-    globals: "npm:^15.9.0"
-    react: "npm:^18.3.1"
-    react-dom: "npm:^18.3.1"
-    react-icons: "npm:^5.5.0"
-    react-router-dom: "npm:^7.0.2"
-    shared-components: "file:../../packages/shared-components"
-    typescript: "npm:^5.5.3"
-    typescript-eslint: "npm:^8.0.1"
-    viem: "npm:^2.21.34"
-    vite: "npm:^5.4.1"
-    vite-plugin-node-polyfills: "npm:^0.23.0"
-  languageName: unknown
-  linkType: soft
 
 "core-util-is@npm:~1.0.0":
   version: 1.0.3
@@ -8506,6 +8476,36 @@ __metadata:
   languageName: node
   linkType: hard
 
+"push-bridge@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "push-bridge@workspace:."
+  dependencies:
+    "@eslint/js": "npm:^9.9.0"
+    "@pushchain/ui-kit": "npm:4.0.14"
+    "@radix-ui/react-popover": "npm:^1.1.2"
+    "@solana/spl-token": "npm:^0.4.14"
+    "@types/react": "npm:^18.3.3"
+    "@types/react-dom": "npm:^18.3.0"
+    "@vitejs/plugin-react-swc": "npm:^3.10.2"
+    eslint: "npm:^9.9.0"
+    eslint-plugin-react: "npm:^7.37.2"
+    eslint-plugin-react-hooks: "npm:^5.1.0"
+    eslint-plugin-react-refresh: "npm:^0.4.9"
+    gh-pages: "npm:^6.2.0"
+    globals: "npm:^15.9.0"
+    react: "npm:^18.3.1"
+    react-dom: "npm:^18.3.1"
+    react-icons: "npm:^5.5.0"
+    react-router-dom: "npm:^7.0.2"
+    shared-components: "file:../../packages/shared-components"
+    typescript: "npm:^5.5.3"
+    typescript-eslint: "npm:^8.0.1"
+    viem: "npm:^2.21.34"
+    vite: "npm:^5.4.1"
+    vite-plugin-node-polyfills: "npm:^0.23.0"
+  languageName: unknown
+  linkType: soft
+
 "qrcode@npm:1.5.3":
   version: 1.5.3
   resolution: "qrcode@npm:1.5.3"
@@ -9291,9 +9291,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"shared-components@file:../../packages/shared-components::locator=core-connection%40workspace%3A.":
+"shared-components@file:../../packages/shared-components::locator=push-bridge%40workspace%3A.":
   version: 0.3.0
-  resolution: "shared-components@file:../../packages/shared-components#../../packages/shared-components::hash=bd8544&locator=core-connection%40workspace%3A."
+  resolution: "shared-components@file:../../packages/shared-components#../../packages/shared-components::hash=bd8544&locator=push-bridge%40workspace%3A."
   dependencies:
     "@emotion/react": "npm:^11.13.0"
     "@radix-ui/react-dialog": "npm:^1.1.1"
