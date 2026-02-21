@@ -4,7 +4,7 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
-    "start": "ts-node index.ts"
+    "start": "NODE_NO_WARNINGS=1 ts-node index.ts"
   },
   "dependencies": {
     "@pushchain/core": "latest",

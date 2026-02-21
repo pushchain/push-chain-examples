@@ -7,7 +7,7 @@
     "start": "NODE_NO_WARNINGS=1 ts-node index.ts"
   },
   "dependencies": {
-    "@pushchain/core": "4.0.12-alpha.0",
+    "@pushchain/core": "^4.0.13",
     "@solana/web3.js": "^1.91.1",
     "@solana/spl-token": "^0.3.8",
     "ethers": "^6.14.4",
