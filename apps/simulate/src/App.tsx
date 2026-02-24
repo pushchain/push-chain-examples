@@ -32,8 +32,9 @@ const App: React.FC = () => {
   const walletConfig: ProviderConfigProps = {
     network: PushUI.CONSTANTS.PUSH_NETWORK.TESTNET,
     login: {
-      email: true,
-      google: true,
+      socials: {
+        bluesky: false,
+      },
       wallet: {
         enabled: true,
       },

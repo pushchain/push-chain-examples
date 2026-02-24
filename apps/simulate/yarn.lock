@@ -1489,9 +1489,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pushchain/ui-kit@npm:^4.0.14":
-  version: 4.0.14
-  resolution: "@pushchain/ui-kit@npm:4.0.14"
+"@pushchain/ui-kit@npm:^4.1.0":
+  version: 4.1.0
+  resolution: "@pushchain/ui-kit@npm:4.1.0"
   dependencies:
     "@coral-xyz/anchor": "npm:^0.31.1"
     "@metamask/sdk": "npm:^0.32.0"
@@ -1507,7 +1507,7 @@ __metadata:
   peerDependencies:
     react: ">=18.3.0 <20.0.0"
     react-dom: ">=18.3.0 <20.0.0"
-  checksum: 10/b7b0fb65ee581cfbc05f615516e6279e995d4bc5f8951224b4f8917d348e392c7264c84cee26e80a49f74b5c14afb9572dfa21a2757adc742bf42d159f409eb8
+  checksum: 10/cd67b9517544a1ab9f403fc89dc1bf5848f3b06f37307c569361110c8ac37afdb9e663e06a806373eb269c8e4d0eb3cdff13c12d318b4d21796d1d0674cf985c
   languageName: node
   linkType: hard
 
@@ -4782,7 +4782,7 @@ __metadata:
   resolution: "core-connection@workspace:."
   dependencies:
     "@eslint/js": "npm:^9.9.0"
-    "@pushchain/ui-kit": "npm:^4.0.14"
+    "@pushchain/ui-kit": "npm:^4.1.0"
     "@radix-ui/react-popover": "npm:^1.1.2"
     "@types/react": "npm:^18.3.3"
     "@types/react-dom": "npm:^18.3.0"
