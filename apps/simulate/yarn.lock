@@ -1466,9 +1466,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pushchain/core@npm:^5.0.0":
-  version: 5.0.0
-  resolution: "@pushchain/core@npm:5.0.0"
+"@pushchain/core@npm:^5.1.2":
+  version: 5.1.2
+  resolution: "@pushchain/core@npm:5.1.2"
   dependencies:
     "@bufbuild/protobuf": "npm:^2.0.0"
     "@coral-xyz/anchor": "npm:^0.31.0"
@@ -1485,17 +1485,17 @@ __metadata:
     tslib: "npm:^2.3.0"
     tweetnacl: "npm:^1.0.3"
     viem: "npm:2.27.2"
-  checksum: 10/f1dc7928ecc6b2e05c1e5802dba54a3b598f5e44dad2deb14f5110a7832c3d608d479c1a54e7980023f35425daeeebd9e8eded21c5c420e5f5409b08782e838f
+  checksum: 10/a571ab023a54c3005951983f288260855a05837babb58902a97e336fc5e160c83eed09a769b18e66cd3d94c7779211686ff1497f175a505482c46f3d5f727b27
   languageName: node
   linkType: hard
 
-"@pushchain/ui-kit@npm:^5.0.0":
-  version: 5.0.0
-  resolution: "@pushchain/ui-kit@npm:5.0.0"
+"@pushchain/ui-kit@npm:^5.1.0":
+  version: 5.1.0
+  resolution: "@pushchain/ui-kit@npm:5.1.0"
   dependencies:
     "@coral-xyz/anchor": "npm:^0.31.1"
     "@metamask/sdk": "npm:^0.32.0"
-    "@pushchain/core": "npm:^5.0.0"
+    "@pushchain/core": "npm:^5.1.2"
     "@solana/web3.js": "npm:^1.98.2"
     "@walletconnect/ethereum-provider": "npm:^2.21.5"
     buffer: "npm:^6.0.3"
@@ -1503,11 +1503,11 @@ __metadata:
     react-is: "npm:^19.1.0"
     styled-components: "npm:^6.1.0"
     tslib: "npm:^2.3.0"
-    viem: "npm:^2.23.9"
+    viem: "npm:2.27.2"
   peerDependencies:
     react: ">=18.3.0 <20.0.0"
     react-dom: ">=18.3.0 <20.0.0"
-  checksum: 10/fcec81745e053ba4306897af4adf77e00fd8a4d734a0016f17cfec9e7482aedf92a8254239a2c520c4e078e772ad29eb80a361374ae251e75a306833ff091ca9
+  checksum: 10/cc4b232e7f5aab91f4ab2c656b1f4cc35838fac2e22d80221813df184384bbf5460e4076ba125cf3db34ba2cde4795210c061a630bd160a1576ee1829865c287
   languageName: node
   linkType: hard
 
@@ -4782,7 +4782,7 @@ __metadata:
   resolution: "core-connection@workspace:."
   dependencies:
     "@eslint/js": "npm:^9.9.0"
-    "@pushchain/ui-kit": "npm:^5.0.0"
+    "@pushchain/ui-kit": "npm:^5.1.0"
     "@radix-ui/react-popover": "npm:^1.1.2"
     "@types/react": "npm:^18.3.3"
     "@types/react-dom": "npm:^18.3.0"
@@ -10424,7 +10424,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"viem@npm:>=2.37.9, viem@npm:^2.21.34, viem@npm:^2.23.9":
+"viem@npm:>=2.37.9, viem@npm:^2.21.34":
   version: 2.38.0
   resolution: "viem@npm:2.38.0"
   dependencies:
