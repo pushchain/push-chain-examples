@@ -5,6 +5,8 @@ export type SelectOption = {
     icon?: any;
     label: string;
     value: string;
+    displayName?: string;
+    badge?: any;
 }
 
 type SelectProps = {
@@ -70,7 +72,7 @@ const Select: React.FC<SelectProps> = ({
                             <Box display='flex' gap='spacing-xs' alignItems='center'>
                                 {SelectedIcon && <SelectedIcon size={24} />}
                                 <Text variant='bm-regular' color='text-secondary'>
-                                    {selected.label}
+                                    {selected.label.includes('ETH') ? 'ETH' : selected.label}
                                 </Text>
                             </Box>
                         ) : (
@@ -118,6 +120,9 @@ const Select: React.FC<SelectProps> = ({
                             maxHeight='70dvh'
                             onMouseDown={(e) => e.stopPropagation()}
                             onTouchStart={(e) => e.stopPropagation()}
+                            css={css`
+                                overflow: scroll;
+                            `}
                         >
                             <Box display='flex' alignItems='center' justifyContent='space-between' padding='spacing-sm'>
                                 <Box>
@@ -136,6 +141,7 @@ const Select: React.FC<SelectProps> = ({
                             {
                                 options.map((opt) => {
                                     const ChainIcon = opt?.icon;
+                                    const BadgeIcon = opt?.badge;
                                     return (
                                         <Box
                                             display='flex'
@@ -153,9 +159,23 @@ const Select: React.FC<SelectProps> = ({
                                             `}
                                         >
                                             <Box display='flex' gap='spacing-xs' alignItems='center'>
-                                                {ChainIcon && <ChainIcon size={24} />}
+                                                <Box position="relative">
+                                                    {ChainIcon && <ChainIcon />}
+                                                    {BadgeIcon && (
+                                                        <Box
+                                                            position="absolute"
+                                                            borderRadius="radius-round"
+                                                            css={css`
+                                                                bottom: -4px;
+                                                                right: -2px;
+                                                            `}
+                                                        >
+                                                            <BadgeIcon width={12} height={12} />
+                                                        </Box>
+                                                    )}
+                                                </Box>
                                                 <Text variant='bm-regular' color='text-secondary'>
-                                                    {opt.label}
+                                                    {opt.displayName || opt.label}
                                                 </Text>
                                             </Box>
                                         </Box>

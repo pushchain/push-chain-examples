@@ -15,7 +15,9 @@ const Header = () => {
             <img height='31px' src="/BridgeLogo.png" alt="Logo" />
             <ResponsiveImg height='38px' src="/PushTitle.png" alt="Title" />
         </Box>
-        <PushUniversalAccountButton />
+        <Box>
+          <PushUniversalAccountButton />
+        </Box>
     </Box>
   );
 };

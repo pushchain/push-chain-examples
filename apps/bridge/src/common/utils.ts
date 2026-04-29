@@ -1,12 +1,14 @@
 import { ethers } from "ethers";
 import { Address, createPublicClient, defineChain, erc20Abi, formatUnits, http } from "viem";
 import { Contract, JsonRpcProvider } from 'ethers';
-import { EVM_CHAIN_CONFIGS, PRC20_TOKENS } from "./constants";
+import { EVM_CHAIN_CONFIGS, TOKENS } from "./constants";
 import { CHAIN } from "@pushchain/core/src/lib/constants/enums";
 import { Connection, PublicKey, clusterApiUrl } from '@solana/web3.js';
 import { UniversalAccount } from "@pushchain/ui-kit";
 import { MoveableToken } from "@pushchain/core/src/lib/constants";
 import { getAssociatedTokenAddress } from "@solana/spl-token";
+import { PushChain } from "@pushchain/core";
+import { SWAP_ROUTER_ABI, SWAP_ROUTER_ADDRESS } from "./abi";
 
 const provider = new JsonRpcProvider("https://evm.donut.rpc.push.org/");
 
@@ -84,6 +86,78 @@ export const getChainIdFromChain = (
 
   return null;
 };
+
+type SwapPushTokensParams = {
+  pushChainClient: PushChain;
+  tokenIn: string;
+  tokenOut: string;
+  amountIn: bigint;
+  fee?: number;
+  amountOutMinimum?: bigint;
+  sqrtPriceLimitX96?: bigint;
+};
+
+export const swapPushTokens = async ({
+  pushChainClient,
+  tokenIn,
+  tokenOut,
+  amountIn,
+  fee = 3000,
+  amountOutMinimum = BigInt(0),
+  sqrtPriceLimitX96 = BigInt(0),
+}: SwapPushTokensParams) => {
+  const tokenInAddress =
+    ethers.isAddress(tokenIn)
+      ? tokenIn
+      : (TOKENS.find((t) => t.symbol === tokenIn)?.address ?? null);
+  const tokenOutAddress =
+    ethers.isAddress(tokenOut)
+      ? tokenOut
+      : (TOKENS.find((t) => t.symbol === tokenOut)?.address ?? null);
+
+  if (!tokenInAddress) throw new Error(`Token not found in TOKENS: ${tokenIn}`);
+  if (!tokenOutAddress) throw new Error(`Token not found in TOKENS: ${tokenOut}`);
+
+  // const approveTx = await pushChainClient.universal.prepareTransaction({
+  //   to: tokenInAddress as `0x${string}`,
+  //   value: BigInt(0),
+  //   data: PushChain.utils.helpers.encodeTxData({
+  //     abi: erc20Abi,
+  //     functionName: 'approve',
+  //     args: [SWAP_ROUTER_ADDRESS as `0x${string}`, amountIn],
+  //   }),
+  // });
+
+  // console.log(approveTx);
+
+  const swapTx = await pushChainClient.universal.prepareTransaction({
+    to: SWAP_ROUTER_ADDRESS,
+    value: BigInt(0),
+    data: PushChain.utils.helpers.encodeTxData({
+      abi: SWAP_ROUTER_ABI,
+      functionName: 'exactInputSingle',
+      args: [{
+        tokenIn: tokenInAddress,
+        tokenOut: tokenOutAddress,
+        fee,
+        recipient: pushChainClient.universal.account,
+        amountIn,
+        amountOutMinimum,
+        sqrtPriceLimitX96,
+      }],
+    }),
+  });
+
+  return pushChainClient.universal.executeTransactions([swapTx]);
+};
+
+export const getCEAAddress = async (uoa: UniversalAccount, chain: CHAIN) => {
+  const solanaCEA = await PushChain.utils.account.deriveExecutorAccount(uoa, {
+      chain,
+      skipNetworkCheck: true,
+  });
+  return solanaCEA.address;
+}
 
 export const fetchNativeTokenBalance = async ({
   wallet,
@@ -233,17 +307,3 @@ export const getTokenSymbol = async (tokenAddress: string) => {
     return null;
   }
 }
-
-type SourceChain = typeof PRC20_TOKENS[number]['sourceChain'];
-type TokenSymbol = typeof PRC20_TOKENS[number]['symbol'];
-
-export const getPrc20Address = (
-  symbol: TokenSymbol,
-  sourceChain: SourceChain
-): string | null => {
-  return (
-    PRC20_TOKENS.find(
-      (t) => t.symbol === symbol && t.sourceChain === sourceChain
-    )?.prc20Address ?? null
-  );
-};

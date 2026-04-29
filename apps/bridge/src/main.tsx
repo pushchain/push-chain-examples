@@ -27,11 +27,6 @@ const GlobalStyle = createGlobalStyle`
 const walletConfig: ProviderConfigProps = {
   network: PushUI.CONSTANTS.PUSH_NETWORK.TESTNET,
   login: {
-    wallet: {
-      excludedChains: [PushUI.CONSTANTS.CHAIN.PUSH],
-    },
-    email: false,
-    google: false,
     appPreview: true,
   },
   modal: {

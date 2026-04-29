@@ -1,19 +1,10 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Box } from 'shared-components';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import Bridge from './components/bridge';
-import { usePushChainClient, PushUI, usePushWalletContext } from '@pushchain/ui-kit';
 
 const App: React.FC = () => {
-  const { pushChainClient } = usePushChainClient();
-  const { handleUserLogOutEvent } = usePushWalletContext();
-
-  useEffect(() => {
-    if (pushChainClient && pushChainClient.universal.origin.chain === PushUI.CONSTANTS.CHAIN_CONFIG.PUSH_TESTNET) {
-      handleUserLogOutEvent();
-    }
-  }, [pushChainClient])
 
   return (
     <Box>

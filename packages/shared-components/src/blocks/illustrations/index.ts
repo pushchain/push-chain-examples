@@ -113,11 +113,17 @@ export { default as RewardsActivity } from './components/RewardsActivity';
 
 export { default as RewardsCoin } from './components/RewardsCoin';
 
+export { default as Push } from './components/Push';
+
 export { default as PushLogo } from './components/PushLogo';
 
 export { default as Polygon } from './components/Polygon';
 
 export { default as PolygonZK } from './components/PolygonZK';
+
+export { default as StEthereum } from './components/StEthereum';
+
+export { default as USDC } from './components/USDC';
 
 export { default as USDT } from './components/USDT';
 

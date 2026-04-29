@@ -21,9 +21,11 @@ const Success: React.FC<SuccessProps> = ({
     txnHash,
     handleBack,
 }) => {
-    const ChainIcon = chainsIconList[chain || ''];
+    const ToChainIcon = chainsIconList[chain || ''];
 
     const { pushChainClient } = usePushChainClient();
+
+    const FromChainIcon = chainsIconList[pushChainClient?.universal.origin.chain || ''];
 
     const time = formatTxTime(Date.now());  
 
@@ -49,11 +51,11 @@ const Success: React.FC<SuccessProps> = ({
                 alignItems='center'
                 justifyContent='center'
             >
-                <IconWrapper Icon={ChainIcon} />
+                <IconWrapper Icon={FromChainIcon} />
                 <Text display={{ ml: 'none' }} variant='h3-regular' color='text-brand-medium'>.......</Text>
                 <img height={110} src="/Success.png" alt="Success" />
                 <Text display={{ ml: 'none' }} variant='h3-regular' color='text-brand-medium'>.......</Text>
-                <IconWrapper Icon={PushMonotone} />
+                <IconWrapper Icon={ToChainIcon} />
             </Box>
             <Box
                 display='flex'
@@ -62,7 +64,7 @@ const Success: React.FC<SuccessProps> = ({
                 justifyContent='center'
                 alignItems='center'
             >
-                <Text variant='h3-semibold' color='text-brand-medium'>Bridged in {duration}secs</Text>
+                <Text variant='h3-semibold' color='text-brand-medium'>Bridged in {duration} secs</Text>
                 <Box
                     display='flex'
                     flexDirection='column'
