@@ -22,7 +22,7 @@ This tutorial consists of:
 ## Project Structure
 
 ```
-universal-simple-counter/
+simple-counter/
 ├── contracts/          # Smart contract code and deployment
 │   ├── src/
 │   │   └── Counter.sol  # Simple counter contract

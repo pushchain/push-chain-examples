@@ -1,4 +1,14 @@
-// Full Documentation: https://push.org/docs/chain/build/send-universal-transaction
+// Full Documentation: https://push.org/docs/chain/build/send-universal-transaction#send-batch-transactions-multicall
+//
+// Batched Universal Transaction
+// ==============================
+// Batches multiple contract calls into a single universal transaction by passing
+// an array of `{ to, value, data }` items as `tx.data`. The single tx.to must be
+// the zero address — that's the SDK's signal that this is a batched call.
+//
+// Note: this is for batching multiple calls into one universal transaction
+// (single route). To compose multiple universal transactions across different
+// routes / chains in one signature, see ../send-multichain-transactions/.
 
 // Import Push Chain Core
 import { PushChain } from '@pushchain/core';
@@ -40,11 +50,14 @@ const CounterABI = [
   },
 ] as const;
 
-// Counter contract address used in examples/tests
+// Counter contract address on Push Chain Donut Testnet
 const COUNTER_ADDRESS = '0x5FbDB2315678afecb367f032d93F642f64180aa3' as `0x${string}`;
 
-// Shape for a single multicall item
-type MulticallCall = {
+// Zero address — required as `tx.to` to signal batched mode to the SDK.
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as `0x${string}`;
+
+// Shape for a single batched call item
+type BatchedCall = {
   to: `0x${string}`;
   value: bigint;
   data: `0x${string}`;
@@ -52,18 +65,18 @@ type MulticallCall = {
 
 // ⭐️ MAIN FUNCTION ⭐️
 async function main() {
-  console.log('\n🌟 Viem Multicall Example - Sepolia Origin → Push Chain Target');
-  await viemMulticallExample();
+  console.log('\n🌟 Batched Universal Transaction Example - Sepolia Origin → Push Chain Target');
+  await batchedExample();
 }
 
 // Run main
 main().catch(console.error);
 
-// --- Viem Multicall Example ---
-// ------------------------------
-async function viemMulticallExample() {
-  // We will originate the universal transaction from Ethereum Sepolia
-  // and execute a multicall against a Counter contract on Push Chain.
+// --- Batched Universal Transaction Example ---
+async function batchedExample() {
+  // We will originate the universal transaction from Ethereum Sepolia and
+  // execute two `increment()` calls on a Counter contract on Push Chain in a
+  // single batched universal transaction.
 
   // 1) Create a fresh Sepolia account using viem
   const RPC_URL = 'https://ethereum-sepolia-rpc.publicnode.com';
@@ -84,35 +97,33 @@ async function viemMulticallExample() {
   // 2) Initialize Push Chain Client (Testnet)
   console.log('\n2. Initialize Push Chain Client');
   const pushChainClient = await PushChain.initialize(universalSigner, {
-    // Using testnet to route universal transactions to Push Testnet
     network: PushChain.CONSTANTS.PUSH_NETWORK.TESTNET,
   });
   console.log('🚀 Got push chain client');
 
-  // 3) Prompt to fund the Sepolia account before sending (required to originate the universal tx)
+  // 3) Prompt to fund the Sepolia account before sending
   console.log('\n3. Fund the Sepolia account to cover the origin transaction');
   await rl.question(
-    `:::prompt:::Please send funds to ${account.address} on Ethereum Sepolia and Press Enter to continue.`
+    `:::prompt:::Please send Sepolia ETH to ${account.address} and press Enter to continue.\nSepolia faucet: https://cloud.google.com/application/web3/faucet/ethereum/sepolia`
   );
 
-  // 4) Build and send a Multicall universal transaction
-  // We will perform two consecutive "increment" calls on the Counter contract.
-  console.log('\n4. Build and Send Multicall Universal Transaction');
+  // 4) Build and send a batched universal transaction
+  console.log('\n4. Build and Send Batched Universal Transaction');
 
-  // Encode the function call data for Counter.increment()
+  // Encode Counter.increment() once — used for both calls in the batch
   const incrementData = PushChain.utils.helpers.encodeTxData({
     abi: CounterABI as unknown as any[],
     functionName: 'increment',
   }) as `0x${string}`;
 
-  // Create an array of calls to be executed atomically on Push Chain
-  const calls: MulticallCall[] = [
+  // Two calls into a single batch — both increments execute atomically on Push Chain
+  const calls: BatchedCall[] = [
     { to: COUNTER_ADDRESS, value: BigInt(0), data: incrementData },
     { to: COUNTER_ADDRESS, value: BigInt(0), data: incrementData },
   ];
 
   try {
-    // Create a public client to read the Counter on Push Chain
+    // Public client to read the Counter on Push Chain before/after
     const publicClientPush = createPublicClient({
       transport: http('https://evm.donut.rpc.push.org/'),
     });
@@ -125,16 +136,15 @@ async function viemMulticallExample() {
       args: [],
     })) as unknown as bigint;
 
-    // Important: When using multicall, `to` must be a 0x-prefixed address.
-    // `data` is the array of calls constructed above.
+    // Important: tx.to must be the ZERO address for batched mode.
+    // The SDK uses that as the signal to interpret tx.data as an array of calls.
     const txResponse = await pushChainClient.universal.sendTransaction({
-      to: COUNTER_ADDRESS,
+      to: ZERO_ADDRESS,
       value: BigInt(0),
       data: calls,
     });
 
     console.log('📤 Transaction hash:', txResponse.hash);
-    // Wait for confirmation like in the spec tests
     await txResponse.wait();
 
     // Read counter AFTER
@@ -145,13 +155,15 @@ async function viemMulticallExample() {
       args: [],
     })) as unknown as bigint;
 
-    console.log('\n🎉 Congrats! You just sent a universal multicall transaction!');
+    console.log('\n🎉 Congrats! You just sent a batched universal transaction!');
     console.log('1️⃣  You sent a Sepolia-origin transaction to the Universal Gateway');
-    console.log('2️⃣  Push Chain Validators handled settlement and executed the calls on Push Chain');
-    console.log('3️⃣  Two increments were executed on the Counter contract, atomically');
+    console.log('2️⃣  Push Chain Validators settled it and executed the calls on Push Chain');
+    console.log('3️⃣  Both increments executed atomically against the Counter');
     console.log(`\n📊 Counter on Push Chain → before: ${before.toString()} | after: ${after.toString()}`);
   } catch (error: any) {
     console.error('❌ Error:', error.message);
-    console.log('💡 Note: This example requires Sepolia testnet funds to execute');
+    console.log('💡 Note: this example needs Sepolia ETH on the generated account to originate the tx');
+  } finally {
+    rl.close();
   }
 }
