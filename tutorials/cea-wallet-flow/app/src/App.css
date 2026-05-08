@@ -1,0 +1,118 @@
+.app-container {
+  width: 100%;
+  max-width: 880px;
+  padding: 2.5rem 1.5rem 4rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.app-title {
+  font-size: 2.25rem;
+  margin: 0 0 0.5rem;
+  color: #222;
+  text-align: center;
+}
+
+.app-subtitle {
+  color: #666;
+  text-align: center;
+  max-width: 640px;
+  margin: 0 0 2rem;
+  line-height: 1.55;
+}
+
+.connect-row {
+  margin-bottom: 1.5rem;
+}
+
+.section {
+  width: 100%;
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: #fafafa;
+  border: 1px solid #eee;
+  border-radius: 12px;
+}
+
+.section h3 {
+  margin: 0 0 1rem;
+  font-size: 1.05rem;
+  color: #d548ec;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.kv-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 0.9rem;
+}
+.kv-row:last-child { border-bottom: none; }
+
+.kv-label {
+  color: #555;
+  font-weight: 500;
+}
+
+.kv-value {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: #222;
+  font-size: 0.85rem;
+}
+
+.cea-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+.cea-table th, .cea-table td {
+  padding: 0.6rem 0.5rem;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+.cea-table th {
+  font-weight: 600;
+  color: #555;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+}
+.cea-table td {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  word-break: break-all;
+}
+.cea-table tr.deployed td:nth-child(3) {
+  color: #2a8e3b;
+  font-weight: 600;
+}
+.cea-table tr.undeployed td:nth-child(3) {
+  color: #888;
+}
+
+.copy-btn {
+  font-size: 0.72rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  background: #fff;
+  border: 1px solid #ddd;
+}
+
+.muted {
+  color: #888;
+  font-size: 0.85rem;
+}
+
+.callout {
+  margin-top: 1rem;
+  padding: 0.85rem 1rem;
+  background: #fff7e6;
+  border: 1px solid #ffe2a8;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: #4a3a14;
+  line-height: 1.5;
+}
