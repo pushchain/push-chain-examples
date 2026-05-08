@@ -37,7 +37,7 @@ async function ethersV6() {
   console.log('🔑 Got universal signer');
 
   const pushChainClient = await PushChain.initialize(universalSigner, {
-    network: PushChain.CONSTANTS.PUSH_NETWORK.TESTNET_DONUT,
+    network: PushChain.CONSTANTS.PUSH_NETWORK.TESTNET,
   });
   // ⭐️ MAIN FUNCTION ⭐️
   console.log('🚀 Got push chain client', JSON.stringify(pushChainClient, (_k, v) => typeof v === 'bigint' ? v.toString() : v, 2));
@@ -64,7 +64,7 @@ async function viem() {
   console.log('🔑 Got universal signer');
 
   const pushChainClient = await PushChain.initialize(universalSigner, {
-    network: PushChain.CONSTANTS.PUSH_NETWORK.TESTNET_DONUT,
+    network: PushChain.CONSTANTS.PUSH_NETWORK.TESTNET,
   });
 
   console.log('🚀 Got push chain client');
@@ -87,7 +87,7 @@ async function solanaweb3Js() {
   console.log('🔑 Got universal signer');
 
   const pushChainClient = await PushChain.initialize(universalSigner, {
-    network: PushChain.CONSTANTS.PUSH_NETWORK.TESTNET_DONUT,
+    network: PushChain.CONSTANTS.PUSH_NETWORK.TESTNET,
   });
 
   console.log('🚀 Got push chain client');

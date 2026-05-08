@@ -54,7 +54,7 @@ const DEFAULT_SOURCE_RPC_URL = `https://sepolia.infura.io/v3/${INFURA_API_KEY}`;
 
 const DEFAULT_PUSH_RPC_URL = process.env.PUSH_RPC_URL ?? 'https://evm.donut.rpc.push.org/';
 
-const DEFAULT_PUSH_NETWORK = process.env.PUSH_NETWORK ?? PushChain.CONSTANTS.PUSH_NETWORK.TESTNET_DONUT;
+const DEFAULT_PUSH_NETWORK = process.env.PUSH_NETWORK ?? PushChain.CONSTANTS.PUSH_NETWORK.TESTNET;
 
 const EXPLORER_BASE_ENV = process.env.PUSH_EXPLORER_BASE_URL;
 
@@ -372,7 +372,7 @@ export class PushWallet extends Wallet {
         overrides[chains.PUSH_MAINNET] = [this.pushRpcUrl];
         break;
       case PushChain.CONSTANTS.PUSH_NETWORK.TESTNET:
-      case PushChain.CONSTANTS.PUSH_NETWORK.TESTNET_DONUT:
+      case PushChain.CONSTANTS.PUSH_NETWORK.TESTNET:
         overrides[chains.PUSH_TESTNET] = [this.pushRpcUrl];
         overrides[chains.PUSH_TESTNET_DONUT] = [this.pushRpcUrl];
         break;
@@ -409,7 +409,7 @@ export class PushWallet extends Wallet {
         override[chains.PUSH_MAINNET] = [base];
         break;
       case PushChain.CONSTANTS.PUSH_NETWORK.TESTNET:
-      case PushChain.CONSTANTS.PUSH_NETWORK.TESTNET_DONUT:
+      case PushChain.CONSTANTS.PUSH_NETWORK.TESTNET:
         override[chains.PUSH_TESTNET] = [base];
         override[chains.PUSH_TESTNET_DONUT] = [base];
         break;

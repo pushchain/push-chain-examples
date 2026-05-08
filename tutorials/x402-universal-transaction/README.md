@@ -114,31 +114,66 @@ sequenceDiagram
 ## Getting Started
 
 ### Prerequisites
-- Node.js (v16 or higher)
+- Node.js (v18 or higher)
 - Basic understanding of blockchain concepts
 - Familiarity with AI agent architectures
 - Knowledge of HTTP protocols and REST APIs
 
 ### Quick Start
-1. **Clone the repository**
-2. **Install dependencies**: `npm install`
-3. **Configure environment**: Set up API keys and endpoints
-4. **Run the example**: `npm start`
-5. **Test payments**: Use the provided test interface
+
+The tutorial ships two cooperating agents (a merchant and a client) plus the underlying `a2a-x402` library. Run them in separate terminals.
+
+**Terminal 1 — Merchant agent:**
+```bash
+cd a2a-x402-typescript/merchant-agent
+npm install
+cp .env.example .env   # add your API keys + wallet
+npm run dev
+```
+
+**Terminal 2 — Client agent:**
+```bash
+cd a2a-x402-typescript/client-agent
+npm install
+cp .env.example .env   # add your API keys + wallet
+npm run dev
+```
+
+Then in the client terminal:
+```
+You: I want to buy a banana
+Agent: The merchant is requesting 1.000000 USDC for a banana. Proceed?
+You: yes
+Agent: Payment completed! Transaction: 0x...
+```
+
+If you want to modify the underlying `a2a-x402` library, see `a2a-x402-typescript/x402_a2a/README.md` for build instructions.
 
 ## Project Structure
 
 ```
 x402-universal-transaction/
-├── src/
-│   ├── agents/          # AI agent implementations
-│   ├── x402/           # X402 protocol handlers
-│   ├── pushchain/      # Push Chain integration
-│   └── examples/       # Usage examples
-├── docs/               # Additional documentation
-├── tests/              # Test suite
-└── README.md          # This file
+├── README.md                        # This file (Push Chain integration overview)
+└── a2a-x402-typescript/
+    ├── README.md                    # a2a-x402 library + agent reference
+    ├── client-agent/                # Payment-enabled client (orchestrator) agent
+    │   ├── agent.ts
+    │   ├── src/
+    │   │   └── wallet/Wallet.ts     # Push Chain Universal Signer wiring
+    │   └── package.json
+    ├── merchant-agent/              # Service-provider agent that requests + settles payments
+    │   ├── agent.ts
+    │   ├── server.ts
+    │   ├── x402_merchant_agent.ts
+    │   └── package.json
+    └── x402_a2a/                    # The reusable a2a-x402 protocol library
+        ├── core/
+        ├── executors/
+        ├── types/
+        └── package.json
 ```
+
+The Push Chain integration lives primarily in `a2a-x402-typescript/client-agent/src/wallet/Wallet.ts`, where the client wraps an external-chain signer into a Push Chain Universal Signer to settle payments cross-chain.
 
 ## Security Considerations
 

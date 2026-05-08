@@ -26,9 +26,9 @@ interface IUEAFactory {
  * @dev Uses Push Chain's UEA system to identify the origin chain of the caller and increments the appropriate counter.
  */
 contract UniversalCounter {
-    /// @notice Counter for Ethereum users (chainNamespace: "eip155", chainId: "1").
+    /// @notice Counter for Ethereum users (chainNamespace: "eip155", chainId: "11155111" — Sepolia testnet).
     uint256 public countEth;
-    /// @notice Counter for Solana users (chainNamespace: "solana", chainId: "5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp").
+    /// @notice Counter for Solana users (chainNamespace: "solana", chainId: "EtWTRABZaYq6iMfeYKouRu166VU2xqa1" — Solana devnet genesis hash).
     uint256 public countSol;
     /// @notice Counter for native Push Chain users (EOA, not UEA).
     uint256 public countPC;
@@ -38,7 +38,7 @@ contract UniversalCounter {
      * @param newCount The new total count after increment.
      * @param caller The address of the user who called increment().
      * @param chainNamespace The namespace of the caller's origin chain (e.g., "eip155", "solana").
-     * @param chainId The chain ID of the caller's origin chain (e.g., "1" for Ethereum mainnet).
+     * @param chainId The chain ID of the caller's origin chain (e.g., "11155111" for Ethereum Sepolia).
      */
     event CountIncremented(
         uint256 newCount,
