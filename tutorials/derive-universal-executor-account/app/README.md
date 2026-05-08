@@ -75,8 +75,9 @@ const account = PushChain.utils.account.toUniversal(
   { chain: chainId }
 );
 
-// Derive the Universal Executor Account (UEA)
-const executorAddress = await PushChain.utils.account.convertOriginToExecutor(account);
+// Derive the Universal Executor Account (UEA).
+// Same pattern used in core-sdk-functions/utility-functions.
+const executorAddress = await PushChain.utils.account.deriveExecutorAccount(account);
 
 // Display the derived UEA address
 setManualLookupResult(executorAddress.address);

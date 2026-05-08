@@ -1,4 +1,4 @@
-# CEA Wallet Flow Tutorial
+# Derive Chain Executor Account Tutorial
 
 A focused tutorial for understanding **Chain Executor Accounts (CEAs)** — the deterministic address that your Push Chain wallet controls on every supported external chain. CEAs are the inverse of UEAs:
 
@@ -14,7 +14,7 @@ A focused tutorial for understanding **Chain Executor Accounts (CEAs)** — the 
 
 This is a **frontend-only tutorial** — there are no contracts to deploy. The focus is the discovery flow that any cross-chain dApp needs before initiating Route 3 or Route 4 transactions.
 
-For the backend / SDK-side equivalent (with actual Route 3 and Route 4 transaction attempts), see [`core-sdk-functions/cea-origin-transaction/`](../../core-sdk-functions/cea-origin-transaction/).
+For the backend / SDK-side equivalent (with actual Route 3 and Route 4 transaction attempts), see [`core-sdk-functions/send-universal-transaction-to-external-chains/`](../../core-sdk-functions/send-universal-transaction-to-external-chains/).
 
 ## Quick start
 
@@ -62,7 +62,7 @@ for (const chain of chains) {
 ## Project structure
 
 ```
-cea-wallet-flow/
+derive-chain-executor-account/
 └── app/                    # React frontend (no contracts)
     ├── src/
     │   ├── App.tsx         # CEA discovery UI
@@ -85,6 +85,6 @@ cea-wallet-flow/
 
 After this tutorial:
 
-- [`core-sdk-functions/cea-origin-transaction/`](../../core-sdk-functions/cea-origin-transaction/) — initiate Route 3 and Route 4 transactions from a Push wallet via CEAs (Node script)
+- [`core-sdk-functions/send-universal-transaction-to-external-chains/`](../../core-sdk-functions/send-universal-transaction-to-external-chains/) — initiate Route 3 and Route 4 transactions from a Push wallet via CEAs (Node script)
 - [`derive-universal-executor-account`](../derive-universal-executor-account/) — the inverse direction (deriving UEAs from external chain wallets)
 - [`utility-functions`](../../core-sdk-functions/utility-functions/) — full SDK utility surface, including all the CEA helpers used here

@@ -105,14 +105,26 @@ async function trackSampleTransactions() {
   const client = await buildPushClient();
   console.log('🔑 Push Chain client ready (read-only — no signing required).\n');
 
+  // The default Solana Devnet RPC prunes old transactions; pass an explicit
+  // RPC override and a wider timeout to give the lookup the best chance.
+  const SOLANA_DEVNET_RPC = 'https://api.devnet.solana.com';
+
   const samples: Array<{
     label: string;
     hash: string;
     chain: typeof PushChain.CONSTANTS.CHAIN[keyof typeof PushChain.CONSTANTS.CHAIN] | undefined;
+    timeoutMs: number;
+    rpcUrls?: Partial<Record<typeof PushChain.CONSTANTS.CHAIN[keyof typeof PushChain.CONSTANTS.CHAIN], string[]>>;
   }> = [
-    { label: 'Push Chain', hash: SAMPLE_PUSH_TX, chain: undefined }, // defaults to Push Chain
-    { label: 'Ethereum Sepolia', hash: SAMPLE_SEPOLIA_TX, chain: PushChain.CONSTANTS.CHAIN.ETHEREUM_SEPOLIA },
-    { label: 'Solana Devnet', hash: SAMPLE_SOLANA_TX, chain: PushChain.CONSTANTS.CHAIN.SOLANA_DEVNET },
+    { label: 'Push Chain', hash: SAMPLE_PUSH_TX, chain: undefined, timeoutMs: 30_000 },
+    { label: 'Ethereum Sepolia', hash: SAMPLE_SEPOLIA_TX, chain: PushChain.CONSTANTS.CHAIN.ETHEREUM_SEPOLIA, timeoutMs: 30_000 },
+    {
+      label: 'Solana Devnet',
+      hash: SAMPLE_SOLANA_TX,
+      chain: PushChain.CONSTANTS.CHAIN.SOLANA_DEVNET,
+      timeoutMs: 90_000,
+      rpcUrls: { [PushChain.CONSTANTS.CHAIN.SOLANA_DEVNET]: [SOLANA_DEVNET_RPC] },
+    },
   ];
 
   for (const sample of samples) {
@@ -121,13 +133,22 @@ async function trackSampleTransactions() {
       const response = await client.universal.trackTransaction(sample.hash, {
         ...(sample.chain ? { chain: sample.chain } : {}),
         progressHook: progressLine(sample.label),
-        advanced: { timeout: 30_000 },
+        advanced: {
+          timeout: sample.timeoutMs,
+          ...(sample.rpcUrls ? { rpcUrls: sample.rpcUrls } : {}),
+        },
       });
       console.log(`✅ Resolved. hash=${response.hash} from=${response.from} chain=${response.chainNamespace ?? 'n/a'}`);
       if (response.route) console.log(`   route: ${response.route}`);
       console.log('   explorer:', client.explorer.getTransactionUrl(response.hash));
     } catch (err) {
-      console.log(`❌ Failed: ${err instanceof Error ? err.message : String(err)}`);
+      const msg = err instanceof Error ? err.message : String(err);
+      console.log(`❌ Failed: ${msg}`);
+      if (sample.label === 'Solana Devnet' && /timeout|not confirmed/i.test(msg)) {
+        console.log('   ℹ️  Solana Devnet prunes old transactions — the sample hash may no');
+        console.log('      longer be retrievable. Try scenario 2 with a fresh hash you just');
+        console.log('      submitted, or run a Route 2 to Solana from send-multichain-transactions.');
+      }
     }
   }
 }

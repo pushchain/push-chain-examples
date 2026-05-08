@@ -27,9 +27,9 @@ const walletConfig: ProviderConfigProps = {
 
 const appMetadata: AppMetadata = {
   logoUrl: "https://avatars.githubusercontent.com/u/64157541?v=4",
-  title: "CEA Wallet Flow",
+  title: "Derive Chain Executor Account",
   description:
-    "Discover and inspect Chain Executor Accounts (CEAs) for any Push Chain wallet across every supported external chain.",
+    "Derive the Chain Executor Accounts (CEAs) that any Push Chain wallet controls on every supported external chain.",
 };
 
 createRoot(document.getElementById("root")!).render(

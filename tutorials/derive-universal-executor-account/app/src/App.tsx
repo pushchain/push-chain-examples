@@ -58,9 +58,11 @@ function App() {
         }
       );
 
-      // Derive the Universal Executor Account (UEA) address
+      // Derive the Universal Executor Account (UEA) address.
+      // Matches the pattern in core-sdk-functions/utility-functions:
+      //   PushChain.utils.account.deriveExecutorAccount(account)
       const executorAddress =
-        await PushChain.utils.account.convertOriginToExecutor(account);
+        await PushChain.utils.account.deriveExecutorAccount(account);
       setManualLookupResult(executorAddress.address);
     } catch (err) {
       console.error("Error deriving UEA:", err);

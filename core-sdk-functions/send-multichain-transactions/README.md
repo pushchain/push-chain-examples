@@ -90,4 +90,4 @@ const result = await cascade.wait({
 
 - [`send-universal-transaction`](../send-universal-transaction/) — single-tx send across Routes 1/2/3
 - [`batched-universal-transaction`](../batched-universal-transaction/) — multiple calls in ONE universal tx (vs. multiple universal txs)
-- [`cea-origin-transaction`](../cea-origin-transaction/) — Route 3 (CEA → Push) with funded CEAs
+- [`send-universal-transaction-to-external-chains`](../send-universal-transaction-to-external-chains/) — Route 2 (any origin → external chain)

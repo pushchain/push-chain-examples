@@ -111,7 +111,8 @@ Converts origin addresses to Universal Executor Addresses:
 
 ```typescript
 const account = PushChain.utils.account.toUniversal(address, { chain });
-const executorAddress = await PushChain.utils.account.convertOriginToExecutor(account);
+// Same pattern used in core-sdk-functions/utility-functions.
+const executorAddress = await PushChain.utils.account.deriveExecutorAccount(account);
 ```
 
 ### Merkle Tree Generation

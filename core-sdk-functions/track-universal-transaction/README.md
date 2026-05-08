@@ -66,16 +66,18 @@ The example also calls `client.explorer.getTransactionUrl(...)` to print a click
 
 Walks through three real testnet hashes (the same ones used in the docs playground):
 
-| Origin | Hash |
-|---|---|
-| Push Chain | `0x169929f61574baf62b84ce68b944e09faf566129d0175b2ee1e020c76ae7bd2f` |
-| Ethereum Sepolia | `0x9b4743376689eb6f90f3aeb9eea58381b3bcc033e1de4709281fd58a77b85098` |
-| Solana Devnet | `22SirqSwhcSjgyb3wdrW9Zis19dxcLHD5yy3BtRbRoLmykrv8eCzKnPaRGxrrZ7a4A7yKGRMGMehqKpTcdF2ByFR` |
+| Origin | Hash | Timeout |
+|---|---|---|
+| Push Chain | `0x169929f61574baf62b84ce68b944e09faf566129d0175b2ee1e020c76ae7bd2f` | 30s |
+| Ethereum Sepolia | `0x9b4743376689eb6f90f3aeb9eea58381b3bcc033e1de4709281fd58a77b85098` | 30s |
+| Solana Devnet | `22SirqSwhcSjgyb3wdrW9Zis19dxcLHD5yy3BtRbRoLmykrv8eCzKnPaRGxrrZ7a4A7yKGRMGMehqKpTcdF2ByFR` | 90s |
 
 For each, the script:
-1. Calls `client.universal.trackTransaction(hash, { chain, progressHook, advanced: { timeout: 30_000 } })`
+1. Calls `client.universal.trackTransaction(hash, { chain, progressHook, advanced: { timeout, rpcUrls? } })`
 2. Streams the lifecycle events through the `progressHook` callback
 3. Prints the resolved hash, sender, chain, route, and explorer URL
+
+> **Solana Devnet caveat:** the public Solana Devnet RPC prunes transaction history regularly. The sample hash above is from the docs and may no longer be retrievable, in which case scenario 1 will surface a `Timeout: transaction not confirmed within 90000ms` for that row and continue. To verify Solana tracking on a fresh hash, submit a Route 2 to Solana via [`../send-multichain-transactions/`](../send-multichain-transactions/) (scenario 3) or [`../send-universal-transaction-to-external-chains/`](../send-universal-transaction-to-external-chains/) (scenario 3), copy the resulting Solana tx hash, and re-run scenario 2 here with it.
 
 ### 2. Track your own transaction
 
