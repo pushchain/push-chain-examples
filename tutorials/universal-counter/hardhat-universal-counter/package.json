@@ -1,0 +1,12 @@
+{
+  "name": "hardhat-counter-project",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-ethers": "^3.0.0",
+    "@nomicfoundation/hardhat-toolbox": "^6.1.0",
+    "@nomicfoundation/hardhat-verify": "^2.0.0",
+    "dotenv": "^16.0.0",
+    "hardhat": "^2.28.4"
+  },
+  "dependencies": {
+  }
+}
