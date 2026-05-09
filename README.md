@@ -1,129 +1,166 @@
-# PushChain Examples
+# Push Chain Examples
 
-A comprehensive collection of example applications, SDK functions, and smart contracts to help you build on PushChain. This repository serves as a learning resource and reference implementation for developers looking to leverage PushChain's cross-chain capabilities.
+A comprehensive collection of runnable examples, SDK function demos, and tutorial apps for building on **Push Chain** — a universal blockchain that lets dApps unify users from any chain (Ethereum, Solana, BNB, …) under a single execution layer.
 
-## Repository Structure
+This repository covers three layers:
 
-### [Apps](./apps)
+- **[`apps/`](./apps)** — full-stack reference apps you can run end-to-end.
+- **[`core-sdk-functions/`](./core-sdk-functions)** — focused, single-purpose examples for the `@pushchain/core` SDK.
+- **[`tutorials/`](./tutorials)** — step-by-step paired contract + frontend projects, each linked to a published tutorial on push.org/docs.
 
-Complete application examples showcasing various PushChain features and integration patterns. Each app demonstrates a specific use case or implementation approach.
+## Network conventions
 
-#### Available Applications
+All examples target the **Donut Testnet** unless otherwise noted:
 
-- **[Simulate](./apps/simulate)** - A transaction simulation tool that helps developers test and validate cross-chain transactions before executing them on mainnet. Includes transaction preview and gas estimation features.
+| Field | Value |
+|---|---|
+| Chain id | `42101` |
+| Push RPC | `https://evm.donut.rpc.push.org/` |
+| Explorer | `https://donut.push.network/` |
+| Network constant in code | `PushChain.CONSTANTS.PUSH_NETWORK.TESTNET` |
 
-### [Core SDK Functions](./core-sdk-functions)
+The Push Chain SDK packages are pinned to `"latest"` across this repo, so every example tracks the most recent published version of `@pushchain/core` and `@pushchain/ui-kit`.
 
-Examples of how to use PushChain's SDK for common blockchain operations, including account management, transaction handling, cross-chain communication, and more.
+---
 
-#### Available SDK Examples
+## Apps
 
-- **[Create Universal Signer](./core-sdk-functions/create-universal-signer)** - Learn how to create and manage universal signers that work across multiple blockchains.
+Full-stack apps that demonstrate end-to-end Push Chain integrations.
 
-- **[Custom Universal Signer](./core-sdk-functions/custom-universal-signer)** - Advanced examples of customizing universal signer behavior for specific use cases.
+| App | What it does |
+|---|---|
+| **[bridge](./apps/bridge)** | Cross-chain bridge UI built on Push Chain Universal Transactions — move tokens between supported chains with a single signature. |
+| **[simulate](./apps/simulate)** | Transaction simulation tool — preview universal transactions, estimate fees, and inspect the routing/CEA pipeline before signing. |
+| **[migrate](./apps/migrate)** | Migration tool — helps users move state or assets onto Push Chain from external chains. |
 
-- **[Initialize EVM Client](./core-sdk-functions/initialize-evm-client)** - Examples of connecting to and interacting with EVM-compatible blockchains.
+Each app lives in its own folder with its own README, dependencies, and run instructions.
 
-- **[Initialize Push Chain Client](./core-sdk-functions/initialize-push-chain-client)** - Learn how to initialize and configure the PushChain client for your applications.
+---
 
-- **[Reading Push Chain State](./core-sdk-functions/reading-push-chain-state)** - Examples of reading and querying state from the PushChain network.
+## Core SDK functions
 
-- **[Send Universal Transaction](./core-sdk-functions/send-universal-transaction)** - Learn how to send transactions that work across multiple blockchains using PushChain's universal transaction system.
+Small, focused examples that each demonstrate a single capability of `@pushchain/core`. These are the right starting point if you want to see how to do **one specific thing** without the full framing of a tutorial app.
 
-- **[Speedrun](./core-sdk-functions/speedrun)** - Quick start examples for rapid development and testing.
+### Setup & client
 
-- **[Utility Functions](./core-sdk-functions/utility-functions)** - Common utility functions and helper methods for PushChain development.
+| Example | Purpose |
+|---|---|
+| **[create-universal-signer](./core-sdk-functions/create-universal-signer)** | Wrap an ethers wallet, viem account, or Solana keypair into a `UniversalSigner` — the primary input to `PushChain.initialize`. |
+| **[custom-universal-signer](./core-sdk-functions/custom-universal-signer)** | Bring your own signing layer (HSM, KMS, MPC) by implementing `signMessage`, `signAndSendTransaction`, `signTypedData` directly. |
+| **[initialize-evm-client](./core-sdk-functions/initialize-evm-client)** | Stand up an EVM read client (ethers / viem) pointed at the Donut RPC for read-only state queries. |
+| **[initialize-push-chain-client](./core-sdk-functions/initialize-push-chain-client)** | Initialize a `PushChainClient` from a signer or a read-only `UniversalAccount`. |
+| **[reading-push-chain-state](./core-sdk-functions/reading-push-chain-state)** | Read blocks, transactions, balances, and contract view calls from Push Chain without the SDK. |
 
-- **[Others Contract Helpers](./core-sdk-functions/others-contract-helpers)** - Additional contract interaction helpers and utilities.
+### Sending universal transactions
 
-### [Tutorials](./tutorials)
+| Example | Route | What it shows |
+|---|---|---|
+| **[send-universal-transaction](./core-sdk-functions/send-universal-transaction)** | Route 1 | Minimal happy path — origin signer → Push Chain target. |
+| **[send-universal-transaction-to-push-all-cases](./core-sdk-functions/send-universal-transaction-to-push-all-cases)** | Route 1 | The same Route 1, exhaustively, for every supported origin chain (EVMs + Solana). |
+| **[send-universal-transaction-to-external-chains](./core-sdk-functions/send-universal-transaction-to-external-chains)** | Route 2 / 3 | Origin signer → external-chain CEA. Includes the Route 3 variant (CEA origin → Push Chain). |
+| **[send-universal-transaction-with-funds](./core-sdk-functions/send-universal-transaction-with-funds)** | Route 1 | Move PRC-20 / native value as part of the same universal tx. |
+| **[send-universal-transaction-pay-gas-with-any-token](./core-sdk-functions/send-universal-transaction-pay-gas-with-any-token)** | Route 1 | Pay universal gas in a supported PRC-20 instead of native PC. |
+| **[send-multichain-transactions](./core-sdk-functions/send-multichain-transactions)** | Cascades | Compose multiple universal transactions under a single signature via `pushChainClient.universal.executeTransactions`. |
+| **[batched-universal-transaction](./core-sdk-functions/batched-universal-transaction)** | Route 1 | Pack multiple contract calls into one universal tx (multicall format). |
 
-Step-by-step guides and example projects that teach you how to build specific features using PushChain. Each tutorial includes both smart contracts and frontend code.
+### Tracking, messaging, contract-initiated dispatch
 
-#### Available Tutorials
+| Example | Purpose |
+|---|---|
+| **[track-universal-transaction](./core-sdk-functions/track-universal-transaction)** | Watch a cross-chain transaction's lifecycle from any chain via `PushChain.utils.tx.track`. |
+| **[sign-universal-message](./core-sdk-functions/sign-universal-message)** | Sign personal messages and EIP-712 typed data through a UniversalSigner — works across origins. |
+| **[contract-initiated-multichain-execution](./core-sdk-functions/contract-initiated-multichain-execution)** | A Push Chain contract autonomously dispatches a cross-chain call through UGPC. The contract's CEA executes the payload on the destination chain. |
+| **[others-contract-helpers](./core-sdk-functions/others-contract-helpers)** | Read on-chain helpers — `IUEAFactory.getUEAForOrigin`, `getOriginForUEA`, `getVMType`, etc. |
 
-- **[Universal Counter](./tutorials/universal-counter)** - A demonstration of cross-chain interaction using PushChain's Universal Ethereum Account (UEA) system. This project shows how users from Ethereum, Solana, and PushChain can interact with the same application seamlessly.
+### Utility surface
 
-## Featured Examples
+| Example | Purpose |
+|---|---|
+| **[utility-functions](./core-sdk-functions/utility-functions)** | A 1:1 walkthrough of the documented `PushChain.utils.*` namespace — accounts, signers, explorer URLs, helpers, chains, tokens. |
+| **[speedrun](./core-sdk-functions/speedrun)** | Smallest possible end-to-end script — wallet → signer → client → tx → done. |
 
-### Universal Counter
+---
 
-A demonstration of cross-chain interaction using PushChain's Universal Ethereum Account (UEA) system. This project shows how users from Ethereum, Solana, and PushChain can interact with the same application seamlessly.
+## Tutorials
 
-[Go to Universal Counter Tutorial →](./tutorials/universal-counter)
+Paired contract + frontend projects, each backed by a published tutorial on push.org/docs. See [`tutorials/README.md`](./tutorials/README.md) for the full list, recommended learning order, and per-tutorial breakdowns.
 
-## Getting Started
+Available tutorials at a glance:
 
-1. **Choose Your Path**: Browse the repository to find an example that matches your use case
-   - For complete applications, start with the [Apps](./apps) directory
-   - For SDK integration, explore the [Core SDK Functions](./core-sdk-functions) directory
-   - For learning tutorials, check out the [Tutorials](./tutorials) directory
+1. **[simple-counter](./tutorials/simple-counter)** — minimal entry-point dApp.
+2. **[universal-counter](./tutorials/universal-counter)** — cross-chain user attribution via UEAs (hardcoded chains).
+3. **[universal-counter-dynamic](./tutorials/universal-counter-dynamic)** — dynamic chain discovery, analytics UI, Matter.js leaderboard.
+4. **[batch-universal-transactions](./tutorials/batch-universal-transactions)** — multicall patterns.
+5. **[universal-claimable-airdrop](./tutorials/universal-claimable-airdrop)** — Merkle-proof airdrop with factory pattern.
+6. **[universal-erc-20-mint](./tutorials/universal-erc-20-mint)** — universal-access ERC-20 token.
+7. **[derive-universal-executor-account](./tutorials/derive-universal-executor-account)** — playground for UEA derivation (any origin → Push Chain).
+8. **[derive-chain-executor-account](./tutorials/derive-chain-executor-account)** — the inverse: Push Chain account → CEA on every supported external chain.
+9. **[x402-universal-transaction](./tutorials/x402-universal-transaction)** — A2A x402 payments settled via Push Chain (advanced, agent-to-agent).
 
-2. **Follow Instructions**: Each example includes detailed README instructions for setup and usage
+---
 
-3. **Experiment**: Modify the code to suit your specific needs and requirements
+## Quick start
 
-4. **Build**: Use these examples as building blocks for your own PushChain applications
-
-## Prerequisites
-
-- Basic knowledge of blockchain development concepts
-- Familiarity with JavaScript/TypeScript for frontend examples
-- Understanding of Solidity for smart contract examples
-- Node.js and npm/yarn for development environment
-
-## Quick Start
-
-To get started with any example:
+Pick any example and run it standalone — every example is self-contained.
 
 ```bash
-# Clone the repository
 git clone https://github.com/pushchain/push-chain-examples.git
 cd push-chain-examples
 
-# Navigate to your chosen example
-cd apps/chess  # or any other app
-
-# Install dependencies
+# Pick an example and follow its README
+cd core-sdk-functions/send-universal-transaction
 npm install
+npm start
+```
 
-# Start the development server
+For tutorial frontends:
+
+```bash
+cd tutorials/simple-counter/app
+npm install
 npm run dev
 ```
 
-## Development Workflow
+Each example's README documents prerequisites, environment variables (typically `PUSH_PRIVATE_KEY`), and run commands. Most SDK examples will print a Push Chain explorer URL once they finish so you can verify the on-chain effect.
 
-1. **Explore Examples**: Start by running the examples to understand how they work
-2. **Study Code**: Examine the implementation details and patterns used
-3. **Modify**: Make changes to experiment with different features
-4. **Build**: Create your own applications using these patterns
-5. **Contribute**: Share your improvements and new examples with the community
+---
 
-## Resources
+## Prerequisites
 
-- [PushChain Documentation](https://push.org/docs)
-- [PushChain GitHub](https://github.com/pushchain)
-- [PushChain Community Discord](https://discord.gg/pushchain)
-- [PushChain Portal](https://portal.push.org/)
+- **Node.js** v18 or newer
+- A Push native wallet funded with **PC** on Donut Testnet (some examples need 5+ PC for protocol fees)
+- For contract examples: **Foundry** (`forge --version`)
+- Basic familiarity with TypeScript / React / Solidity depending on the example
+
+---
+
+## Documentation & resources
+
+- [Push Chain docs](https://push.org/docs/chain) — architecture, concepts, and the full tutorial catalog
+- [@pushchain/core on npm](https://www.npmjs.com/package/@pushchain/core)
+- [@pushchain/ui-kit on npm](https://www.npmjs.com/package/@pushchain/ui-kit)
+- [Push Chain GitHub](https://github.com/pushchain)
+- [Donut Testnet explorer](https://donut.push.network/)
+- [Push Chain Discord](https://discord.gg/pushchain)
+
+---
 
 ## Contributing
 
-Contributions are welcome! If you have an example or tutorial you'd like to add, please submit a pull request. We encourage:
+PRs welcome. Things especially appreciated:
 
-- New application examples
-- Additional SDK function examples
-- Tutorial improvements
-- Documentation enhancements
-- Bug fixes and performance improvements
+- New SDK function examples that demonstrate a capability not yet covered
+- New tutorial apps showing real cross-chain UX patterns
+- README fixes when an example's behavior drifts from its docs
+- Bug reports / improvements to existing examples
+
+When adding new examples, follow the conventions used elsewhere in the repo:
+
+- Use `PushChain.CONSTANTS.PUSH_NETWORK.TESTNET` (not `TESTNET_DONUT`)
+- Pin `@pushchain/core` and `@pushchain/ui-kit` to `"latest"` so the example tracks the SDK
+- Only call documented `PushChain.*` / `pushChainClient.*` namespaces — don't import internal helpers
+- Each example is self-contained (`npm install && npm start` should work without touching another folder)
 
 ## License
 
-This project is licensed under the MIT License. See the LICENSE file for details.
-
-## Support
-
-If you need help with any of these examples or have questions about PushChain development:
-
-- Join our [Discord community](https://discord.gg/pushchain)
-- Check our [documentation](https://push.org/docs)
-- Open an issue on GitHub for bugs or feature requests
+MIT.

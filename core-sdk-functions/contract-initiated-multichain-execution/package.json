@@ -1,0 +1,20 @@
+{
+  "name": "contract-initiated-multichain-execution",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "NODE_NO_WARNINGS=1 ts-node index.ts"
+  },
+  "dependencies": {
+    "@coral-xyz/anchor": "0.31.1",
+    "@pushchain/core": "latest",
+    "dotenv": "^17.2.3",
+    "ethers": "^6.14.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.0.0"
+  }
+}
