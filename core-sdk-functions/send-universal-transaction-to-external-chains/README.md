@@ -35,16 +35,16 @@ Scenarios 2 and 3 print the addresses to fund and pause for you to top them up b
 
 CEAs derive deterministically from your Push Chain account, so re-runs must reuse the same key for funded CEAs to be reachable. Either:
 
-- Set `PUSH_PRIVATE_KEY` in your environment, OR
-- Let the script generate one — it prints the key on first run so you can save it.
+- Copy `.env.sample` → `.env` and paste your private key, OR
+- Leave `.env` empty and let the script generate a fresh key — it prints the value on first run so you can save it.
 
 ```bash
-# First run: generates and prints the key
+cp .env.sample .env
+# (optional) edit .env: paste your PUSH_PRIVATE_KEY
 npm start
-
-# Subsequent runs: reuse the same Push account
-PUSH_PRIVATE_KEY=0x... npm start
 ```
+
+The script loads `.env` automatically via `dotenv`.
 
 ## How progressHook is wired
 

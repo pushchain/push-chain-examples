@@ -20,6 +20,7 @@
 // Chain account (and therefore the same CEAs). On first run the script
 // generates one and prints it so you can save it.
 
+import 'dotenv/config';
 import { PushChain } from '@pushchain/core';
 import { ethers } from 'ethers';
 import { PublicKey } from '@solana/web3.js';
