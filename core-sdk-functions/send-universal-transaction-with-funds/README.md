@@ -130,12 +130,14 @@ You'll need:
 
 ### 2. Mint USDT (if needed)
 
-Mint USDT on Sepolia:
+Mint test USDT on **Ethereum Sepolia** (the real ERC-20 the user holds before bridging):
 ```
-https://sepolia.etherscan.io/address/0xCA0C5E6F002A389E1580F0DB7cd06e4549B5F9d3#writeContract
+https://sepolia.etherscan.io/address/0x7169D38820dfd117C3FA1f22a697dBA58d90BA06#writeContract
 ```
 
 Call the `mint` function to get test USDT.
+
+> Don't confuse this Sepolia address with `0xCA0C5E6F002A389E1580F0DB7cd06e4549B5F9d3` — that one is the **Donut representation** of Sepolia USDT (only exists on Push Chain Donut Testnet).
 
 ## 📊 Example Output
 
