@@ -31,7 +31,6 @@ const RPC_PUSH = 'https://evm.donut.rpc.push.org/';
 
 // Push Chain Donut Testnet predeploys (from the contract address book).
 const UGPC = '0x00000000000000000000000000000000000000C1';
-const UNIVERSAL_EXECUTOR_MODULE = '0x14191Ea54B4c176fCf86f51b0FAc7CB1E71Df7d7';
 
 // 4-byte prefix the destination CEA looks for to recognize a multicall payload.
 // Without this prefix, the CEA falls into the single-call path and reverts on
@@ -268,11 +267,10 @@ async function getOrDeployContract(wallet: ethers.Wallet): Promise<string> {
   }
 
   console.log('\n📦 Deploying MinimalContractInitiatedExecutor on Push Donut Testnet...');
-  console.log('   ugpc:                   ', UGPC);
-  console.log('   universalExecutorModule:', UNIVERSAL_EXECUTOR_MODULE);
+  console.log('   ugpc:', UGPC);
 
   const factory = new ethers.ContractFactory(artifact.abi, bytecode, wallet);
-  const deployment = await factory.deploy(UGPC, UNIVERSAL_EXECUTOR_MODULE);
+  const deployment = await factory.deploy(UGPC);
   const deployTx = deployment.deploymentTransaction();
   if (deployTx) console.log('   📤 deploy tx:', deployTx.hash);
 

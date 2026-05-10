@@ -109,16 +109,16 @@ Caller ──┐
                                                   msg.sender == CEA
 ```
 
-For inbound flows (BNB CEA → Push contract), the TSS network calls back into your contract's `executeUniversalTx(...)`, with `msg.sender == UNIVERSAL_EXECUTOR_MODULE`. The contract validates that caller, replay-protects via `txId`, and decodes the payload to apply app logic. The example contract's payload format is `abi.encode(uint8 action, address beneficiary)` with action `0` = "credit beneficiary".
+This example is **one-way only**: there's no inbound back-leg. The destination CEA executes the payload on BNB and the flow ends there. If you want a Push contract that *also* receives a TSS callback when the destination tx finishes (so its own state advances), see [`../contract-initiated-roundtrip-execution/`](../contract-initiated-roundtrip-execution/).
 
 ## Key contract surface
 
 ```solidity
-// Push Chain Donut Testnet addresses
-address constant UGPC                    = 0x00000000000000000000000000000000000000C1;
-address constant UNIVERSAL_EXECUTOR_MODULE = 0x14191Ea54B4c176fCf86f51b0FAc7CB1E71Df7d7;
+// Push Chain Donut Testnet predeploy
+address constant UGPC = 0x00000000000000000000000000000000000000C1;
 
-// Outbound — your contract calls this internally to dispatch a cross-chain call
+// Outbound — your contract calls UGPC to dispatch a cross-chain call.
+// The CEA on the destination chain executes `payload` from your contract's identity.
 function dispatchOutbound(
     address token,
     uint256 amount,
@@ -127,19 +127,7 @@ function dispatchOutbound(
     bytes calldata payload,
     address revertRecipient
 ) external payable;
-
-// Inbound — UNIVERSAL_EXECUTOR_MODULE calls this when an external CEA reports back
-function executeUniversalTx(
-    string calldata sourceChainNamespace,
-    bytes calldata ceaAddress,
-    bytes calldata payload,
-    uint256 amount,
-    address prc20,
-    bytes32 txId
-) external payable onlyUniversalExecutor;
 ```
-
-Always validate `msg.sender == universalExecutorModule` and replay-protect via `txId` in any inbound handler. The example does both.
 
 ## Network
 

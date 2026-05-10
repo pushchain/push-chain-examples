@@ -1,0 +1,22 @@
+{
+  "name": "contract-initiated-roundtrip-between-external-chains",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "tsx index.ts"
+  },
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.30.1",
+    "@pushchain/core": "latest",
+    "@solana/web3.js": "^1.91.1",
+    "bs58": "^5.0.0",
+    "dotenv": "^16.4.5",
+    "ethers": "^6.14.4"
+  },
+  "devDependencies": {
+    "@types/bs58": "^4.0.1",
+    "@types/node": "^20.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
+  }
+}

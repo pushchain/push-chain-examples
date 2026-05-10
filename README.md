@@ -69,7 +69,14 @@ Small, focused examples that each demonstrate a single capability of `@pushchain
 |---|---|
 | **[track-universal-transaction](./core-sdk-functions/track-universal-transaction)** | Watch a cross-chain transaction's lifecycle from any chain via `PushChain.utils.tx.track`. |
 | **[sign-universal-message](./core-sdk-functions/sign-universal-message)** | Sign personal messages and EIP-712 typed data through a UniversalSigner — works across origins. |
-| **[contract-initiated-multichain-execution](./core-sdk-functions/contract-initiated-multichain-execution)** | A Push Chain contract autonomously dispatches a cross-chain call through UGPC. The contract's CEA executes the payload on the destination chain. |
+| **[contract-initiated-outbound-execution](./core-sdk-functions/contract-initiated-outbound-execution)** | **Outbound:** A Push Chain contract autonomously dispatches a cross-chain call through UGPC. The contract's CEA executes the payload on the destination chain (BNB counter). |
+| **[contract-initiated-inbound-execution](./core-sdk-functions/contract-initiated-inbound-execution)** | **Inbound:** A Sepolia contract calls Sepolia's UniversalGateway to trigger a Push counter increment from the contract's UEA on Push. |
+| **[contract-initiated-roundtrip-execution](./core-sdk-functions/contract-initiated-roundtrip-execution)** | **Round-trip:** A Push contract dispatches outbound to BNB, the BNB CEA fires a callback through BNB's gateway, and the resulting inbound advances Push state — both legs in one contract. |
+| **[contract-initiated-roundtrip-with-result](./core-sdk-functions/contract-initiated-roundtrip-with-result)** | **Round-trip with app state:** Same flow with a `request → fulfill` state machine — the inbound callback decodes a requestId from the outbound's payload and updates real application state. |
+| **[contract-initiated-recipient-bridge](./core-sdk-functions/contract-initiated-recipient-bridge)** | **Funds-only bridge:** A Sepolia contract bridges native ETH to a recipient address on Push (no payload, just funds delivery). |
+| **[contract-initiated-inbound-with-funds](./core-sdk-functions/contract-initiated-inbound-with-funds)** | **Inbound + funds:** A Sepolia contract bridges ETH AND triggers `vault.deposit{value}(beneficiary)` on Push — the canonical "deposit-and-execute" pattern. |
+| **[contract-initiated-outbound-with-funds](./core-sdk-functions/contract-initiated-outbound-with-funds)** | **Outbound + funds:** Push contract bridges pBNB AND calls a BNB target in the same outbound (symmetric to inbound-with-funds). |
+| **[contract-initiated-roundtrip-between-external-chains](./core-sdk-functions/contract-initiated-roundtrip-between-external-chains)** | **Cascade across two external chains:** A Push contract dispatches to BNB; the BNB back-leg triggers Push to fire a NEW outbound to Solana — incrementing counters on **both BNB and Solana** from a single `kickOff()` call. |
 | **[others-contract-helpers](./core-sdk-functions/others-contract-helpers)** | Read on-chain helpers — `IUEAFactory.getUEAForOrigin`, `getOriginForUEA`, `getVMType`, etc. |
 
 ### Utility surface
@@ -95,7 +102,8 @@ Available tutorials at a glance:
 6. **[universal-erc-20-mint](./tutorials/universal-erc-20-mint)** — universal-access ERC-20 token.
 7. **[derive-universal-executor-account](./tutorials/derive-universal-executor-account)** — playground for UEA derivation (any origin → Push Chain).
 8. **[derive-chain-executor-account](./tutorials/derive-chain-executor-account)** — the inverse: Push Chain account → CEA on every supported external chain.
-9. **[x402-universal-transaction](./tutorials/x402-universal-transaction)** — A2A x402 payments settled via Push Chain (advanced, agent-to-agent).
+9. **[universal-cross-chain-counters](./tutorials/universal-cross-chain-counters)** — one Push contract that fans `increment()` out to BNB / Sepolia / Arbitrum counters in a single tx, gated by per-chain CEAs.
+10. **[x402-universal-transaction](./tutorials/x402-universal-transaction)** — A2A x402 payments settled via Push Chain (advanced, agent-to-agent).
 
 ---
 

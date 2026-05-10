@@ -141,7 +141,25 @@ The inverse of Derive Universal Executor Account. Connect a Push Chain wallet, s
 
 ---
 
-### 9. X402 Universal Transactions (advanced)
+### 9. Universal Cross-Chain Counters
+
+Builds on Derive Chain Executor Account. A **single Push contract** orchestrates `increment()` calls to per-chain `ExternalCounter` deployments on Ethereum, BNB, and Base in one transaction. Each destination counter only accepts calls from the orchestrator's deterministic CEA.
+
+**What you'll learn:**
+- Cross-chain orchestration from one Push contract via `UniversalGatewayPC`
+- Pre-computing and pre-authorizing a contract's CEA on every destination chain
+- The `UniversalOutboundTxRequest` shape — `recipient`, `token` routing, `amount = 0`, `gasLimit`, `payload`, `revertRecipient`
+- `msg.sender` on a destination chain resolving to the orchestrator's deterministic CEA
+
+**Components:**
+- [`contracts/`](./universal-cross-chain-counters/contracts/) — `MultiChainCounter.sol` (Push orchestrator) + `ExternalCounter.sol` (destination counter)
+- [`app/`](./universal-cross-chain-counters/app/) — Frontend that derives CEAs, polls counters across chains, and triggers `tickAll`
+
+[Go to Universal Cross-Chain Counters Tutorial →](./universal-cross-chain-counters)
+
+---
+
+### 10. X402 Universal Transactions (advanced)
 
 Combines the X402 Agent-to-Agent payment protocol with PushChain Universal Transactions. AI agents request payments via HTTP 402 exceptions; payments are settled cross-chain via Push.
 
@@ -171,7 +189,8 @@ If you're new to PushChain development:
 6. **Batch Universal Transactions** — multicall patterns
 7. **Universal Claimable Airdrop** — Merkle proofs + factory pattern
 8. **Derive Chain Executor Account** — the CEA half of the identity model
-9. **X402 Universal Transactions** — backend / agent payment flows
+9. **Universal Cross-Chain Counters** — apply CEAs to a one-contract orchestrator
+10. **X402 Universal Transactions** — backend / agent payment flows
 
 ## Tutorial Conventions
 
