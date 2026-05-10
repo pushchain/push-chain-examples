@@ -137,13 +137,17 @@ You'll need on **Ethereum Sepolia**:
 
 ### 2. Mint Tokens (if needed)
 
-**USDT on Sepolia:**
+**USDT on Sepolia** (real ERC-20 on Sepolia — call `mint`):
 ```
-https://sepolia.etherscan.io/address/0xCA0C5E6F002A389E1580F0DB7cd06e4549B5F9d3#writeContract
+https://sepolia.etherscan.io/address/0x7169D38820dfd117C3FA1f22a697dBA58d90BA06#writeContract
 ```
 
-**USDC on Sepolia:**
-Check Sepolia faucets or token contracts for USDC minting.
+**USDC on Sepolia** (real ERC-20 on Sepolia — call `mint`):
+```
+https://sepolia.etherscan.io/address/0x97F477B7f970D47a87B42869ceeace218106152a#writeContract
+```
+
+> Don't confuse these Sepolia addresses with the matching Donut representations — the relay bridges from Sepolia to Donut, where the actual `funds`-side balance lives.
 
 ## 📊 Example Output
 

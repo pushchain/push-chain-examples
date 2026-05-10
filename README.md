@@ -63,6 +63,15 @@ Small, focused examples that each demonstrate a single capability of `@pushchain
 | **[send-multichain-transactions](./core-sdk-functions/send-multichain-transactions)** | Cascades | Compose multiple universal transactions under a single signature via `pushChainClient.universal.executeTransactions`. |
 | **[batched-universal-transaction](./core-sdk-functions/batched-universal-transaction)** | Route 1 | Pack multiple contract calls into one universal tx (multicall format). |
 
+### PUSD stablecoin
+
+| Example | Purpose |
+|---|---|
+| **[pusd-mint-from-external-chain](./core-sdk-functions/pusd-mint-from-external-chain)** | **Path A:** mint PUSD by depositing USDT from Ethereum Sepolia in a single signature — multicall (`approve` + `deposit`) plus `funds` to bridge the reserve token in. |
+| **[pusd-mint-from-push-eoa](./core-sdk-functions/pusd-mint-from-push-eoa)** | **Path B:** mint PUSD from a native Push EOA — two sequential signatures (`approve`, `deposit`), no bridging. |
+| **[pusd-redeem](./core-sdk-functions/pusd-redeem)** | Burn PUSD for a preferred reserve token (with basket fallback) — single call, no PUSD approval needed. |
+| **[pusd-read-state](./core-sdk-functions/pusd-read-state)** | Read PUSD supply, fees, per-token reserves, and verify the `totalReserves ≥ totalSupply` solvency invariant. |
+
 ### Tracking, messaging, contract-initiated dispatch
 
 | Example | Purpose |
@@ -104,6 +113,7 @@ Available tutorials at a glance:
 8. **[derive-chain-executor-account](./tutorials/derive-chain-executor-account)** — the inverse: Push Chain account → CEA on every supported external chain.
 9. **[universal-cross-chain-counters](./tutorials/universal-cross-chain-counters)** — one Push contract that fans `increment()` out to BNB / Sepolia / Arbitrum counters in a single tx, gated by per-chain CEAs.
 10. **[x402-universal-transaction](./tutorials/x402-universal-transaction)** — A2A x402 payments settled via Push Chain (advanced, agent-to-agent).
+11. **[universal-pusd-payments](./tutorials/universal-pusd-payments)** — paywall dApp that accepts PUSD as payment from any chain in one signature; demonstrates the on-chain PUSD integration pattern.
 
 ---
 

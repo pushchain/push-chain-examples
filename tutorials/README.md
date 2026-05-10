@@ -159,6 +159,24 @@ Builds on Derive Chain Executor Account. A **single Push contract** orchestrates
 
 ---
 
+### 11. Universal PUSD Payments
+
+A paired contract + frontend tutorial that demonstrates a real-product PUSD use case: a paywall accepting PUSD as payment from users on any chain in **one signature**. Showcases the on-chain Solidity integration for PUSD (`IPUSD.transferFrom`) and the universal transaction layer's multicall mode (`approve` + `paywall.pay()` ride together).
+
+**What you'll learn:**
+- Integrating PUSD into a Solidity contract (`IPUSD` interface, `transferFrom` charging pattern)
+- Bundling `approve + call` in a single signature via multicall (outer `to` = `0x0`)
+- Cross-chain user attribution through UEAs — `msg.sender` is the user's deterministic UEA on Push, so the same contract works for callers on Sepolia, Solana, BNB, Base, native Push, etc.
+- Deploying with Foundry on Donut Testnet and wiring the address into a Vite + React frontend
+
+**Components:**
+- [`contracts/`](./universal-pusd-payments/contracts/) — `PusdPaywall.sol`
+- [`app/`](./universal-pusd-payments/app/) — React frontend with the multicall pay flow
+
+[Go to Universal PUSD Payments Tutorial →](./universal-pusd-payments)
+
+---
+
 ### 10. X402 Universal Transactions (advanced)
 
 Combines the X402 Agent-to-Agent payment protocol with PushChain Universal Transactions. AI agents request payments via HTTP 402 exceptions; payments are settled cross-chain via Push.
@@ -191,6 +209,7 @@ If you're new to PushChain development:
 8. **Derive Chain Executor Account** — the CEA half of the identity model
 9. **Universal Cross-Chain Counters** — apply CEAs to a one-contract orchestrator
 10. **X402 Universal Transactions** — backend / agent payment flows
+11. **Universal PUSD Payments** — accept PUSD as payment in your contract (real-product DeFi pattern)
 
 ## Tutorial Conventions
 
