@@ -1,0 +1,24 @@
+{
+  "name": "pusd-mint-from-external-chain",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "NODE_NO_WARNINGS=1 ts-node index.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@coral-xyz/anchor": "0.31.1",
+    "@pushchain/core": "latest",
+    "dotenv": "^17.2.3",
+    "viem": "^2.31.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.0.0"
+  }
+}
