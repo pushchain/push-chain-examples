@@ -115,23 +115,41 @@ The INBOUND_PAYLOAD is a normal `UniversalPayload` struct with a sentinel multic
 
 ```solidity
 UniversalOutboundTxRequest req = {
-    target:           solanaCEABytes,       // 32-byte program-derived address
-    token:            pSOL,                 // selects Solana Devnet
+    target:           solanaCEABytes,           // 32-byte program-derived address
+    token:            pSOL,                     // selects Solana Devnet
     amount:           0,
     gasLimit:         2_000_000,
-    payload:          solanaPayload,        // Anchor-encoded receive_sol(0)
+    payload:          solanaPayload,            // Anchor-encoded receive_sol(0)
     revertRecipient:  address(this)
 };
+// msg.value = solanaOutboundValuePc (set by runner — see "Sizing the Solana value")
 ```
 
 `solanaPayload` is built off-chain by the runner via `PushChain.utils.helpers.encodeTxData({ idl: TEST_COUNTER_IDL, functionName: 'receive_sol', args: [0n] })`.
+
+## Sizing the Solana outbound value
+
+UGPC swaps native PC into the destination chain's gas-token (here, pSOL) on the Push-side leg. If the PC value passed isn't enough to fill the swap at current Uniswap V3 pool prices, the swap router reverts with `STF` (SafeTransferFrom). A flat percentage of contract balance (e.g. `balance/2`) is **not safe** — pool prices move and the swap can fail unpredictably.
+
+The runner mirrors the SDK's `estimateNativeValueForSwap` algorithm to size the value precisely, then stores it on the contract via `configureSolanaOutboundValue(uint256)`:
+
+1. `UGPC.UNIVERSAL_CORE()` → UniversalCore address.
+2. `UniversalCore.getOutboundTxGasAndFees(pSOL, 2_000_000)` → `gasFee` (in pSOL).
+3. `UniversalCore.WPC()` / `.uniswapV3Factory()` / `.defaultFeeTier(pSOL)`.
+4. `factory.getPool(WPC, pSOL, feeTier)` → pool address.
+5. `pool.slot0()` → `sqrtPriceX96`.
+6. `wpcNeeded = (gasFee × sqrtPriceX96²) / 2¹⁹²` (or the inverse if pSOL > WPC by address).
+7. Multiply by 2 (SDK `SWAP_BUFFER`) then by 1.1 (10% executor buffer) → `solanaOutboundValuePc`.
+
+The contract dispatches outbound 2 with `value: solanaOutboundValuePc`. UGPC refunds any surplus into the contract via `receive()`, so over-sizing is safe.
 
 ## Common pitfalls
 
 | Pitfall | Symptom | Fix |
 |---|---|---|
 | `gasLimit < 2_000_000` on outbound 1 | BNB CEA runs out of gas inside the nested `sendUniversalTxToUEA` call; back-leg never fires | Hardcoded 2M in the contract; don't lower it |
-| Contract PC balance too low after first kickOff | `executeUniversalTx` dispatches Solana outbound with insufficient `value` → UGPC reverts | Fund the contract with ≥ 8 PC; UGPC refunds surplus so 8 PC covers many round-trips |
+| Solana value undersized for current pool depth | Outbound 2 reverts inside UGPC's swap with `STF` | Runner computes `solanaOutboundValuePc` via `estimateNativeValueForSwap` mirror — never use `balance/2` |
+| Contract PC balance too low to cover BOTH legs | kickOff succeeds but executeUniversalTx reverts with `InsufficientPC` | Fund contract ≥ `protocolFee + solanaOutboundValuePc` (the runner tops up automatically) |
 | BNB CEA not funded with BNB | Back-leg's gateway call reverts; cascade stalls at step 2 | Faucet ≥ 0.05 BNB to the printed CEA address |
 | Solana payload decoded but program not found / mismatch | Solana CEA executes but the test_counter program errors | Verify SOL_TEST_PROGRAM is reachable on Solana Devnet; check explorer for the CEA tx |
 | Auto-trigger inside executeUniversalTx fails (e.g., insufficient PC) | BNB back-leg lands but Solana never dispatches | Use `dispatchSolanaManually()` (owner-only) to retry — fund the contract first |
@@ -142,6 +160,7 @@ UniversalOutboundTxRequest req = {
 function fund() external payable;
 function configureBnbTarget(address bnbDestinationContract, bytes calldata bnbDestinationCalldata) external;
 function configureSolanaTarget(bytes calldata solanaCEABytes, bytes calldata solanaPayload) external;
+function configureSolanaOutboundValue(uint256 valuePc) external;       // owner-only — sized off-chain
 function kickOff(address bnbCEAAddr, uint256 protocolFeePc, uint256 ueaNonce) external;
 function executeUniversalTx(string, bytes, bytes, uint256, address, bytes32) external payable;
 function dispatchSolanaManually() external;     // owner-only fallback
@@ -149,6 +168,7 @@ function dispatchSolanaManually() external;     // owner-only fallback
 uint256 public kickOffCount;
 uint256 public bnbBackLegCount;
 uint256 public solanaDispatchCount;
+uint256 public solanaOutboundValuePc;            // PC value for outbound 2 (set by runner)
 ```
 
 ## Network

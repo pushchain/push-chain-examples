@@ -89,6 +89,22 @@ contract MultiChainCascade {
     /// here. The destination Solana CEA executes this payload.
     bytes public solanaPayload;
 
+    /// @notice The PC `value` to forward to UGPC for the Solana outbound.
+    /// **MUST** be sized to cover the Uniswap V3 PC→pSOL gas-token swap on
+    /// the Push side. The runner computes this off-chain by replicating the
+    /// SDK's `estimateNativeValueForSwap` algorithm (read pool slot0, compute
+    /// wpcNeeded, apply 2x swap buffer + 10% safety buffer) and stores it
+    /// here via `configureSolanaOutboundValue`.
+    ///
+    /// **Why this is needed:** UGPC swaps native PC into the destination
+    /// chain's gas-token (here, pSOL) on the Push-side leg. If the PC value
+    /// passed isn't enough to fill the swap at current pool prices, the
+    /// Uniswap V3 router reverts with `STF` (SafeTransferFrom). The exact
+    /// value depends on live pool depth so it can't be hard-coded; over-
+    /// funding is safe because UGPC refunds excess back into this contract
+    /// via `receive()`.
+    uint256 public solanaOutboundValuePc;
+
     // -------------------------------------------------------------------------
     // State — bumped along the cascade for observability
     // -------------------------------------------------------------------------
@@ -107,9 +123,10 @@ contract MultiChainCascade {
     event Funded(address indexed from, uint256 amount, uint256 newBalance);
     event ConfiguredBnbTarget(address indexed bnbContract, bytes calldata_);
     event ConfiguredSolanaTarget(bytes solanaCEABytes, bytes solanaPayload);
+    event ConfiguredSolanaValue(uint256 valuePc);
     event KickedOff(uint256 kickOffCount, bytes outboundPayload);
     event BnbBackLegLanded(bytes32 indexed txId, uint256 bnbBackLegCount);
-    event SolanaDispatched(uint256 solanaDispatchCount, bytes payload);
+    event SolanaDispatched(uint256 solanaDispatchCount, uint256 valuePc);
 
     error NotOwner();
     error NotUniversalExecutor();
@@ -165,6 +182,18 @@ contract MultiChainCascade {
         emit ConfiguredSolanaTarget(_solanaCEABytes, _solanaPayload);
     }
 
+    /// @notice Owner-only. Set the PC value to forward to UGPC for the Solana
+    /// outbound. The runner computes this off-chain (mirrors the SDK's
+    /// `estimateNativeValueForSwap`) so the value covers the live PC→pSOL
+    /// Uniswap V3 swap on the Push side. See the docstring on
+    /// `solanaOutboundValuePc` for why a flat value can't be used.
+    function configureSolanaOutboundValue(uint256 _valuePc) external {
+        if (msg.sender != owner) revert NotOwner();
+        if (_valuePc == 0) revert ZeroAddress();
+        solanaOutboundValuePc = _valuePc;
+        emit ConfiguredSolanaValue(_valuePc);
+    }
+
     // -------------------------------------------------------------------------
     // Step 1: kickOff — Push contract → UGPC → BNB CEA
     // -------------------------------------------------------------------------
@@ -180,6 +209,7 @@ contract MultiChainCascade {
     ) external {
         if (bnbDestinationContract == address(0)) revert NotConfigured();
         if (solanaCEABytes.length == 0) revert NotConfigured();
+        if (solanaOutboundValuePc == 0) revert NotConfigured();
         if (bnbCEAAddr == address(0)) revert ZeroAddress();
         if (address(this).balance < protocolFeePc) {
             revert InsufficientPC(protocolFeePc, address(this).balance);
@@ -270,13 +300,14 @@ contract MultiChainCascade {
     // Step 3: dispatch to Solana (called from executeUniversalTx)
     // -------------------------------------------------------------------------
 
-    /// @notice Compute the protocol fee for the Solana outbound and dispatch.
-    /// Called automatically when the BNB back-leg lands. Uses up to half of
-    /// `address(this).balance` as the fee — UGPC refunds surplus back into
-    /// `address(this)` via `receive()`.
+    /// @notice Dispatch the Solana outbound. Uses the off-chain-computed
+    /// `solanaOutboundValuePc` (set by the runner via
+    /// `configureSolanaOutboundValue`) which sizes the PC→pSOL gas-token
+    /// swap to clear current Uniswap V3 pool depth. Surplus is refunded.
     function _dispatchSolanaOutbound() internal {
-        uint256 fee = address(this).balance / 2;
-        if (fee == 0) revert InsufficientPC(1, 0);
+        uint256 fee = solanaOutboundValuePc;
+        if (fee == 0) revert NotConfigured();
+        if (address(this).balance < fee) revert InsufficientPC(fee, address(this).balance);
 
         UniversalOutboundTxRequest memory req = UniversalOutboundTxRequest({
             target: solanaCEABytes,        // 32-byte Solana program-derived address
@@ -290,7 +321,7 @@ contract MultiChainCascade {
         IUniversalGatewayPC(ugpc).sendUniversalTxOutbound{value: fee}(req);
 
         solanaDispatchCount += 1;
-        emit SolanaDispatched(solanaDispatchCount, solanaPayload);
+        emit SolanaDispatched(solanaDispatchCount, fee);
     }
 
     /// @notice Manual dispatcher — useful if the auto-trigger inside

@@ -6,27 +6,36 @@ pragma solidity ^0.8.26;
 //
 // RoundtripWithResult
 // ===================
-// Real-world variation of the bare round-trip: instead of just bumping a
-// counter, the inbound callback decodes a payload that the outbound encoded
-// and uses it to drive **application state**. Demonstrates how a Push contract
-// can request external-chain work and act on the returned data.
+// "External action done → do action here." Push contract dispatches outbound
+// to BNB Testnet. The destination CEA's outer multicall does TWO things:
 //
-// **Pattern**: a "request → fulfill" cycle.
-//   1. User calls `request(externalContract, externalCalldata)` on Push.
-//   2. The contract assigns a `requestId`, marks it pending, dispatches
-//      outbound to the BNB CEA. The outbound's inboundUniversalPayload
-//      includes a multicall step that calls back into THIS contract's
-//      `fulfillRequest(bytes32 requestId, bytes data)` with the requestId
-//      embedded — so when the callback fires, we know which request lands.
-//   3. TSS dispatches the inbound; the contract's docs-style executeUniversalTx
-//      decodes the requestId from `payload`, marks the request fulfilled,
-//      stores the data, and emits Fulfilled.
+//   1. **External action.** Calls `bnbCounter.increment()` — a real BNB-side
+//      state change.
+//   2. **Self-call to `sendUniversalTxToUEA`.** Triggers the back-leg.
 //
-// What stays the same as `contract-initiated-roundtrip-execution/`:
-//   - SDK Route 3 wire format (CEA self-call to `sendUniversalTxToUEA`)
-//   - gasLimit = 2_000_000 on UGPC outbound
-//   - PC funding model (contract holds PC, kickOff spends from it)
-//   - Docs-style 6-arg executeUniversalTx is what TSS dispatches to
+// When the back-leg lands on this contract via `executeUniversalTx`, we run
+// the **Push action**: pop the oldest pending request off a FIFO queue and
+// mark it `Fulfilled`. That state change is what application code reacts to.
+//
+// Why FIFO instead of decoding requestId from the inbound payload?
+// ----------------------------------------------------------------
+// TSS relays back-leg callbacks in the same order the outbound legs were
+// submitted. The decoder approach (extract requestId from `payload` bytes
+// inside the inbound `UniversalPayload`) is fragile — TSS-delivered bytes
+// don't always round-trip through `abi.decode` cleanly. A queue is simpler,
+// uses no payload introspection, and matches the natural ordering.
+//
+//   [Push EOA] ──request()──▶ this contract ──UGPC──▶ [BNB CEA]
+//                                  ▲                    │
+//                                  │                    │ outer multicall:
+//                                  │                    │   step 1: bnbCounter.increment()
+//                                  │                    │   step 2: CEA.sendUniversalTxToUEA(self-call)
+//                                  │                    ▼
+//                                  │            gateway.sendUniversalTxFromCEA
+//                                  │                    │
+//                                  │                    ▼
+//                          executeUniversalTx ◀──── TSS Cosmos universal-executor
+//                          (pops queue, marks request Fulfilled)
 
 struct UniversalOutboundTxRequest {
     bytes target;
@@ -46,22 +55,32 @@ contract RoundtripWithResult {
     address public immutable universalExecutorModule;
 
     bytes4 internal constant UEA_MULTICALL_SELECTOR = 0x2cc2842d;
+    bytes4 internal constant INCREMENT_SELECTOR = 0xd09de08a; // bytes4(keccak256("increment()"))
 
     enum RequestStatus { None, Pending, Fulfilled }
 
     struct Request {
         RequestStatus status;
-        bytes32 destinationTxOrTag; // encoded by the user; e.g. a tx hash, a job id
-        uint256 createdAt;
-        uint256 fulfilledAt;
-        bytes resultData;
+        bytes32 tag;            // application-level tag passed by caller
+        uint256 createdAt;      // block.timestamp on Push when request() called
+        uint256 fulfilledAt;    // block.timestamp on Push when callback landed
+        bytes32 inboundTxId;    // TSS-supplied txId of the inbound callback
     }
 
-    /// @notice Counter producing unique requestIds.
+    /// @notice Sequence counter producing unique requestIds.
     uint256 public nextRequestSeq;
+
+    /// @notice Total fulfilled requests (the "Push action" counter — bumped
+    /// on every successful inbound callback).
+    uint256 public fulfilledCount;
 
     /// @notice requestId → request state.
     mapping(bytes32 => Request) public requests;
+
+    /// @notice FIFO queue of pending requestIds (head moves forward; tail grows
+    /// on each `request()` call).
+    bytes32[] public pendingQueue;
+    uint256 public pendingHead;
 
     /// @notice Replay protection on inbound callbacks.
     mapping(bytes32 => bool) public seenInboundTxIds;
@@ -69,35 +88,23 @@ contract RoundtripWithResult {
     event Funded(address indexed from, uint256 amount, uint256 newBalance);
     event Requested(
         bytes32 indexed requestId,
-        address externalContract,
-        bytes externalCalldata,
-        bytes32 tag
+        address bnbCounter,
+        address bnbCEA,
+        bytes32 tag,
+        uint256 queuePosition
     );
     event Fulfilled(
         bytes32 indexed requestId,
         bytes32 indexed inboundTxId,
         string sourceChainNamespace,
-        bytes resultData
+        uint256 fulfilledCount
     );
 
     error NotUniversalExecutor();
     error ZeroAddress();
     error AlreadySeen(bytes32 inboundTxId);
-    error UnknownRequest(bytes32 requestId);
-    error AlreadyFulfilled(bytes32 requestId);
+    error NoPendingRequest();
     error InsufficientPC(uint256 required, uint256 available);
-
-    struct UniversalPayload {
-        address to;
-        uint256 value;
-        bytes data;
-        uint256 gasLimit;
-        uint256 maxFeePerGas;
-        uint256 maxPriorityFeePerGas;
-        uint256 nonce;
-        uint256 deadline;
-        uint8 vType;
-    }
 
     struct Multicall {
         address to;
@@ -115,105 +122,106 @@ contract RoundtripWithResult {
         emit Funded(msg.sender, msg.value, address(this).balance);
     }
 
-    /// @notice Initiate a "request" against an external chain. The destination
-    /// CEA executes `externalCalldata` on `externalContract`, and a callback
-    /// fires back to this contract with a payload tying the result to
-    /// `requestId`.
-    /// @param destinationCEAAddr This contract's CEA on the destination chain.
+    /// @notice Initiate a request: BNB-side `bnbCounter.increment()` runs,
+    /// callback fires back, oldest pending request is marked Fulfilled.
+    /// @param bnbCounter The counter contract on BNB Testnet to increment.
+    /// @param bnbCEAAddr This contract's CEA on BNB (deriveExecutorAccount).
     /// @param tokenForRouting PRC-20 selecting the destination chain (e.g. pBNB).
     /// @param protocolFeePc PC the contract forwards to UGPC.
     /// @param ueaNonce Push UEA nonce. 0 for fresh.
-    /// @param tag Application-level identifier (e.g. user-defined job tag) —
-    ///     stored on the request and emitted in Requested.
+    /// @param tag Application tag — stored on the request and emitted.
     function request(
-        address destinationCEAAddr,
+        address bnbCounter,
+        address bnbCEAAddr,
         address tokenForRouting,
         uint256 protocolFeePc,
         uint256 ueaNonce,
         bytes32 tag
     ) external returns (bytes32 requestId) {
-        if (destinationCEAAddr == address(0)) revert ZeroAddress();
+        if (bnbCounter == address(0) || bnbCEAAddr == address(0)) revert ZeroAddress();
         if (address(this).balance < protocolFeePc) {
             revert InsufficientPC(protocolFeePc, address(this).balance);
         }
 
-        // Generate a deterministic-but-unique requestId for this dispatch.
         requestId = keccak256(abi.encodePacked(address(this), nextRequestSeq, block.timestamp, tag));
         nextRequestSeq += 1;
         requests[requestId] = Request({
             status: RequestStatus.Pending,
-            destinationTxOrTag: tag,
+            tag: tag,
             createdAt: block.timestamp,
             fulfilledAt: 0,
-            resultData: ""
+            inboundTxId: bytes32(0)
         });
+        pendingQueue.push(requestId);
 
-        // ---- Layer 1: inner multicall — when the callback's payload is
-        //      decoded, we want to be able to recover the requestId. We
-        //      encode an "echo" of the requestId through the inboundUniversalPayload
-        //      using the standard multicall mechanism. The callback is
-        //      delivered via the docs-style 6-arg executeUniversalTx with
-        //      `payload = inboundUniversalPayload` — which we'll inspect to
-        //      pick out the requestId. -----------------------------------
-        // For this example we make the inner multicall a no-op that simply
-        // carries the requestId in the multicall's `data` field. The
-        // executeUniversalTx callback receives the FULL UniversalPayload bytes
-        // as its `payload` arg, so we can grep out our requestId from there.
+        bytes memory outerMulticallData = _buildOuterMulticall(bnbCounter, bnbCEAAddr, ueaNonce);
+
+        IUniversalGatewayPC(ugpc).sendUniversalTxOutbound{value: protocolFeePc}(
+            UniversalOutboundTxRequest({
+                target: abi.encodePacked(bnbCEAAddr),
+                token: tokenForRouting,
+                amount: 0,
+                gasLimit: 2_000_000,
+                payload: outerMulticallData,
+                revertRecipient: address(this)
+            })
+        );
+
+        emit Requested(requestId, bnbCounter, bnbCEAAddr, tag, pendingQueue.length - 1);
+    }
+
+    /// @dev Builds the full outer multicall blob the destination CEA executes:
+    ///   step 1: bnbCounter.increment() — the EXTERNAL action
+    ///   step 2: CEA self-call to sendUniversalTxToUEA — triggers the back-leg
+    function _buildOuterMulticall(
+        address bnbCounter,
+        address bnbCEAAddr,
+        uint256 ueaNonce
+    ) internal view returns (bytes memory) {
+        // Layer 1: a no-op inner multicall — the back-leg's Push-side action
+        // is a state change in this contract, not a multicall step.
         Multicall[] memory innerCalls = new Multicall[](1);
-        innerCalls[0] = Multicall({to: address(this), value: 0, data: abi.encode(requestId)});
+        innerCalls[0] = Multicall({to: address(this), value: 0, data: ""});
         bytes memory innerMulticallData = abi.encodePacked(
             UEA_MULTICALL_SELECTOR,
             abi.encode(innerCalls)
         );
 
-        // ---- Layer 2: encoded UniversalPayload (vType=1, inbound) -----
+        // Layer 2: encoded UniversalPayload (vType=1, inbound).
         bytes memory inboundUniversalPayload = abi.encode(
             address(0), uint256(0), innerMulticallData,
             uint256(1e7), uint256(1e10), uint256(0),
             ueaNonce + 1, uint256(9999999999), uint8(1)
         );
 
-        // ---- Layer 3: CEA self-call to sendUniversalTxToUEA ---------
+        // Layer 3: CEA self-call to sendUniversalTxToUEA.
         bytes memory ceaSelfCallData = abi.encodeWithSelector(
             bytes4(keccak256("sendUniversalTxToUEA(address,uint256,bytes,address)")),
             address(0), uint256(0), inboundUniversalPayload, address(this)
         );
 
-        // ---- Layer 4: outer multicall destination CEA executes -------
-        Multicall[] memory outerCalls = new Multicall[](1);
+        // Layer 4: outer multicall the destination CEA executes.
+        Multicall[] memory outerCalls = new Multicall[](2);
         outerCalls[0] = Multicall({
-            to: destinationCEAAddr,
+            to: bnbCounter,
+            value: 0,
+            data: abi.encodePacked(INCREMENT_SELECTOR)
+        });
+        outerCalls[1] = Multicall({
+            to: bnbCEAAddr,
             value: 0,
             data: ceaSelfCallData
         });
-        bytes memory outerMulticallData = abi.encodePacked(
-            UEA_MULTICALL_SELECTOR,
-            abi.encode(outerCalls)
-        );
-
-        // ---- Dispatch via UGPC -------------------------------------
-        bytes memory targetBytes = abi.encodePacked(destinationCEAAddr);
-        UniversalOutboundTxRequest memory req = UniversalOutboundTxRequest({
-            target: targetBytes,
-            token: tokenForRouting,
-            amount: 0,
-            gasLimit: 2_000_000,
-            payload: outerMulticallData,
-            revertRecipient: address(this)
-        });
-
-        IUniversalGatewayPC(ugpc).sendUniversalTxOutbound{value: protocolFeePc}(req);
-
-        emit Requested(requestId, destinationCEAAddr, ceaSelfCallData, tag);
+        return abi.encodePacked(UEA_MULTICALL_SELECTOR, abi.encode(outerCalls));
     }
 
-    /// @notice TSS-delivered inbound callback (docs-style 6-arg signature).
-    /// Decodes the inbound `payload` to extract the requestId we encoded
-    /// into the outbound's inner multicall, then marks that request fulfilled.
+    /// @notice TSS-delivered inbound callback. Pops the oldest pending request
+    /// and marks it Fulfilled. No payload decoding — relies on TSS preserving
+    /// outbound-submission order in back-leg delivery.
     function executeUniversalTx(
         string calldata sourceChainNamespace,
         bytes calldata /* ceaAddress */,
-        bytes calldata payload,
+        bytes calldata /* payload */,
         uint256 /* amount */,
         address /* prc20 */,
         bytes32 txId
@@ -222,58 +230,22 @@ contract RoundtripWithResult {
         if (seenInboundTxIds[txId]) revert AlreadySeen(txId);
         seenInboundTxIds[txId] = true;
 
-        // The `payload` here is the encoded UniversalPayload struct we built
-        // on the outbound side (fields: to, value, data, gasLimit, ...). The
-        // `data` field within is `0x2cc2842d || abi.encode(Multicall[])` and
-        // the Multicall[0].data is `abi.encode(requestId)`. We unwrap layer
-        // by layer to get the requestId.
-        bytes32 requestId = _extractRequestIdFromInboundPayload(payload);
+        if (pendingHead >= pendingQueue.length) revert NoPendingRequest();
+        bytes32 requestId = pendingQueue[pendingHead];
+        pendingHead += 1;
 
         Request storage r = requests[requestId];
-        if (r.status == RequestStatus.None) revert UnknownRequest(requestId);
-        if (r.status == RequestStatus.Fulfilled) revert AlreadyFulfilled(requestId);
-
         r.status = RequestStatus.Fulfilled;
         r.fulfilledAt = block.timestamp;
-        r.resultData = payload;
+        r.inboundTxId = txId;
+        fulfilledCount += 1;
 
-        emit Fulfilled(requestId, txId, sourceChainNamespace, payload);
+        emit Fulfilled(requestId, txId, sourceChainNamespace, fulfilledCount);
     }
 
-    /// @notice Decodes the inbound payload (an encoded UniversalPayload) and
-    /// returns the requestId we packed into the inner multicall's `data` field.
-    function _extractRequestIdFromInboundPayload(bytes calldata payload)
-        internal
-        pure
-        returns (bytes32)
-    {
-        // UniversalPayload struct layout: (address, uint256, bytes data, ...).
-        // Decode and grab `data` (the multicall blob).
-        (
-            ,
-            ,
-            bytes memory inner,
-            ,
-            ,
-            ,
-            ,
-            ,
-        ) = abi.decode(
-            payload,
-            (address, uint256, bytes, uint256, uint256, uint256, uint256, uint256, uint8)
-        );
-
-        // `inner` = 0x2cc2842d || abi.encode(Multicall[]). Strip the 4-byte selector.
-        require(inner.length >= 4, "inner too short");
-        bytes memory innerWithoutSel = new bytes(inner.length - 4);
-        for (uint256 i = 0; i < innerWithoutSel.length; i++) {
-            innerWithoutSel[i] = inner[i + 4];
-        }
-        Multicall[] memory calls = abi.decode(innerWithoutSel, (Multicall[]));
-        require(calls.length > 0, "no multicall");
-
-        // We packed `abi.encode(requestId)` (= 32-byte right-padded) into calls[0].data.
-        return abi.decode(calls[0].data, (bytes32));
+    /// @notice Convenience: how many requests are still waiting for callback.
+    function pendingCount() external view returns (uint256) {
+        return pendingQueue.length - pendingHead;
     }
 
     receive() external payable {}

@@ -53,19 +53,89 @@ const CASCADE_ABI = [
   'function fund() external payable',
   'function configureBnbTarget(address bnbDestinationContract, bytes bnbDestinationCalldata) external',
   'function configureSolanaTarget(bytes solanaCEABytes, bytes solanaPayload) external',
+  'function configureSolanaOutboundValue(uint256 valuePc) external',
   'function kickOff(address bnbCEAAddr, uint256 protocolFeePc, uint256 ueaNonce) external',
   'function dispatchSolanaManually() external',
   'function bnbDestinationContract() view returns (address)',
   'function solanaCEABytes() view returns (bytes)',
   'function solanaPayload() view returns (bytes)',
+  'function solanaOutboundValuePc() view returns (uint256)',
   'function kickOffCount() view returns (uint256)',
   'function bnbBackLegCount() view returns (uint256)',
   'function solanaDispatchCount() view returns (uint256)',
   'function lastInboundTxId() view returns (bytes32)',
   'event KickedOff(uint256 kickOffCount, bytes outboundPayload)',
   'event BnbBackLegLanded(bytes32 indexed txId, uint256 bnbBackLegCount)',
-  'event SolanaDispatched(uint256 solanaDispatchCount, bytes payload)',
+  'event SolanaDispatched(uint256 solanaDispatchCount, uint256 valuePc)',
 ];
+
+const PSOL_ON_PUSH = '0x5D525Df2bD99a6e7ec58b76aF2fd95F39874EBed';
+
+const UGPC_ABI = ['function UNIVERSAL_CORE() view returns (address)'];
+const UNIVERSAL_CORE_ABI = [
+  'function getOutboundTxGasAndFees(address prc20Token, uint256 gasLimit) view returns (address gasToken, uint256 gasFee, uint256 protocolFee, uint256 gasPrice)',
+  'function WPC() view returns (address)',
+  'function uniswapV3Factory() view returns (address)',
+  'function defaultFeeTier(address) view returns (uint24)',
+];
+const UNI_FACTORY_ABI = ['function getPool(address, address, uint24) view returns (address)'];
+const UNI_POOL_ABI = ['function slot0() view returns (uint160 sqrtPriceX96, int24, uint16, uint16, uint16, uint8, bool)'];
+
+/**
+ * Mirrors the SDK's `estimateNativeValueForSwap` (in
+ * `@pushchain/core/src/lib/orchestrator/internals/gas-calculator.js`) plus the
+ * outer 10% buffer applied in `executeUoaToCeaSvm`. Returns the PC value to
+ * pass as `msg.value` when calling UGPC.sendUniversalTxOutbound for a Solana
+ * destination so the on-chain PC→pSOL Uniswap V3 swap can clear current pool
+ * depth without reverting `STF` (SafeTransferFrom).
+ */
+async function computeSolanaOutboundValue(
+  pushProvider: ethers.Provider,
+  prc20Token: string,
+  gasLimit: bigint
+): Promise<{ valuePc: bigint; debug: Record<string, string> }> {
+  const ugpc = new ethers.Contract(UGPC, UGPC_ABI, pushProvider);
+  const universalCoreAddr: string = await ugpc.UNIVERSAL_CORE();
+  const universalCore = new ethers.Contract(universalCoreAddr, UNIVERSAL_CORE_ABI, pushProvider);
+
+  const [gasToken, gasFee] = await universalCore.getOutboundTxGasAndFees(prc20Token, gasLimit);
+  const [wpcAddress, factoryAddress, feeTier] = await Promise.all([
+    universalCore.WPC(),
+    universalCore.uniswapV3Factory(),
+    universalCore.defaultFeeTier(gasToken),
+  ]);
+  const factory = new ethers.Contract(factoryAddress, UNI_FACTORY_ABI, pushProvider);
+  const poolAddress: string = await factory.getPool(wpcAddress, gasToken, feeTier);
+  if (poolAddress === ethers.ZeroAddress) {
+    throw new Error(`No PC↔gasToken pool for ${gasToken} with feeTier ${feeTier}`);
+  }
+  const pool = new ethers.Contract(poolAddress, UNI_POOL_ABI, pushProvider);
+  const [sqrtPriceX96] = await pool.slot0();
+
+  const Q192 = 1n << 192n;
+  const priceNum = (sqrtPriceX96 as bigint) * (sqrtPriceX96 as bigint);
+  const isGasTokenToken0 =
+    (gasToken as string).toLowerCase() < (wpcAddress as string).toLowerCase();
+  const wpcNeeded: bigint = isGasTokenToken0
+    ? ((gasFee as bigint) * priceNum) / Q192
+    : ((gasFee as bigint) * Q192) / priceNum;
+  const swapBuffered = wpcNeeded * 2n;          // SDK SWAP_BUFFER
+  const withTenPct = (swapBuffered * 110n) / 100n; // SDK +10% executor buffer
+
+  return {
+    valuePc: withTenPct,
+    debug: {
+      gasToken,
+      gasFee: ethers.formatEther(gasFee as bigint) + ' (raw)',
+      gasFeeRaw: (gasFee as bigint).toString(),
+      pool: poolAddress,
+      sqrtPriceX96: (sqrtPriceX96 as bigint).toString(),
+      wpcNeeded: ethers.formatEther(wpcNeeded),
+      withSwapBuffer: ethers.formatEther(swapBuffered),
+      with10PctBuffer: ethers.formatEther(withTenPct),
+    },
+  };
+}
 
 const COUNTER_ABI = [
   { inputs: [], name: 'increment', outputs: [], stateMutability: 'nonpayable', type: 'function' },
@@ -180,12 +250,52 @@ async function main() {
     onChainSolanaPayload.toLowerCase() !== solanaPayload.toLowerCase() ||
     (await dispatcher.solanaCEABytes()).toLowerCase() !== solanaCEABytesHex.toLowerCase()
   ) {
-    console.log('🔧 Configuring Solana target on the contract...');
+    console.log('Configuring Solana target on the contract...');
     const txCfg = await dispatcher.configureSolanaTarget(solanaCEABytesHex, solanaPayload);
     await txCfg.wait();
-    console.log(`   ✅ Solana target set: program ${SOL_TEST_PROGRAM} -> receive_sol(0)\n`);
+    console.log(`   Solana target set: program ${SOL_TEST_PROGRAM} -> receive_sol(0)\n`);
   } else {
-    console.log('🔧 Solana target already configured\n');
+    console.log('Solana target already configured\n');
+  }
+
+  // 6b) Compute the precise PC value the cascade should forward to UGPC for
+  // the Solana outbound. Mirrors the SDK's pool-slot0 swap-sizing logic so the
+  // PC->pSOL swap clears current Uniswap V3 pool depth without reverting STF.
+  console.log('Computing Solana outbound PC value (mirrors SDK estimateNativeValueForSwap)...');
+  const { valuePc: solanaValueComputed, debug } = await computeSolanaOutboundValue(
+    pushProvider,
+    PSOL_ON_PUSH,
+    BigInt(2_000_000)
+  );
+  console.log(`   gasToken:           ${debug.gasToken}`);
+  console.log(`   gasFee (pSOL):      ${debug.gasFeeRaw}`);
+  console.log(`   pool:               ${debug.pool}`);
+  console.log(`   sqrtPriceX96:       ${debug.sqrtPriceX96}`);
+  console.log(`   wpcNeeded:          ${debug.wpcNeeded} PC`);
+  console.log(`   x2 swap buffer:     ${debug.withSwapBuffer} PC`);
+  console.log(`   +10% safety buffer: ${debug.with10PctBuffer} PC  <- value`);
+
+  const onChainSolValue: bigint = await dispatcher.solanaOutboundValuePc();
+  if (onChainSolValue !== solanaValueComputed) {
+    console.log('Configuring Solana outbound value on the contract...');
+    const txCfg = await dispatcher.configureSolanaOutboundValue(solanaValueComputed);
+    await txCfg.wait();
+    console.log(`   set solanaOutboundValuePc = ${ethers.formatEther(solanaValueComputed)} PC\n`);
+  } else {
+    console.log('Solana outbound value already configured\n');
+  }
+
+  // 6c) Re-check funding: the contract needs enough PC to cover the BNB
+  // outbound (protocolFee) AND the Solana outbound (solanaValueComputed).
+  // Top up if short.
+  const requiredPc = protocolFee + solanaValueComputed;
+  const currentBal = await pushProvider.getBalance(dispatcherAddress);
+  if (currentBal < requiredPc) {
+    const topUp = requiredPc - currentBal;
+    console.log(`Topping up to cover both outbound legs (need ${ethers.formatEther(requiredPc)} PC, have ${ethers.formatEther(currentBal)} PC)...`);
+    const txTop = await dispatcher.fund({ value: topUp });
+    await txTop.wait();
+    console.log(`   topped up by ${ethers.formatEther(topUp)} PC\n`);
   }
 
   // 7) Snapshot starting state.
