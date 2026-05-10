@@ -23,7 +23,7 @@ async function main() {
 
   // Initialize Push Chain SDK
   const pushChainClient = await PushChain.initialize(universalSigner, {
-    network: PushChain.CONSTANTS.PUSH_NETWORK.TESTNET_DONUT,
+    network: PushChain.CONSTANTS.PUSH_NETWORK.TESTNET,
   });
   // FIX: JSON.stringify with BigInt support
   console.log(

@@ -8,174 +8,212 @@ This directory contains step-by-step tutorials and example projects to help you 
 
 ### 1. Simple Counter
 
-A basic introduction to PushChain development with a simple counter application.
+A minimal entry-point tutorial — basic smart contract deployment + a simple React frontend with PushChain UI Kit. Best place to start if you've never built on PushChain.
 
 **What you'll learn:**
 - Basic PushChain UI Kit integration
 - Universal Account connection
 - Simple smart contract interaction
-- Cross-chain transaction sending
+- Sending transactions with `pushChainClient`
 
 **Components:**
-- [`contracts/`](./simple-counter/contracts/) - Simple Counter smart contract
-- [`app/`](./simple-counter/app/) - Clean React frontend with Push Chain UI Kit
+- [`contracts/`](./simple-counter/contracts/) — Simple `Counter.sol`
+- [`app/`](./simple-counter/app/) — Minimal React frontend
 
 [Go to Simple Counter Tutorial →](./simple-counter)
 
+---
+
 ### 2. Universal Counter
 
-A comprehensive tutorial demonstrating cross-chain interaction using PushChain's Universal Ethereum Account (UEA) system. This project shows how users from Ethereum, Solana, and PushChain can interact with the same application seamlessly.
+Cross-chain user attribution: a single counter contract on Push Chain that detects whether the caller originated from Ethereum, Solana, or Push Chain (via the UEA system) and attributes increments accordingly. Hardcoded chain IDs for clarity.
 
 **What you'll learn:**
-- Cross-chain user attribution
-- Dynamic vs hardcoded chain handling
-- Universal Counter contract patterns
-- Interactive physics-based UI
-- Real-time leaderboard systems
+- Universal Ethereum Accounts (UEAs)
+- `IUEAFactory.getOriginForUEA` for cross-chain user attribution
+- Building a frontend that works for any origin chain
 
 **Components:**
-- [`contracts/`](./universal-counter/contracts/) - Universal Counter smart contracts
-- [`app/`](./universal-counter/app/) - Clean counter display with hardcoded chains
-- [`app-dynamic/`](./universal-counter/app-dynamic/) - Dynamic chain detection with data table
-- [`ballsy-app/`](./universal-counter/ballsy-app/) - Interactive physics-based leaderboard game
+- [`contracts/`](./universal-counter/contracts/) — `UniversalCounter.sol`
+- [`app/`](./universal-counter/app/) — Counter UI with hardcoded chain handling
 
 [Go to Universal Counter Tutorial →](./universal-counter)
 
-### 3. Universal Airdrop
+---
 
-A tutorial demonstrating how to create a cross-chain airdrop system using Universal External Accounts (UEA) and Merkle proofs.
+### 3. Universal Counter (Dynamic)
 
-**What you'll learn:**
-- Cross-chain airdrop distribution
-- Merkle proof verification
-- Universal External Account integration
-- Token claiming mechanisms
-
-**Components:**
-- [`contracts/`](./universal-airdrop/contracts/) - Universal Airdrop and TestToken contracts
-- [`scripts/`](./universal-airdrop/scripts/) - Deployment and Merkle tree generation scripts
-- [`data/`](./universal-airdrop/data/) - Airdrop recipient configuration
-
-[Go to Universal Airdrop Tutorial →](./universal-airdrop)
-
-### 4. Universal ERC-20 Mint
-
-A tutorial showing how to create a universal ERC-20 token minting system that works across different chains.
+The dynamic variant of Universal Counter. Instead of hardcoding supported chains, the contract discovers participating chains at runtime. Ships with two frontends: an analytics-style data table and an interactive Matter.js physics game.
 
 **What you'll learn:**
-- Cross-chain token minting
-- Universal token standards
-- Multi-chain token distribution
-- ERC-20 contract patterns
+- Dynamic chain discovery on-chain
+- Per-chain analytics (total counts, unique users)
+- Building richer cross-chain UIs (data tables, physics simulations)
 
 **Components:**
-- [`contracts/`](./universal-erc-20-mint/contracts/) - Universal ERC-20 minting contracts
+- [`contracts/`](./universal-counter-dynamic/contracts/) — `UniversalCounterDynamic.sol`
+- [`app/`](./universal-counter-dynamic/app/) — Dynamic analytics UI with chain table
+- [`ballsy-app/`](./universal-counter-dynamic/ballsy-app/) — Matter.js physics-based leaderboard
+
+[Go to Universal Counter Dynamic Tutorial →](./universal-counter-dynamic)
+
+---
+
+### 4. Batch Universal Transactions
+
+Demonstrates how to execute multiple contract calls in a single universal transaction (multicall). Combines a counter increment with an ERC-20 mint into one transaction.
+
+**What you'll learn:**
+- Multicall / batch transaction patterns
+- Multi-contract interaction in one tx
+- Gas optimization via batching
+
+**Components:**
+- [`app/`](./batch-universal-transactions/app/) — React frontend (uses pre-deployed testnet contracts)
+
+[Go to Batch Universal Transactions Tutorial →](./batch-universal-transactions)
+
+---
+
+### 5. Universal Claimable Airdrop
+
+Cross-chain airdrop using Merkle proofs and UEAs. Wallets from any supported chain can claim their token allocation, with deduplication and on-chain verification.
+
+**What you'll learn:**
+- Cross-chain airdrop distribution via UEAs
+- Merkle tree generation + on-chain proof verification (OpenZeppelin)
+- Factory pattern for deploying multiple campaigns
+
+**Components:**
+- [`contracts/`](./universal-claimable-airdrop/contracts/) — `UniversalAirdropFactory.sol` + `UniversalAirdrop.sol`
+- [`app/`](./universal-claimable-airdrop/app/) — Multi-step UI (add wallets → generate tree → deploy → claim)
+
+[Go to Universal Claimable Airdrop Tutorial →](./universal-claimable-airdrop)
+
+---
+
+### 6. Universal ERC-20 Mint
+
+A standard ERC-20 token (`$UNICORN`) that can be minted by users from any supported chain. Used as a building block by other tutorials (Batch, Airdrop).
+
+**What you'll learn:**
+- Deploying ERC-20 contracts on Push Chain
+- Universal access via UEAs
+- Real-time balance tracking with React + ethers.js
+
+**Components:**
+- [`contracts/`](./universal-erc-20-mint/contracts/) — `UniversalERC20.sol`
+- [`app/`](./universal-erc-20-mint/app/) — Minting UI
 
 [Go to Universal ERC-20 Mint Tutorial →](./universal-erc-20-mint)
 
-## Tutorial Components Overview
+---
 
-### Smart Contracts (`contracts/`)
-Each tutorial includes Solidity smart contracts that demonstrate:
-- **Simple Counter**: Basic increment functionality
-- **Universal Counter**: Cross-chain user attribution and counting
-- **Universal Counter Dynamic**: Dynamic chain detection and storage
+### 7. Derive Universal Executor Account
 
-### Frontend Applications
+Interactive playground for deriving a UEA from any wallet on any supported chain. Shows both the client-side (`PushChain.utils.account.deriveExecutorAccount`) and the on-chain (`IUEAFactory.getUEAForOrigin`) paths.
 
-#### Basic Apps (`app/`)
-Clean, minimal interfaces focusing on core functionality:
-- Simple wallet connection
-- Transaction sending
-- Counter display
-- Explorer links
+**What you'll learn:**
+- How UEAs are deterministically derived from any origin wallet
+- Client-side derivation via `@pushchain/core` utilities
+- On-chain derivation via the `IUEAFactory` precompile
 
-#### Dynamic Apps (`app-dynamic/`)
-Advanced interfaces with dynamic data handling:
-- Real-time chain detection
-- Data tables with chain information
-- Dynamic counter attribution
-- Comprehensive chain analytics
+**Components:**
+- [`app/`](./derive-universal-executor-account/app/) — Interactive UEA derivation tool
 
-#### Interactive Apps (`ballsy-app/`)
-Engaging, game-like experiences:
-- Matter.js physics engine integration
-- Interactive ball animations
-- Real-time leaderboards
-- Cross-chain competition mechanics
+[Go to Derive UEA Tutorial →](./derive-universal-executor-account)
 
-## Tutorial Structure
+---
 
-Each tutorial typically includes:
+### 8. Derive Chain Executor Account
 
-- **Smart contracts** written in Solidity with deployment scripts
-- **Frontend applications** built with React, TypeScript, and Push Chain UI Kit
-- **Detailed README files** explaining concepts and implementation
-- **Step-by-step instructions** for deployment and usage
-- **Live demos** and deployment configurations
+The inverse of Derive Universal Executor Account. Connect a Push Chain wallet, see the deterministic CEA your account controls on every supported external chain. Frontend-only, no contracts.
 
-## Getting Started
+**What you'll learn:**
+- The CEA half of the UEA ↔ CEA model
+- Driving `PushChain.utils.account.deriveExecutorAccount(account, { chain })` for every supported external chain
+- Surfacing CEA deployment status in a UI
 
-To get started with any tutorial:
+**Components:**
+- [`app/`](./derive-chain-executor-account/app/) — React frontend (no contracts)
 
-1. **Choose your tutorial** based on your learning goals
-2. **Navigate to the tutorial directory** of your choice
-3. **Read the README** for an overview of the project
-4. **Set up contracts** by following the smart contract deployment guide
-5. **Run the frontend** by following the app setup instructions
-6. **Experiment and customize** the code to make it your own!
+[Go to Derive Chain Executor Account Tutorial →](./derive-chain-executor-account)
+
+---
+
+### 9. Universal Cross-Chain Counters
+
+Builds on Derive Chain Executor Account. A **single Push contract** orchestrates `increment()` calls to per-chain `ExternalCounter` deployments on Ethereum, BNB, and Base in one transaction. Each destination counter only accepts calls from the orchestrator's deterministic CEA.
+
+**What you'll learn:**
+- Cross-chain orchestration from one Push contract via `UniversalGatewayPC`
+- Pre-computing and pre-authorizing a contract's CEA on every destination chain
+- The `UniversalOutboundTxRequest` shape — `recipient`, `token` routing, `amount = 0`, `gasLimit`, `payload`, `revertRecipient`
+- `msg.sender` on a destination chain resolving to the orchestrator's deterministic CEA
+
+**Components:**
+- [`contracts/`](./universal-cross-chain-counters/contracts/) — `MultiChainCounter.sol` (Push orchestrator) + `ExternalCounter.sol` (destination counter)
+- [`app/`](./universal-cross-chain-counters/app/) — Frontend that derives CEAs, polls counters across chains, and triggers `tickAll`
+
+[Go to Universal Cross-Chain Counters Tutorial →](./universal-cross-chain-counters)
+
+---
+
+### 10. X402 Universal Transactions (advanced)
+
+Combines the X402 Agent-to-Agent payment protocol with PushChain Universal Transactions. AI agents request payments via HTTP 402 exceptions; payments are settled cross-chain via Push.
+
+**What you'll learn:**
+- X402 protocol integration (request, sign, settle)
+- Wrapping external-chain signers into PushChain Universal Signers from a Node agent
+- Cross-chain payment settlement for AI agent commerce
+
+**Components:**
+- [`a2a-x402-typescript/client-agent/`](./x402-universal-transaction/a2a-x402-typescript/client-agent/) — Wallet agent with PushChain integration
+- [`a2a-x402-typescript/merchant-agent/`](./x402-universal-transaction/a2a-x402-typescript/merchant-agent/) — Merchant agent that requests + settles payments
+- [`a2a-x402-typescript/x402_a2a/`](./x402-universal-transaction/a2a-x402-typescript/x402_a2a/) — Reusable a2a-x402 protocol library
+
+[Go to X402 Tutorial →](./x402-universal-transaction)
+
+---
+
+## Recommended Learning Path
+
+If you're new to PushChain development:
+
+1. **Simple Counter** — basic dApp scaffolding
+2. **Universal Counter** — first cross-chain UEA pattern (hardcoded chains)
+3. **Derive Universal Executor Account** — understand UEA derivation in depth
+4. **Universal Counter (Dynamic)** — dynamic chain discovery
+5. **Universal ERC-20 Mint** — universal token contract
+6. **Batch Universal Transactions** — multicall patterns
+7. **Universal Claimable Airdrop** — Merkle proofs + factory pattern
+8. **Derive Chain Executor Account** — the CEA half of the identity model
+9. **Universal Cross-Chain Counters** — apply CEAs to a one-contract orchestrator
+10. **X402 Universal Transactions** — backend / agent payment flows
+
+## Tutorial Conventions
+
+All tutorials assume:
+- **Network**: Push Chain Donut Testnet (chain id `42101`)
+- **RPC**: `https://evm.donut.rpc.push.org/`
+- **Explorer**: `https://donut.push.network/`
+- **Network constant in code**: `PushChain.CONSTANTS.PUSH_NETWORK.TESTNET`
+
+Most tutorials are full-stack (Solidity contracts + React app). Each subdirectory contains its own README with the project structure, deployment instructions, and how to run the frontend.
 
 ## Prerequisites
 
-Most tutorials assume basic knowledge of:
-
-- **Blockchain concepts** and Ethereum development
-- **JavaScript/TypeScript** and modern web development
-- **React** and component-based UI development
-- **Smart contract development** with Solidity
-- **Git** and package management (npm/yarn)
-
-## Learning Path
-
-If you're new to PushChain development, we recommend following these tutorials in order:
-
-1. **Simple Counter** - Learn the basics of PushChain integration
-2. **Universal Counter (app)** - Understand cross-chain user attribution
-3. **Universal Counter (app-dynamic)** - Explore dynamic chain detection
-4. **Universal Counter (ballsy-app)** - Build interactive, engaging experiences
-5. **Universal Airdrop** - Learn cross-chain token distribution with Merkle proofs
-6. **Universal ERC-20 Mint** - Explore universal token minting patterns
-
-## Key Concepts Covered
-
-### Cross-Chain Interaction
-- Universal Ethereum Accounts (UEAs)
-- Chain-agnostic user interfaces
-- Cross-chain transaction handling
-
-### Smart Contract Patterns
-- Counter contracts with chain attribution
-- Dynamic chain detection and storage
-- Event emission for real-time updates
-
-### Frontend Development
-- Push Chain UI Kit integration
-- Real-time data fetching and updates
-- Interactive animations and physics
-- Responsive design patterns
-
-### Advanced Features
-- WebSocket event subscriptions
-- Matter.js physics integration
-- Dynamic data visualization
-- Cross-chain leaderboard systems
+- **Node.js** (v18 or higher) and npm/yarn
+- **Foundry** (for tutorials that include smart contracts)
+- Basic knowledge of React/TypeScript and Solidity
+- A wallet (MetaMask, Phantom, etc.) for testing
 
 ## Resources
 
-For more information about PushChain development:
-
 - [PushChain Documentation](https://push.org/docs)
 - [PushChain UI Kit](https://www.npmjs.com/package/@pushchain/ui-kit)
+- [PushChain Core SDK](https://www.npmjs.com/package/@pushchain/core)
 - [PushChain GitHub](https://github.com/pushchain)
-- [PushChain Community Discord](https://discord.gg/pushchain)
+- [PushChain Discord](https://discord.gg/pushchain)
 - [Push Chain Explorer](https://donut.push.network/)

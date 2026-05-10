@@ -1,0 +1,240 @@
+/* Main container */
+.app-container {
+  min-height: 100vh;
+  background-color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* Typography */
+.app-title {
+  font-size: 2.5rem;
+  margin-top: 5rem;
+  margin-bottom: 3rem;
+  color: #333;
+  text-align: center;
+}
+
+.app-description {
+  color: gray;
+  font-size: 14px;
+  margin: -1rem 0 3rem 0;
+  padding: 0 0 1rem 0;
+  max-width: 480px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Info boxes */
+.info-box {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background-color: #f9f9f9;
+  border-radius: 12px;
+  max-width: 600px;
+  width: 100%;
+}
+
+.info-box-blue {
+  background-color: #f0f7ff;
+  border: 1px solid #d0e7ff;
+}
+
+.info-box-title {
+  font-size: 1rem;
+  margin: 0 0 1rem 0;
+  color: #0066cc;
+  font-weight: bold;
+}
+
+.info-card {
+  background-color: white;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.info-card:last-child {
+  margin-bottom: 0;
+}
+
+/* Labels and text */
+.label-text {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.85rem;
+  color: #666;
+  font-weight: bold;
+}
+
+.address-text {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.8rem;
+  color: #333;
+  font-family: monospace;
+  word-break: break-all;
+}
+
+.uea-address {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #d548ec;
+  font-family: monospace;
+  word-break: break-all;
+  font-weight: bold;
+}
+
+.chain-label {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #999;
+}
+
+/* Divider */
+.divider-container {
+  display: flex;
+  align-items: center;
+  margin: 1rem 0 1rem 0;
+  max-width: 600px;
+  width: 100%;
+}
+
+.divider-line-left {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, transparent, #d548ec);
+}
+
+.divider-line-right {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to left, transparent, #d548ec);
+}
+
+.divider-content {
+  padding: 0 1.5rem;
+  text-align: center;
+}
+
+.divider-or {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #d548ec;
+  margin-bottom: 0.25rem;
+}
+
+.divider-subtitle {
+  font-size: 0.85rem;
+  color: #666;
+  font-weight: 500;
+}
+
+/* CEA card layout */
+.cea-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 0.5rem;
+}
+
+.cea-card-chain {
+  font-size: 0.9rem;
+  color: #333;
+  font-weight: bold;
+}
+
+.cea-card-namespace {
+  font-size: 0.7rem;
+  color: #aaa;
+  font-family: monospace;
+}
+
+.cea-card-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.cea-status {
+  display: inline-block;
+  font-size: 0.7rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.cea-status.deployed {
+  background: #e6f7ec;
+  color: #2a8e3b;
+}
+
+.cea-status.undeployed {
+  background: #f1f1f1;
+  color: #888;
+}
+
+.btn-secondary {
+  font-size: 0.75rem;
+  padding: 0.35rem 0.7rem;
+  background: white;
+  color: #d548ec;
+  border: 1px solid #d548ec;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-secondary:hover {
+  background: #fff5fe;
+}
+
+/* Callout */
+.callout {
+  margin-top: 1rem;
+  padding: 0.85rem 1rem;
+  background: #fff7e6;
+  border: 1px solid #ffe2a8;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: #4a3a14;
+  line-height: 1.5;
+}
+
+.callout a {
+  color: #b06a00;
+  text-decoration: underline;
+}
+
+.muted {
+  color: #888;
+  font-size: 0.85rem;
+}
+
+/* Footer */
+.footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  margin: 40px 0 0 0;
+  padding: 12px 20px;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  background: #fff;
+  text-align: center;
+}
+
+.footer-text {
+  color: gray;
+  font-size: 12px;
+  margin: 0;
+}
+
+.footer-link {
+  color: #d548ec;
+}

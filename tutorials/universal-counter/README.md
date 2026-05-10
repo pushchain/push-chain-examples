@@ -126,27 +126,26 @@ const provider = new ethers.JsonRpcProvider(
 ## 🎮 User Experience Flow
 
 1. **Connect Wallet**: Users connect using Push Universal Account Button
-2. **Chain Detection**: System automatically detects user's origin chain
+2. **Chain Detection**: Contract reads the caller's origin via `IUEAFactory.getOriginForUEA`
 3. **Increment Counter**: Users click to increment their chain's counter
-4. **Visual Feedback**: 
-   - Basic app: Counter numbers update
-   - Dynamic app: Data table updates with chain information
-   - Ballsy app: Physics balls drop and leaderboard updates
-5. **Real-Time Updates**: All users see live updates from other participants
+4. **Visual Feedback**: Per-chain counters (PC / ETH / SOL) and total update
+5. **Live Updates**: Counters re-read after each transaction confirms
+
+This tutorial uses **hardcoded chain detection** (Sepolia + Solana Devnet) for clarity. For dynamic chain discovery, see [Universal Counter Dynamic](../universal-counter-dynamic/), which also ships a Matter.js physics-based variant in `ballsy-app/`.
 
 ## 🚨 Troubleshooting
 
 ### Common Issues
-1. **Contract not found**: Ensure contract address is correct in all apps
-2. **Transaction fails**: Check wallet connection and testnet tokens
-3. **Physics not working**: Verify Matter.js integration in ballsy-app
-4. **Real-time updates missing**: Check WebSocket connection
+1. **Contract not found**: Verify the contract address in `app/src/App.tsx` matches your deployment
+2. **Transaction fails**: Check wallet connection and that the connected wallet has testnet tokens
+3. **Counter doesn't update**: The frontend re-reads counter values after each tx — refresh if stuck
+4. **"Invalid chain" revert**: This contract only accepts Push Chain native, Ethereum Sepolia, and Solana Devnet origins. Other chains will revert.
 
 ## 📚 Resources
 
 - [PushChain Documentation](https://push.org/docs)
 - [PushChain UI Kit](https://www.npmjs.com/package/@pushchain/ui-kit)
-- [Matter.js Documentation](https://brm.io/matter-js/)
+- [Universal Counter Dynamic Tutorial](../universal-counter-dynamic/) — for dynamic chain discovery + Matter.js variant
 - [Foundry Documentation](https://book.getfoundry.sh/)
 
 ## 🚀 Next Steps

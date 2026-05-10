@@ -51,9 +51,6 @@ Thumbs.db
 .nx/cache
 .nx/workspace-data
 
-# Env files
-.env
-
 # Foundry
 # Forge build artifacts
 contracts/**/out/
@@ -64,21 +61,42 @@ tutorials/**/out/
 tutorials/**/cache/
 tutorials/**/lib/forge-std/
 
+core-sdk-functions/**/out/
+core-sdk-functions/**/cache/
+core-sdk-functions/**/lib/forge-std/
+
 # Local test node data (if you persist Anvil state)
 contracts/**/.anvil/
 
 tutorials/**/.anvil/
 
+core-sdk-functions/**/.anvil/
+
 # Coverage & reports
-contracts/**/coverage/           # solidity-coverage output
-contracts/**/profile/            # any profiling outputs
+# (gitignore doesn't support inline comments; keep them on their own lines)
+# solidity-coverage output
+contracts/**/coverage/
+# any profiling outputs
+contracts/**/profile/
 
-tutorials/**/coverage/           # solidity-coverage output
-tutorials/**/profile/            # any profiling outputs
+tutorials/**/coverage/
+tutorials/**/profile/
 
-# Environment & secrets
-.env                # environment variables (private keys, RPC URLs)
-*.env               # any other .env files
+core-sdk-functions/**/coverage/
+core-sdk-functions/**/profile/
+
+# Environment & secrets — never commit real .env values
+# (gitignore doesn't support inline comments; keep them on their own lines)
+.env
+.env.local
+.env.*.local
+*.env
+
+# But DO commit templates so devs know which keys to set:
+!.env.sample
+!.env.example
+!**/.env.sample
+!**/.env.example
 
 # Node.js (if you also include JS/TS tooling)
 node_modules/

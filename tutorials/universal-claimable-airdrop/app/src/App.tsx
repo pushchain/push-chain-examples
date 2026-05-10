@@ -130,7 +130,7 @@ function App() {
         });
         
         // derive deterministic address
-        const executorAddress = await PushChain.utils.account.convertOriginToExecutor(account);
+        const executorAddress = await PushChain.utils.account.deriveExecutorAccount(account);
 
         // Return as tuple [executorAddress, amount, originalAddress, chain]
         return [
@@ -335,7 +335,7 @@ function App() {
         chain: manualLookupChain as any
       });
       
-      const executorAddress = await PushChain.utils.account.convertOriginToExecutor(account);
+      const executorAddress = await PushChain.utils.account.deriveExecutorAccount(account);
       const executorAddr = executorAddress.address;
 
       // Find if address is in the eligible list

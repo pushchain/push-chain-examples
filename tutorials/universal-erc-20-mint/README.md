@@ -2,7 +2,7 @@
 
 A comprehensive tutorial demonstrating how to create and interact with a universal ERC-20 token ($UNICORN) that can be minted by users from any blockchain using PushChain's Universal External Accounts (UEA).
 
-👉 **Live Demo**: Experience the power of universal token minting across chains!
+The deployed `$UNICORN` token is a shared contract reused across other tutorials in this repo (Batch Universal Transactions, Universal Claimable Airdrop).
 
 ## 🌟 Overview
 

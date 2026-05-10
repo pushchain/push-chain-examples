@@ -121,9 +121,8 @@ async function ethersV6() {
     });
     console.log('📤 Transaction Response:', txResponse);
 
-    // TODO: enable when txResponse object is done
-    // const receipt = txResponse.wait();
-    // console.log('✅ Transaction mined receipt:', receipt);
+    const receipt = await txResponse.wait();
+    console.log('✅ Transaction mined receipt:', receipt);
 
     if (chainSelection !== '1') {
       console.log('🎉 Congrats! You just sent a universal transaction! Here is what happened:');
@@ -190,9 +189,8 @@ async function viemExample() {
     });
     console.log('📤 Transaction Response:', txResponse);
 
-    // TODO: enable when txResponse object is done
-    // const receipt = txResponse.wait();
-    // console.log('✅ Transaction mined receipt:', receipt);
+    const receipt = await txResponse.wait();
+    console.log('✅ Transaction mined receipt:', receipt);
 
     if (chainSelection !== '1') {
       console.log('🎉 Congrats! You just sent a universal transaction! Here is what happened:');
@@ -259,9 +257,8 @@ async function solanaExample() {
     });
     console.log('📤 Transaction Response:', txResponse);
 
-    // TODO: enable when txResponse object is done
-    // const receipt = txResponse.wait();
-    // console.log('✅ Transaction mined receipt:', receipt);
+    const receipt = await txResponse.wait();
+    console.log('✅ Transaction mined receipt:', receipt);
 
     console.log('🎉 Congrats! You just sent a universal transaction! Here is what happened:');
     console.log('1️⃣  You sent DEVNET SOLANA to our Universal Gateway on Solana Devnet');

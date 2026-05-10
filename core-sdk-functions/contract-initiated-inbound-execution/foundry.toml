@@ -1,0 +1,19 @@
+[profile.default]
+solc_version = "0.8.26"
+
+# Push Chain Donut Testnet's EVM does not support Cancun opcodes (MCOPY = 0x5e
+# would revert at runtime). Compile for Shanghai instead — Sepolia supports
+# Shanghai too, so the same artifact deploys on both chains.
+evm_version = "shanghai"
+
+src = "src"
+out = "out"
+libs = ["lib"]
+
+[rpc_endpoints]
+push_testnet = "https://evm.donut.rpc.push.org/"
+sepolia      = "https://ethereum-sepolia-rpc.publicnode.com"
+
+# BlockScout (Push) doesn't require an API key, but Foundry expects a key field.
+[etherscan]
+push_testnet = { key = "blockscout", url = "https://donut.push.network/api", chain = 42101 }

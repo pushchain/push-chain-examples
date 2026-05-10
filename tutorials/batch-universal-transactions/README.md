@@ -9,7 +9,7 @@ An advanced example demonstrating how to execute multiple contract calls in a si
 This tutorial consists of:
 
 - **Frontend App**: A React app that executes batch transactions using PushChain's multicall feature
-- **Existing Examples**: Existing smart contract examples 
+- **Pre-deployed contracts**: Uses already-deployed `Counter` and `ERC20` (UNICORN) contracts on Donut Testnet — no deployment step needed
 
 ## What You'll Learn
 
