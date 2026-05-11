@@ -60,7 +60,6 @@ For applications where multiple `request()` calls can be in flight, this means t
 
 - **Foundry** + **Node ≥ 18**
 - Push EOA with ≥ 10 PC for the first run (deploy + fund the contract)
-- BNB testnet faucet to fund the contract's CEA (printed by the runner) with ≥ 0.05 BNB
 
 ## Run
 
@@ -85,7 +84,7 @@ Dispatcher PC balance: 0 PC
 Funding contract with 8.0 PC...
 
 Dispatcher's CEA on BNB: 0x...
-BNB CEA balance: 0.05 BNB
+BNB CEA balance: 0.0 BNB (informational)
 
 BNB counter (before):       42
 Push fulfilledCount (before): 0
@@ -116,7 +115,6 @@ Final state:
 |---|---|---|
 | `gasLimit < 2_000_000` on outbound | BNB CEA runs out of gas inside the nested gateway call; back-leg never fires | Hardcoded 2M in the contract; don't lower it |
 | Contract PC balance too low | UGPC outbound reverts (or back-leg cannot dispatch) | Fund the contract with ≥ 8 PC; UGPC refunds surplus so 8 PC covers many round-trips |
-| BNB CEA not funded with BNB | BNB counter increment + back-leg's gateway call revert | Faucet ≥ 0.05 BNB to the printed CEA address |
 | Calling `request()` again before back-leg of the previous one lands | Multiple pending entries in queue. Each subsequent callback pops the oldest. | Wait for `pendingCount() == 0` before kicking another, OR rely on FIFO ordering across multiple in-flight requests |
 
 ## Key contract surface

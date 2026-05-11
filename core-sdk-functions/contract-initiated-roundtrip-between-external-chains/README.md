@@ -66,8 +66,7 @@ The contract holds its own PC balance for both UGPC dispatches; the EOA only pay
 
 - **Foundry** + Node ≥ 18
 - A Push EOA with ≥ 12 PC for first run (deploy + 8 PC fund + gas headroom)
-- BNB Testnet faucet to fund the contract's BNB CEA (printed by the runner) with ≥ 0.05 BNB
-- No funding needed on the Solana CEA — UGPC's outbound 2 includes a gas budget that the Solana CEA uses for the program call
+- No funding needed on the destination CEAs (BNB or Solana). UGPC's gas budget for each outbound is forwarded to the CEA as `msg.value` when TSS submits the destination tx, so the CEA has native balance for nested gateway calls during that tx.
 
 ## Run
 
@@ -82,8 +81,8 @@ npm start
 First run will:
 1. Deploy `MultiChainCascade` on Push.
 2. Fund it with 8 PC.
-3. Print the **BNB CEA** address — exit early if unfunded with BNB.
-4. Once the BNB CEA has BNB, configure both targets, fire `kickOff`, and watch the cascade.
+3. Derive both destination CEAs (BNB + Solana) and configure both targets on the contract.
+4. Fire `kickOff` and watch the cascade.
 
 ## Configuration model
 
@@ -150,7 +149,6 @@ The contract dispatches outbound 2 with `value: solanaOutboundValuePc`. UGPC ref
 | `gasLimit < 2_000_000` on outbound 1 | BNB CEA runs out of gas inside the nested `sendUniversalTxToUEA` call; back-leg never fires | Hardcoded 2M in the contract; don't lower it |
 | Solana value undersized for current pool depth | Outbound 2 reverts inside UGPC's swap with `STF` | Runner computes `solanaOutboundValuePc` via `estimateNativeValueForSwap` mirror — never use `balance/2` |
 | Contract PC balance too low to cover BOTH legs | kickOff succeeds but executeUniversalTx reverts with `InsufficientPC` | Fund contract ≥ `protocolFee + solanaOutboundValuePc` (the runner tops up automatically) |
-| BNB CEA not funded with BNB | Back-leg's gateway call reverts; cascade stalls at step 2 | Faucet ≥ 0.05 BNB to the printed CEA address |
 | Solana payload decoded but program not found / mismatch | Solana CEA executes but the test_counter program errors | Verify SOL_TEST_PROGRAM is reachable on Solana Devnet; check explorer for the CEA tx |
 | Auto-trigger inside executeUniversalTx fails (e.g., insufficient PC) | BNB back-leg lands but Solana never dispatches | Use `dispatchSolanaManually()` (owner-only) to retry — fund the contract first |
 

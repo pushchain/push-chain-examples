@@ -99,14 +99,7 @@ async function main() {
   );
   console.log(`Dispatcher's CEA on BNB: ${bnbCEA.address}`);
   const ceaBal = await bnbProvider.getBalance(bnbCEA.address);
-  console.log(`BNB CEA balance: ${ethers.formatEther(ceaBal)} BNB`);
-  if (ceaBal < ethers.parseEther('0.001')) {
-    console.error(`\nThe BNB CEA needs >= 0.001 BNB to dispatch the back-leg.`);
-    console.error(`Faucet to: ${bnbCEA.address}`);
-    console.error('https://www.bnbchain.org/en/testnet-faucet');
-    process.exit(1);
-  }
-  console.log('   funded\n');
+  console.log(`BNB CEA balance: ${ethers.formatEther(ceaBal)} BNB (informational)\n`);
 
   // 4) Snapshot BNB counter + Push fulfilledCount BEFORE.
   const bnbCounter = new ethers.Contract(BNB_COUNTER, COUNTER_ABI, bnbProvider);
