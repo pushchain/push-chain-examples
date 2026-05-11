@@ -140,10 +140,16 @@ contract EthereumInboundDispatcher {
         );
 
         // 2) Wrap the multicall in the UniversalPayload struct the UEA expects.
+        //    Because `data` is multicall-wrapped (starts with UEA_MULTICALL_SELECTOR
+        //    = 0x2cc2842d), the UEA branches into _handleMulticall and IGNORES
+        //    `to`. Conventionally set to address(0). If you instead pass raw
+        //    single-call calldata (no selector prefix), UEA_EVM.sol executes
+        //    `to.call{value}(data)` and `to` MUST be the real target.
+        //    Verified in push-chain-core-contracts/src/UEA/UEA_EVM.sol#executeUniversalTx.
         bytes memory universalPayload = abi.encode(
-            address(0),         // to     — always zero; real target is inside `data`
+            address(0),         // to: ignored when data is multicall-wrapped (this example)
             uint256(0),         // value
-            multicallData,      // data
+            multicallData,      // data (multicall-wrapped)
             uint256(1e7),       // gasLimit (matches SDK default)
             uint256(1e10),      // maxFeePerGas (10 gwei, matches SDK)
             uint256(0),         // maxPriorityFeePerGas
