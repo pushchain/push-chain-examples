@@ -6,7 +6,7 @@ A Push Chain contract dispatches an outbound transaction to BNB Testnet AND is w
 
 ## Status (Donut testnet, May 2026) — ✅ working end-to-end
 
-Verified complete round-trip at dispatcher `0x94D2FA05f854588bb2E1dC40d97f338618cBDc6c`: `outboundCount` 0→1 (Push leg + UGPC outbound emit), BNB CEA `0x32025e2B…Cb26` deployed by TSS validators, BNB-side multicall executed (CEA self-call to `sendUniversalTxToUEA`), and the inbound back-leg landed on Push via `executeUniversalTx(string,bytes,bytes,uint256,address,bytes32)` — `inboundCount` 0→1, `lastInboundTxId = 0xcf3d0150…48dd`.
+Verified complete round-trip at dispatcher `0x94D2FA05f854588bb2E1dC40d97f338618cBDc6c`: `outboundCount` 0→1 (Push leg + UGPC outbound emit), BNB CEA `0x32025e2B…Cb26` deployed by TSS validators, BNB-side multicall executed (CEA self-call to `sendUniversalTxToUEA`), and the inbound back-leg landed on Push via the docs-style 6-arg `executeUniversalTx(string,bytes,bytes,uint256,address,bytes32)` — `callbacks` 0→1, `lastTxId = 0xcf3d0150…48dd`.
 
 **Three configurations needed to make the back-leg fire**, all verified by elimination across earlier failed runs:
 
@@ -14,14 +14,14 @@ Verified complete round-trip at dispatcher `0x94D2FA05f854588bb2E1dC40d97f338618
 2. **Contract pre-funded with PC.** Per [the docs](https://push.org/docs/chain/build/contract-initiated-multichain-execution): "the CEA inbound to Push Chain needs $PC for execution fees. Funding your Push-side contract with $PC is your responsibility." 1.5 PC was sufficient with the wire format below.
 3. **Outbound payload uses the SDK Route 3 wire format**: the destination CEA's outer multicall must include a step that **self-calls** `CEA.sendUniversalTxToUEA(token, amount, encodedUniversalPayload, revertRecipient)`. That self-call is what the TSS uses as the trigger to fire the inbound. Plain multicalls (no self-call to `sendUniversalTxToUEA`) DID NOT trigger the back-leg, even with sufficient gas/PC.
 
-**Empirical answer for which `executeUniversalTx` overload TSS calls on a Push-native contract:** the **docs-style 6-arg version** `executeUniversalTx(string sourceChainNamespace, bytes ceaAddress, bytes payload, uint256 amount, address prc20, bytes32 txId)`. The UEA-style 2-arg version (`executeUniversalTx(UniversalPayload, bytes)`) is reserved for actual UEA proxy accounts and does NOT fire here — confirmed by deploying a contract with both overloads side-by-side and observing only the 6-arg counter advance.
+> The `executeUniversalTx` signature TSS dispatches to for Push-native contracts is the **docs-style 6-arg version** `(string sourceChainNamespace, bytes ceaAddress, bytes payload, uint256 amount, address prc20, bytes32 txId)`. The 2-arg `executeUniversalTx(UniversalPayload, bytes)` overload in the codebase is for actual UEA proxy accounts and is not invoked for ordinary Push contracts; this example implements only the 6-arg path.
 
 ## What this example contains
 
 | File | Purpose |
 |---|---|
-| [`src/RoundtripDispatcher.sol`](src/RoundtripDispatcher.sol) | The single Push Chain contract. `kickOff(...)` dispatches outbound; `executeUniversalTx(...)` is the gated back-leg handler the executor module would invoke. Holds its own PC via `fund()`. |
-| [`index.ts`](index.ts) | Auto-deploys the contract, funds it with PC if empty, derives the BNB CEA, calls `kickOff`, and polls both the BNB counter (forward leg) and the dispatcher's `inboundCount` (back-leg). |
+| [`src/RoundtripDispatcher.sol`](src/RoundtripDispatcher.sol) | The single Push Chain contract. `kickOff(...)` dispatches outbound; `executeUniversalTx(...)` is the gated back-leg handler the executor module invokes. Holds its own PC via `fund()`. |
+| [`index.ts`](index.ts) | Auto-deploys the contract, funds it with PC if empty, derives the BNB CEA, calls `kickOff`, and polls both the BNB CEA bytecode (forward leg) and the dispatcher's `callbacks` (back-leg). |
 | [`foundry.toml`](foundry.toml) | Foundry config — pinned to Shanghai. |
 
 ## Flow (as designed)
@@ -38,18 +38,17 @@ RoundtripDispatcher.kickOff
          ▼
        UGPC ───emit event──▶  TSS validators ──submit──▶  BNB CEA
        0x...C1                                            │ (deployed lazily)
-                                                          │ (3) increment() on BNB counter
+                                                          │ (3) CEA self-calls sendUniversalTxToUEA
                                                           ▼
-                                                       BNB Counter
-                                                  msg.sender == CEA
+                                                  gateway.sendUniversalTxFromCEA
 
 Once the destination tx finalizes, TSS automatically:
                           ┌────────────────────────────────────────┐
                           │                                        │
                           ▼                                        │
        UNIVERSAL_EXECUTOR_MODULE ──executeUniversalTx──▶ RoundtripDispatcher.executeUniversalTx
-       0x14191Ea5...Df7d7                                          │ inboundCount += 1
-                                                                   │ executedTxIds[txId] = true
+       0x14191Ea5...Df7d7                                          │ callbacks += 1
+                                                                   │ seenTxIds[txId] = true
                                                                    ▼
                                                              (callback complete)
 ```
@@ -80,7 +79,7 @@ cp .env.sample .env
 npm start
 ```
 
-Expected output (forward leg works; back-leg is the part currently TSS-blocked):
+Expected output:
 
 ```
 🔑 Push EOA: 0x...
@@ -90,33 +89,31 @@ Expected output (forward leg works; back-leg is the part currently TSS-blocked):
    ✅ deployed at: 0x...
 
 📊 Dispatcher balance: 0 PC
-💸 Funding contract with 8.0 PC (one-time)...
+💸 Funding contract with 8.0 PC...
    ✅ Dispatcher balance now: 8.0 PC
 
 📍 Dispatcher's CEA on BNB: 0x...
 
 📊 Pre-kick state:
    outboundCount: 0
-   inboundCount:  0
-   BNB counter:   <N>
+   callbacks:     0
 
 🚀 Calling kickOff() on Push contract...
    📤 Push kickOff tx: 0x...
    ✅ Push leg settled.
 
-📡 Waiting for the round-trip to complete...
+📡 Watching for the inbound callback...
 
-✅ Forward leg landed:
-   BNB counter: <N> → <N+1>
+✅ BNB CEA deployed by TSS (forward leg landed)
 
-⚠️  Did not observe `inboundCount` advance within 6 minutes.
-   The forward leg landed (BNB counter advanced), but the TSS
-   auto-callback to executeUniversalTx has not arrived yet.
+🎉 Inbound callback fired!
+   callbacks: 0 → 1
+   lastTxId:  0x...
 ```
 
 ## Wire format details
 
-The outbound payload is the same simple format as the one-way outbound example: `0x2cc2842d` (UEA_MULTICALL marker) + `abi.encode((address,uint256,bytes)[])` with a single call to `BNB counter.increment()`. No nested gateway calls, no special opt-in flag — just the documented format.
+The outbound payload uses the **SDK Route 3 wire format**: a single-step outer multicall whose only call is the destination CEA self-calling `sendUniversalTxToUEA(token=0, amount=0, innerUniversalPayload, revertRecipient=this)`. The inner UniversalPayload carries the multicall the UEA on Push should execute when the inbound lands.
 
 The inbound handler matches the docs:
 
@@ -130,23 +127,24 @@ function executeUniversalTx(
     bytes32 txId
 ) external payable {
     if (msg.sender != universalExecutorModule) revert NotUniversalExecutor();
-    if (executedTxIds[txId]) revert TxAlreadyExecuted();
-    executedTxIds[txId] = true;
-    inboundCount += 1;
-    // ... record txId, sourceChain, etc.
+    if (seenTxIds[txId]) revert TxAlreadyExecuted();
+    seenTxIds[txId] = true;
+    callbacks += 1;
+    lastTxId = txId;
+    emit Callback(callbacks, txId, sourceChainNamespace, ceaAddress, prc20, amount);
 }
 ```
 
 ## Key contract surface
 
 ```solidity
-constructor(address _ugpc, address _module, address _destinationContract);
+constructor(address _ugpc, address _module);
 function fund() external payable;
 function kickOff(
-    bytes calldata destinationCEABytes,
+    address destinationCEAAddr,
     address tokenForRouting,
-    bytes calldata destinationCalldata,
-    uint256 protocolFeePc
+    uint256 protocolFeePc,
+    uint256 ueaNonce
 ) external;
 function executeUniversalTx(
     string calldata sourceChainNamespace,
@@ -157,9 +155,8 @@ function executeUniversalTx(
     bytes32 txId
 ) external payable;
 function outboundCount() view returns (uint256);
-function inboundCount() view returns (uint256);
-function lastInboundTxId() view returns (bytes32);
-function lastInboundSourceChain() view returns (string);
+function callbacks() view returns (uint256);
+function lastTxId() view returns (bytes32);
 ```
 
 ## Network
@@ -168,7 +165,6 @@ function lastInboundSourceChain() view returns (string);
   - UGPC: `0x00000000000000000000000000000000000000C1`
   - Universal Executor Module: `0x14191Ea54B4c176fCf86f51b0FAc7CB1E71Df7d7`
 - BNB Testnet (chain id `97`)
-  - Counter target: `0x7f0936bb90e7dcf3edb47199c2005e7184e44cf8`
 - Routing token: `0x7a9082dA308f3fa005beA7dB0d203b3b86664E36` (pBNB)
 
 ## Related examples
