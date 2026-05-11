@@ -9,17 +9,6 @@ pragma solidity ^0.8.26;
 // A Push Chain contract that dispatches an outbound to BNB Testnet AND
 // receives an automatic completion callback when the back-leg lands.
 //
-// **Why two `executeUniversalTx` overloads?** Push Chain's codebase exposes
-// two distinct inbound signatures:
-//   - `executeUniversalTx(UniversalPayload, bytes)`            — the UEA proxy interface
-//   - `executeUniversalTx(string, bytes, bytes, uint256, address, bytes32)` — the docs example
-//
-// We implement both side-by-side so it's empirically obvious which one the
-// TSS Cosmos universal-executor module dispatches to for a Push-native
-// contract. **Verified on Donut Testnet (May 2026): only the docs-style
-// 6-arg version fires.** Counter `docsStyleCallbacks` advanced; UEA-style
-// stayed at 0. The 2-arg path is reserved for actual UEA proxy accounts.
-//
 // **What makes the back-leg fire** (verified by elimination across earlier
 // failed runs):
 //   1. `gasLimit ≥ 2_000_000` on the UGPC outbound. The 500k auto-floor is
@@ -44,6 +33,12 @@ pragma solidity ^0.8.26;
 //                                                          ▼
 //                          TSS Cosmos universal-executor ──▶ this contract
 //                          (msg.sender == UNIVERSAL_EXECUTOR_MODULE)
+//
+// For Push-native contracts, TSS dispatches the docs-style 6-arg
+// `executeUniversalTx(string, bytes, bytes, uint256, address, bytes32)`.
+// The 2-arg `executeUniversalTx(UniversalPayload, bytes)` overload exists
+// in the codebase for actual UEA proxy accounts and is not invoked for
+// ordinary Push contracts; this contract implements only the 6-arg path.
 
 /// @notice UGPC outbound request — `target` is the destination CEA bytes.
 struct UniversalOutboundTxRequest {
@@ -74,20 +69,10 @@ contract RoundtripDispatcher {
     // -------------------------------------------------------------------------
 
     uint256 public outboundCount;
+    uint256 public callbacks;
 
-    /// @notice Bumped each time TSS delivers via UEA-style entry
-    /// (`executeUniversalTx(UniversalPayload, bytes)`).
-    /// Empirically stays at 0 for Push-native contracts.
-    uint256 public ueaStyleCallbacks;
-
-    /// @notice Bumped each time TSS delivers via docs-style entry
-    /// (`executeUniversalTx(string, bytes, bytes, uint256, address, bytes32)`).
-    /// Empirically the path that fires for Push-native contracts.
-    uint256 public docsStyleCallbacks;
-
-    mapping(bytes32 => bool) public seenDocsTxIds;
-    bytes32 public lastDocsTxId;
-    uint256 public lastUeaPayloadNonce;
+    mapping(bytes32 => bool) public seenTxIds;
+    bytes32 public lastTxId;
 
     // -------------------------------------------------------------------------
     // Events / Errors
@@ -96,8 +81,7 @@ contract RoundtripDispatcher {
     event Funded(address indexed from, uint256 amount, uint256 newBalance);
     event OutboundKicked(uint256 outboundCount, bytes payload);
 
-    event UeaStyleCallback(uint256 sequence, uint256 payloadNonce, uint8 vType, bytes payloadData);
-    event DocsStyleCallback(
+    event Callback(
         uint256 sequence,
         bytes32 indexed txId,
         string sourceChainNamespace,
@@ -114,18 +98,6 @@ contract RoundtripDispatcher {
     // -------------------------------------------------------------------------
     // Types
     // -------------------------------------------------------------------------
-
-    struct UniversalPayload {
-        address to;
-        uint256 value;
-        bytes data;
-        uint256 gasLimit;
-        uint256 maxFeePerGas;
-        uint256 maxPriorityFeePerGas;
-        uint256 nonce;
-        uint256 deadline;
-        uint8 vType;
-    }
 
     struct Multicall {
         address to;
@@ -223,24 +195,9 @@ contract RoundtripDispatcher {
     }
 
     // -------------------------------------------------------------------------
-    // Inbound, path A — UEA-style entry (matches `UEA_EVM.executeUniversalTx`).
-    //   For Push-native contracts this is NEVER invoked by TSS.
-    // -------------------------------------------------------------------------
-
-    function executeUniversalTx(
-        UniversalPayload calldata payload,
-        bytes calldata /* signature */
-    ) external {
-        if (msg.sender != universalExecutorModule) revert NotUniversalExecutor();
-        ueaStyleCallbacks += 1;
-        lastUeaPayloadNonce = payload.nonce;
-        emit UeaStyleCallback(ueaStyleCallbacks, payload.nonce, payload.vType, payload.data);
-    }
-
-    // -------------------------------------------------------------------------
-    // Inbound, path B — docs-style 6-arg entry. Matches the example in
+    // Inbound — docs-style 6-arg `executeUniversalTx` matches the example in
     //   the public docs at push.org/docs/chain/build/contract-initiated-multichain-execution.
-    //   This IS the one TSS calls for Push-native contracts.
+    //   This IS the path TSS calls for Push-native contracts.
     // -------------------------------------------------------------------------
 
     function executeUniversalTx(
@@ -252,12 +209,12 @@ contract RoundtripDispatcher {
         bytes32 txId
     ) external payable {
         if (msg.sender != universalExecutorModule) revert NotUniversalExecutor();
-        if (seenDocsTxIds[txId]) revert TxAlreadyExecuted();
-        seenDocsTxIds[txId] = true;
-        docsStyleCallbacks += 1;
-        lastDocsTxId = txId;
-        emit DocsStyleCallback(
-            docsStyleCallbacks, txId, sourceChainNamespace, ceaAddress, prc20, amount
+        if (seenTxIds[txId]) revert TxAlreadyExecuted();
+        seenTxIds[txId] = true;
+        callbacks += 1;
+        lastTxId = txId;
+        emit Callback(
+            callbacks, txId, sourceChainNamespace, ceaAddress, prc20, amount
         );
     }
 

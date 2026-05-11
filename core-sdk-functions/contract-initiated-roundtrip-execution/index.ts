@@ -1,17 +1,16 @@
 // Full Documentation: https://push.org/docs/chain/build/contract-initiated-multichain-execution
 //
-// Round-Trip Multichain Execution — Dual Inbound Probe
-// ====================================================
+// Round-Trip Multichain Execution
+// ===============================
 // Push contract → UGPC → BNB CEA → CEA self-calls sendUniversalTxToUEA →
-// gateway.sendUniversalTxFromCEA → TSS dispatches inbound to Push contract
-// (= the CEA's pushAccount).
+// gateway.sendUniversalTxFromCEA → TSS dispatches inbound back to the Push
+// contract (= the CEA's pushAccount) via the 6-arg `executeUniversalTx`.
 //
-// The contract implements BOTH `executeUniversalTx` overloads so we can
-// see empirically which one TSS dispatches to:
-//   - UEA-style: `executeUniversalTx(UniversalPayload, bytes)`
-//   - Docs-style: `executeUniversalTx(string, bytes, bytes, uint256, address, bytes32)`
-// On Donut Testnet, only the docs-style 6-arg version fires for Push-native
-// contracts (`docsStyleCallbacks` advances; `ueaStyleCallbacks` stays at 0).
+// The contract implements the docs-style 6-arg `executeUniversalTx` because
+// that is the signature TSS dispatches to for Push-native contracts. The
+// 2-arg `executeUniversalTx(UniversalPayload, bytes)` overload in the
+// codebase is for actual UEA proxy accounts and is not invoked for ordinary
+// Push contracts.
 
 import 'dotenv/config';
 import { PushChain } from '@pushchain/core';
@@ -30,13 +29,10 @@ const DISPATCHER_ABI = [
   'function fund() external payable',
   'function kickOff(address destinationCEAAddr, address tokenForRouting, uint256 protocolFeePc, uint256 ueaNonce) external',
   'function outboundCount() view returns (uint256)',
-  'function ueaStyleCallbacks() view returns (uint256)',
-  'function docsStyleCallbacks() view returns (uint256)',
-  'function lastUeaPayloadNonce() view returns (uint256)',
-  'function lastDocsTxId() view returns (bytes32)',
+  'function callbacks() view returns (uint256)',
+  'function lastTxId() view returns (bytes32)',
   'event OutboundKicked(uint256 outboundCount, bytes payload)',
-  'event UeaStyleCallback(uint256 sequence, uint256 payloadNonce, uint8 vType, bytes payloadData)',
-  'event DocsStyleCallback(uint256 sequence, bytes32 indexed txId, string sourceChainNamespace, bytes ceaAddress, address prc20, uint256 amount)',
+  'event Callback(uint256 sequence, bytes32 indexed txId, string sourceChainNamespace, bytes ceaAddress, address prc20, uint256 amount)',
 ];
 
 async function main() {
@@ -47,7 +43,7 @@ async function main() {
   }
 
   console.log('═══════════════════════════════════════════════════════════════');
-  console.log('  Contract-Initiated Round-Trip — Dual Inbound Probe');
+  console.log('  Contract-Initiated Round-Trip Multichain Execution');
   console.log('═══════════════════════════════════════════════════════════════\n');
 
   const pushProvider = new ethers.JsonRpcProvider(RPC_PUSH);
@@ -107,12 +103,10 @@ async function main() {
 
   // 4) Snapshot starting state.
   const startOutbound: bigint = await dispatcher.outboundCount();
-  const startUea: bigint = await dispatcher.ueaStyleCallbacks();
-  const startDocs: bigint = await dispatcher.docsStyleCallbacks();
+  const startCallbacks: bigint = await dispatcher.callbacks();
   console.log(`📊 Pre-kick state:`);
-  console.log(`   outboundCount:       ${startOutbound}`);
-  console.log(`   ueaStyleCallbacks:   ${startUea}`);
-  console.log(`   docsStyleCallbacks:  ${startDocs}`);
+  console.log(`   outboundCount: ${startOutbound}`);
+  console.log(`   callbacks:     ${startCallbacks}`);
 
   // 5) Kick off — pass ueaNonce=0 (Push-native contract has no UEA proxy nonce).
   console.log('\n🚀 Calling kickOff() on Push contract...');
@@ -132,47 +126,35 @@ async function main() {
   const recK = await txKick.wait();
   console.log(`   ✅ Push leg settled. status=${recK?.status === 1 ? 'success' : 'failed'} block=${recK?.blockNumber}`);
 
-  // 6) Poll for the back-leg via either path.
-  console.log('\n📡 Watching for both inbound paths to fire (typically 1-3 min total)...');
-  console.log('   Whichever counter advances tells us which signature TSS uses.\n');
+  // 6) Poll for the back-leg.
+  console.log('\n📡 Watching for the inbound callback (typically 1-3 min total)...\n');
 
   const deadline = Date.now() + 8 * 60 * 1000;
   let bnbDeployed = false;
   while (Date.now() < deadline) {
-    const [code, ueaC, docsC] = await Promise.all([
+    const [code, callbacksNow] = await Promise.all([
       bnbProvider.getCode(bnbCEA.address),
-      dispatcher.ueaStyleCallbacks() as Promise<bigint>,
-      dispatcher.docsStyleCallbacks() as Promise<bigint>,
+      dispatcher.callbacks() as Promise<bigint>,
     ]);
     const isDeployed = code !== '0x';
     if (isDeployed && !bnbDeployed) {
       bnbDeployed = true;
       console.log(`✅ BNB CEA deployed by TSS (forward leg landed)`);
     }
-    if (ueaC > startUea) {
-      const lastNonce = await dispatcher.lastUeaPayloadNonce();
-      console.log(`\n🎉 UEA-STYLE inbound fired!`);
-      console.log(`   ueaStyleCallbacks: ${startUea} → ${ueaC}`);
-      console.log(`   lastUeaPayloadNonce: ${lastNonce}`);
-      console.log(`   ▶ TSS dispatches via executeUniversalTx(UniversalPayload, bytes)`);
-      return;
-    }
-    if (docsC > startDocs) {
-      const lastTx = await dispatcher.lastDocsTxId();
-      console.log(`\n🎉 DOCS-STYLE inbound fired!`);
-      console.log(`   docsStyleCallbacks: ${startDocs} → ${docsC}`);
-      console.log(`   lastDocsTxId: ${lastTx}`);
-      console.log(`   ▶ TSS dispatches via executeUniversalTx(string,bytes,bytes,uint256,address,bytes32)`);
+    if (callbacksNow > startCallbacks) {
+      const lastTx = await dispatcher.lastTxId();
+      console.log(`\n🎉 Inbound callback fired!`);
+      console.log(`   callbacks: ${startCallbacks} → ${callbacksNow}`);
+      console.log(`   lastTxId:  ${lastTx}`);
       return;
     }
     await new Promise((r) => setTimeout(r, 8000));
   }
 
-  console.log('\n⚠️  Did not observe either inbound path within 8 minutes.');
+  console.log('\n⚠️  Did not observe the inbound callback within 8 minutes.');
   console.log(`   Forward leg deployed CEA: ${bnbDeployed ? 'yes' : 'no'}`);
-  console.log(`   ueaStyleCallbacks:   ${await dispatcher.ueaStyleCallbacks()}`);
-  console.log(`   docsStyleCallbacks:  ${await dispatcher.docsStyleCallbacks()}`);
-  console.log(`   Watch ${dispatcherAddress} on https://donut.push.network/ for either event.`);
+  console.log(`   callbacks: ${await dispatcher.callbacks()}`);
+  console.log(`   Watch ${dispatcherAddress} on https://donut.push.network/ for the Callback event.`);
 }
 
 async function getOrDeployFoundry(args: {
