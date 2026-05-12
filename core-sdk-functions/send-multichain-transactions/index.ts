@@ -219,10 +219,16 @@ async function twoHopCascade() {
   console.log('✅ hop1 prepared — route:', hop1.route);
 
   console.log('\n🚀 Executing cascade (one user signature)...');
-  const cascade = await client.universal.executeTransactions([hop0, hop1]);
+  // executeTransactions's progressHook streams every ProgressEvent
+  // (pre-flight, broadcast, cascade tracking) with id/title/message/level.
+  const cascade = await client.universal.executeTransactions([hop0, hop1], {
+    progressHook: (event) => console.log(`   [${event.id}] ${event.title}`),
+  });
   console.log('   initialTxHash:', cascade.initialTxHash);
   console.log('   hopCount:     ', cascade.hopCount);
 
+  // cascade.wait's progressHook streams per-hop CascadeProgressEvent
+  // (hopIndex, route, chain, status, txHash) during tracking.
   const result = await cascade.wait({
     progressHook: (e: { hopIndex: number; status: string; chain: string }) =>
       console.log(`   [Hop ${e.hopIndex}] ${e.status} on ${e.chain}`),
@@ -305,10 +311,16 @@ async function threeHopCascade() {
   console.log('✅ hop2 prepared — route:', hop2.route);
 
   console.log('\n🚀 Executing 3-hop cascade (one user signature)...');
-  const cascade = await client.universal.executeTransactions([hop0, hop1, hop2]);
+  // executeTransactions's progressHook streams every ProgressEvent
+  // (pre-flight, broadcast, cascade tracking) with id/title/message/level.
+  const cascade = await client.universal.executeTransactions([hop0, hop1, hop2], {
+    progressHook: (event) => console.log(`   [${event.id}] ${event.title}`),
+  });
   console.log('   initialTxHash:', cascade.initialTxHash);
   console.log('   hopCount:     ', cascade.hopCount);
 
+  // cascade.wait's progressHook streams per-hop CascadeProgressEvent
+  // (hopIndex, route, chain, status, txHash) during tracking.
   const result = await cascade.wait({
     progressHook: (e: { hopIndex: number; status: string; chain: string }) =>
       console.log(`   [Hop ${e.hopIndex}] ${e.status} on ${e.chain}`),
