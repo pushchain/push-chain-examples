@@ -71,9 +71,9 @@ const CASCADE_ABI = [
 
 const PSOL_ON_PUSH = '0x5D525Df2bD99a6e7ec58b76aF2fd95F39874EBed';
 
-const UGPC_ABI = ['function UNIVERSAL_CORE() view returns (address)'];
+const UGPC_ABI = ['function universalCore() view returns (address)'];
 const UNIVERSAL_CORE_ABI = [
-  'function getOutboundTxGasAndFees(address prc20Token, uint256 gasLimit) view returns (address gasToken, uint256 gasFee, uint256 protocolFee, uint256 gasPrice)',
+  'function getOutboundTxGasAndFees(address prc20Token, uint256 gasLimit) view returns (address gasToken, uint256 gasFee, uint256 protocolFee, uint256 gasPrice, string chainNamespace, uint256 gasLimitUsed)',
   'function WPC() view returns (address)',
   'function uniswapV3Factory() view returns (address)',
   'function defaultFeeTier(address) view returns (uint24)',
@@ -95,7 +95,7 @@ async function computeSolanaOutboundValue(
   gasLimit: bigint
 ): Promise<{ valuePc: bigint; debug: Record<string, string> }> {
   const ugpc = new ethers.Contract(UGPC, UGPC_ABI, pushProvider);
-  const universalCoreAddr: string = await ugpc.UNIVERSAL_CORE();
+  const universalCoreAddr: string = await ugpc.universalCore();
   const universalCore = new ethers.Contract(universalCoreAddr, UNIVERSAL_CORE_ABI, pushProvider);
 
   const [gasToken, gasFee] = await universalCore.getOutboundTxGasAndFees(prc20Token, gasLimit);

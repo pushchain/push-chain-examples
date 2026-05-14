@@ -41,10 +41,12 @@ pragma solidity ^0.8.26;
 //   - Solana CEA gets gas budget from UGPC outbound 2 (no separate funding)
 
 struct UniversalOutboundTxRequest {
-    bytes target;
+    bytes recipient;
     address token;
     uint256 amount;
     uint256 gasLimit;
+    uint256 gasPrice;
+    uint256 maxPCForGas;
     bytes payload;
     address revertRecipient;
 }
@@ -258,10 +260,12 @@ contract MultiChainCascade {
         );
 
         UniversalOutboundTxRequest memory req = UniversalOutboundTxRequest({
-            target: abi.encodePacked(bnbCEAAddr),
+            recipient: abi.encodePacked(bnbCEAAddr),
             token: PBNB,
             amount: 0,
             gasLimit: 2_000_000,
+            gasPrice: 0,
+            maxPCForGas: 0,
             payload: outerMulticallData,
             revertRecipient: address(this)
         });
@@ -310,10 +314,12 @@ contract MultiChainCascade {
         if (address(this).balance < fee) revert InsufficientPC(fee, address(this).balance);
 
         UniversalOutboundTxRequest memory req = UniversalOutboundTxRequest({
-            target: solanaCEABytes,        // 32-byte Solana program-derived address
+            recipient: solanaCEABytes,     // 32-byte Solana program-derived address
             token: PSOL,
             amount: 0,
             gasLimit: 2_000_000,
+            gasPrice: 0,
+            maxPCForGas: 0,
             payload: solanaPayload,        // pre-encoded Anchor instruction
             revertRecipient: address(this)
         });

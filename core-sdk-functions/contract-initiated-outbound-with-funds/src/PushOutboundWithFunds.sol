@@ -27,6 +27,8 @@ struct UniversalOutboundTxRequest {
     address token;
     uint256 amount;
     uint256 gasLimit;
+    uint256 gasPrice;
+    uint256 maxPCForGas;
     bytes payload;
     address revertRecipient;
 }
@@ -125,6 +127,8 @@ contract PushOutboundWithFunds {
             token: prc20Token,
             amount: amount,
             gasLimit: 2_000_000,         // headroom for nested call with value
+            gasPrice: 0,
+            maxPCForGas: 0,
             payload: payload,
             revertRecipient: address(this)
         });

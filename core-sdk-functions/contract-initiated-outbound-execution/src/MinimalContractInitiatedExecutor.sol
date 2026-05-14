@@ -21,6 +21,8 @@ struct UniversalOutboundTxRequest {
     address token;          // PRC20 on Push Chain to bridge (address(0) for none)
     uint256 amount;         // Amount of PRC20 to bridge
     uint256 gasLimit;       // Gas limit for external execution (0 = default)
+    uint256 gasPrice;       // Gas price override; 0 = per-chain default from UniversalCore
+    uint256 maxPCForGas;    // Max native PC for gas swap; 0 = no cap
     bytes payload;          // ABI-encoded calldata for the CEA to execute on the target chain
     address revertRecipient;// Address to receive bridged funds if external tx reverts
 }
@@ -101,6 +103,8 @@ contract MinimalContractInitiatedExecutor {
                 token: token,
                 amount: amount,
                 gasLimit: gasLimit,
+                gasPrice: 0,
+                maxPCForGas: 0,
                 payload: payload,
                 revertRecipient: revertRecipient
             })

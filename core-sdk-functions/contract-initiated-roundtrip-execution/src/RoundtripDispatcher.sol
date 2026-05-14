@@ -42,10 +42,12 @@ pragma solidity ^0.8.26;
 
 /// @notice UGPC outbound request — `target` is the destination CEA bytes.
 struct UniversalOutboundTxRequest {
-    bytes target;
+    bytes recipient;
     address token;
     uint256 amount;
     uint256 gasLimit;
+    uint256 gasPrice;
+    uint256 maxPCForGas;
     bytes payload;
     address revertRecipient;
 }
@@ -180,10 +182,12 @@ contract RoundtripDispatcher {
         // ---- Dispatch via UGPC ---------------------------------------------
         bytes memory targetBytes = abi.encodePacked(destinationCEAAddr);
         UniversalOutboundTxRequest memory req = UniversalOutboundTxRequest({
-            target: targetBytes,
+            recipient: targetBytes,
             token: tokenForRouting,
             amount: 0,
             gasLimit: 2_000_000,
+            gasPrice: 0,
+            maxPCForGas: 0,
             payload: outerMulticallData,
             revertRecipient: address(this)
         });

@@ -38,10 +38,12 @@ pragma solidity ^0.8.26;
 //                          (pops queue, marks request Fulfilled)
 
 struct UniversalOutboundTxRequest {
-    bytes target;
+    bytes recipient;
     address token;
     uint256 amount;
     uint256 gasLimit;
+    uint256 gasPrice;
+    uint256 maxPCForGas;
     bytes payload;
     address revertRecipient;
 }
@@ -158,10 +160,12 @@ contract RoundtripWithResult {
 
         IUniversalGatewayPC(ugpc).sendUniversalTxOutbound{value: protocolFeePc}(
             UniversalOutboundTxRequest({
-                target: abi.encodePacked(bnbCEAAddr),
+                recipient: abi.encodePacked(bnbCEAAddr),
                 token: tokenForRouting,
                 amount: 0,
                 gasLimit: 2_000_000,
+                gasPrice: 0,
+                maxPCForGas: 0,
                 payload: outerMulticallData,
                 revertRecipient: address(this)
             })
