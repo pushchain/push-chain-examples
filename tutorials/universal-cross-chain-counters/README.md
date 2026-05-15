@@ -8,10 +8,9 @@ The app and live playground come pre-wired to a working reference deployment so 
 
 | Contract | Chain | Address |
 |---|---|---|
-| `MultiChainCounter` | Push Donut Testnet | [`0x6448…3D15`](https://donut.push.network/address/0x6448B16c0b295F24DAB9743C80d842f47F923D15) |
-| `ExternalCounter` | Ethereum Sepolia | [`0x6448…3D15`](https://sepolia.etherscan.io/address/0x6448B16c0b295F24DAB9743C80d842f47F923D15) |
-| `ExternalCounter` | BNB Testnet | [`0xb3fB…6E79`](https://testnet.bscscan.com/address/0xb3fB98A3C6EEA643532198CF22cc50BC48026E79) |
-| `ExternalCounter` | Arbitrum Sepolia | [`0xb3fB…6E79`](https://sepolia.arbiscan.io/address/0xb3fB98A3C6EEA643532198CF22cc50BC48026E79) |
+| `MultiChainCounter` | Push Donut Testnet | [`0x7dd8…fBDd`](https://donut.push.network/address/0x7dd80f17C593F73292b3c4B785C4dD0100C4fBDd) |
+| `ExternalCounter` | Ethereum Sepolia | [`0xCf5D…Ee92`](https://sepolia.etherscan.io/address/0xCf5DB8F40F7dAA8Aa8Cb36C880F7207a65e2Ee92) |
+| `ExternalCounter` | BNB Testnet | [`0xfEe7…57D5`](https://testnet.bscscan.com/address/0xfEe777Fbd341AC02d105037022fc03D3CcD757D5) |
 
 Want to run against your own deploys? Edit the constants at the top of [`app/src/App.tsx`](./app/src/App.tsx) — the deploy steps below produce the same shape.
 

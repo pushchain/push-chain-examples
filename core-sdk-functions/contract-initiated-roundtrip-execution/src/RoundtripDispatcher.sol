@@ -40,13 +40,16 @@ pragma solidity ^0.8.26;
 // in the codebase for actual UEA proxy accounts and is not invoked for
 // ordinary Push contracts; this contract implements only the 6-arg path.
 
-/// @notice UGPC outbound request — `target` is the destination CEA bytes.
+/// @notice UGPC outbound request (SDK v6 layout) — `target` is the destination CEA bytes;
+/// `gasPrice` and `maxPCForGas` are new in v6.
 struct UniversalOutboundTxRequest {
-    bytes target;
+    bytes   recipient;
     address token;
     uint256 amount;
     uint256 gasLimit;
-    bytes payload;
+    uint256 gasPrice;
+    uint256 maxPCForGas;
+    bytes   payload;
     address revertRecipient;
 }
 
@@ -180,10 +183,12 @@ contract RoundtripDispatcher {
         // ---- Dispatch via UGPC ---------------------------------------------
         bytes memory targetBytes = abi.encodePacked(destinationCEAAddr);
         UniversalOutboundTxRequest memory req = UniversalOutboundTxRequest({
-            target: targetBytes,
+            recipient: targetBytes,
             token: tokenForRouting,
             amount: 0,
             gasLimit: 2_000_000,
+            gasPrice: 0,
+            maxPCForGas: 0,
             payload: outerMulticallData,
             revertRecipient: address(this)
         });

@@ -25,9 +25,9 @@ Then open the dev server URL.
 
 | Contract | Chain | Address |
 |---|---|---|
-| `MultiChainCounter` | Push Donut Testnet | `0x6448B16c0b295F24DAB9743C80d842f47F923D15` |
-| `ExternalCounter` | Ethereum Sepolia | `0x6448B16c0b295F24DAB9743C80d842f47F923D15` |
-| `ExternalCounter` | BNB Testnet | `0xb3fB98A3C6EEA643532198CF22cc50BC48026E79` |
+| `MultiChainCounter` | Push Donut Testnet | `0x7dd80f17C593F73292b3c4B785C4dD0100C4fBDd` |
+| `ExternalCounter` | Ethereum Sepolia | `0xCf5DB8F40F7dAA8Aa8Cb36C880F7207a65e2Ee92` |
+| `ExternalCounter` | BNB Testnet | `0xfEe777Fbd341AC02d105037022fc03D3CcD757D5` |
 | `ExternalCounter` | Arbitrum Sepolia | `0xb3fB98A3C6EEA643532198CF22cc50BC48026E79` |
 
 To run against your own deploys, edit the constants at the top of `src/App.tsx`:

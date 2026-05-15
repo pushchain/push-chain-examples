@@ -15,14 +15,16 @@ pragma solidity ^0.8.26;
 // here — for that pattern (Push contract receives a TSS callback when the
 // destination tx finishes), see [`../contract-initiated-roundtrip-execution/`].
 
-/// @notice Outbound request shape consumed by UGPC.
+/// @notice Outbound request shape consumed by UGPC (SDK v6 layout).
 struct UniversalOutboundTxRequest {
-    bytes recipient;        // CEA or target address on the external chain (bytes-encoded)
-    address token;          // PRC20 on Push Chain to bridge (address(0) for none)
-    uint256 amount;         // Amount of PRC20 to bridge
-    uint256 gasLimit;       // Gas limit for external execution (0 = default)
-    bytes payload;          // ABI-encoded calldata for the CEA to execute on the target chain
-    address revertRecipient;// Address to receive bridged funds if external tx reverts
+    bytes   recipient;       // raw destination address on source chain (bytes for SVM compat). bytes("") parks funds in caller's CEA
+    address token;           // PRC20 token address on Push Chain (address(0) for none)
+    uint256 amount;          // amount to withdraw (burn on Push, unlock at origin)
+    uint256 gasLimit;        // gas limit for fee quote (0 = per-chain default)
+    uint256 gasPrice;        // gas price override (0 = per-chain default from UniversalCore; new in v6)
+    uint256 maxPCForGas;     // max native PC for the gas swap (0 = no cap; new in v6)
+    bytes   payload;         // ABI-encoded calldata to execute on origin chain (empty for funds-only)
+    address revertRecipient; // address to receive funds in case of revert
 }
 
 /// @notice Minimal UGPC interface.
@@ -76,7 +78,7 @@ contract MinimalContractInitiatedExecutor {
     /// tokens, this function approves UGPC for the amount before calling.
     /// @param token PRC20 token on Push Chain. Use address(0) if not bridging tokens.
     /// @param amount Amount of PRC20 to bridge. Use 0 if not bridging.
-    /// @param recipient Bytes-encoded CEA or target address on the external chain.
+    /// @param recipient Bytes-encoded CEA or destination address on the external chain.
     /// @param gasLimit Gas limit for the external-chain execution. Use 0 for default.
     /// @param payload ABI-encoded calldata or app payload for the external-chain action.
     /// @param revertRecipient Address to receive bridged funds if the external tx reverts.
@@ -101,6 +103,8 @@ contract MinimalContractInitiatedExecutor {
                 token: token,
                 amount: amount,
                 gasLimit: gasLimit,
+                gasPrice: 0,            // per-chain default from UniversalCore
+                maxPCForGas: 0,         // no cap on PC for the gas swap
                 payload: payload,
                 revertRecipient: revertRecipient
             })

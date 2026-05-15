@@ -1,13 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.26;
 
-/// @notice UGPC outbound request shape. Mirrors the production type so this
-/// tutorial doesn't need a hard dependency on push-chain-gateway-contracts.
+/// @notice UGPC outbound request shape (SDK v6 layout). Mirrors the production
+/// type so this tutorial doesn't need a hard dependency on push-chain-gateway-contracts.
 struct UniversalOutboundTxRequest {
     bytes recipient;        // bytes-packed ExternalCounter address on the destination chain
     address token;          // PRC20 on Push that maps to the destination chain (e.g. pETH)
     uint256 amount;         // 0 — we are not bridging funds
     uint256 gasLimit;       // gas the destination CEA gets to run `increment()`
+    uint256 gasPrice;       // gas price override (0 = per-chain default; new in v6)
+    uint256 maxPCForGas;    // max PC for gas swap (0 = no cap; new in v6)
     bytes payload;          // ABI-encoded calldata for the destination contract
     address revertRecipient; // refunded if the outbound cannot finalise
 }
@@ -142,6 +144,8 @@ contract MultiChainCounter {
                     token: d.chainToken,
                     amount: 0,
                     gasLimit: gas,
+                    gasPrice: 0,         // per-chain default from UniversalCore
+                    maxPCForGas: 0,      // no cap on PC for the gas swap
                     payload: payload,
                     revertRecipient: revertRecipient
                 })
