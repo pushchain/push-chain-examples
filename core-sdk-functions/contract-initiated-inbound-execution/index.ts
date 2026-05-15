@@ -90,7 +90,7 @@ async function main() {
   const dispatcher = new ethers.Contract(dispatcherAddress, DISPATCHER_ABI, sepoliaWallet);
 
   // 3) Show the dispatcher's UEA on Push — this is what the counter will see.
-  // We initialize a Push Chain client just to use `convertOriginToExecutor`.
+  // We initialize a Push Chain client just to use `deriveExecutorAccount`.
   const universalSigner = await PushChain.utils.signer.toUniversal(pushWallet);
   const pushChainClient = await PushChain.initialize(universalSigner, {
     network: PushChain.CONSTANTS.PUSH_NETWORK.TESTNET,

@@ -60,7 +60,7 @@ Three library variants matching the docs:
 This file matches the **Utility Functions** docs page exactly, so it does NOT include:
 - `pushChainClient.universal.signMessage`, `prepareTransaction`, `executeTransactions`, `trackTransaction` — those belong in the [send-universal-transaction](../send-universal-transaction/) examples.
 - `pushChainClient.getAccountStatus()` — covered in [initialize-push-chain-client](../initialize-push-chain-client/).
-- The deprecated `convertOriginToExecutor` and `convertExecutorToOriginAccount` — replaced by `deriveExecutorAccount` and `resolveControllerAccount` respectively.
+- The legacy `convertOriginToExecutor` and `convertExecutorToOriginAccount` (removed in `@pushchain/core@6.0.0`), replaced by `deriveExecutorAccount` and `resolveControllerAccount` respectively.
 
 ## Network
 
