@@ -219,14 +219,22 @@ async function twoHopCascade() {
   console.log('✅ hop1 prepared — route:', hop1.route);
 
   console.log('\n🚀 Executing cascade (one user signature)...');
-  const cascade = await client.universal.executeTransactions([hop0, hop1]);
+  // executeTransactions's progressHook streams ProgressEvent across every
+  // phase (pre-flight, broadcast, cascade tracking). Each event has id,
+  // title, message, and level — combine them for a full status line.
+  const cascade = await client.universal.executeTransactions([hop0, hop1], {
+    progressHook: (event) => {
+      const icon = ({ INFO: 'ℹ️', SUCCESS: '✅', ERROR: '❌' } as Record<string, string>)[event.level] || '•';
+      console.log(`   ${icon} [${event.id}] ${event.title} - ${event.message}`);
+    },
+  });
   console.log('   initialTxHash:', cascade.initialTxHash);
   console.log('   hopCount:     ', cascade.hopCount);
 
-  const result = await cascade.wait({
-    progressHook: (e: { hopIndex: number; status: string; chain: string }) =>
-      console.log(`   [Hop ${e.hopIndex}] ${e.status} on ${e.chain}`),
-  });
+  // executeTransactions's progressHook above already streams per-hop tracking
+  // events (SEND-TX-309-* and SEND-TX-399-*), so cascade.wait() doesn't need
+  // its own progressHook — just await for completion.
+  const result = await cascade.wait();
   console.log('🏁 All hops complete. Success:', result.success);
 
   if (result.success) {
@@ -305,19 +313,35 @@ async function threeHopCascade() {
   console.log('✅ hop2 prepared — route:', hop2.route);
 
   console.log('\n🚀 Executing 3-hop cascade (one user signature)...');
-  const cascade = await client.universal.executeTransactions([hop0, hop1, hop2]);
+  // executeTransactions's progressHook streams ProgressEvent across every
+  // phase (pre-flight, broadcast, cascade tracking). Each event has id,
+  // title, message, and level — combine them for a full status line.
+  const cascade = await client.universal.executeTransactions([hop0, hop1, hop2], {
+    progressHook: (event) => {
+      const icon = ({ INFO: 'ℹ️', SUCCESS: '✅', ERROR: '❌' } as Record<string, string>)[event.level] || '•';
+      console.log(`   ${icon} [${event.id}] ${event.title} - ${event.message}`);
+    },
+  });
   console.log('   initialTxHash:', cascade.initialTxHash);
   console.log('   hopCount:     ', cascade.hopCount);
 
-  const result = await cascade.wait({
-    progressHook: (e: { hopIndex: number; status: string; chain: string }) =>
-      console.log(`   [Hop ${e.hopIndex}] ${e.status} on ${e.chain}`),
-  });
+  // executeTransactions's progressHook above already streams per-hop tracking
+  // events (SEND-TX-309-* and SEND-TX-399-*), so cascade.wait() doesn't need
+  // its own progressHook — just await for completion.
+  const result = await cascade.wait();
   console.log('🏁 All hops complete. Success:', result.success);
 
   if (result.success) {
     console.log('\n📊 Push Chain counter AFTER:', (await pushCounter.countPC()).toString());
     console.log('📊 BNB counter AFTER:        ', (await bnbCounter.count()).toString());
-    console.log('📊 Solana hop: see explorer link in cascade.hops outboundDetails');
+
+    // Solana state isn't read via a public RPC contract call here —
+    // surface the on-chain Solana hop's tx hash + explorer URL from
+    // result.hops[].outboundDetails so devs can inspect it manually.
+    const solanaHop = result.hops.find((h: any) => h.executionChain === PushChain.CONSTANTS.CHAIN.SOLANA_DEVNET);
+    if (solanaHop?.outboundDetails) {
+      console.log('🌞 Solana hop tx:', solanaHop.outboundDetails.externalTxHash);
+      console.log('🔗 Solana explorer:', solanaHop.outboundDetails.explorerUrl);
+    }
   }
 }

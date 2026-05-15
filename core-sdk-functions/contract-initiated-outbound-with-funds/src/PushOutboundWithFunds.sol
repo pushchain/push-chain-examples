@@ -22,12 +22,15 @@ interface IPRC20 {
     function balanceOf(address account) external view returns (uint256);
 }
 
+// SDK v6 layout: `target` renamed from `recipient`; `gasPrice` and `maxPCForGas` added.
 struct UniversalOutboundTxRequest {
-    bytes recipient;
+    bytes   recipient;
     address token;
     uint256 amount;
     uint256 gasLimit;
-    bytes payload;
+    uint256 gasPrice;
+    uint256 maxPCForGas;
+    bytes   payload;
     address revertRecipient;
 }
 
@@ -121,10 +124,12 @@ contract PushOutboundWithFunds {
         // Dispatch via UGPC.
         bytes memory targetBytes = abi.encodePacked(destinationCEAAddr);
         UniversalOutboundTxRequest memory req = UniversalOutboundTxRequest({
-            recipient: targetBytes,
+            recipient: targetBytes,           // renamed from `recipient` in SDK v6
             token: prc20Token,
             amount: amount,
-            gasLimit: 2_000_000,         // headroom for nested call with value
+            gasLimit: 2_000_000,           // headroom for nested call with value
+            gasPrice: 0,                   // UniversalCore default (new in v6)
+            maxPCForGas: 0,                // uncapped legacy behavior (new in v6)
             payload: payload,
             revertRecipient: address(this)
         });

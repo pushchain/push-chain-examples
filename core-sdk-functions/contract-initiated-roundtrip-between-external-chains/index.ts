@@ -203,13 +203,7 @@ async function main() {
   );
   console.log(`📍 Dispatcher's CEA on BNB:    ${bnbCEA.address}`);
   const ceaBnbBal = await bnbProvider.getBalance(bnbCEA.address);
-  console.log(`📊 BNB CEA balance: ${ethers.formatEther(ceaBnbBal)} BNB`);
-  if (ceaBnbBal < ethers.parseEther('0.001')) {
-    console.error(`\n❌ The BNB CEA needs ≥ 0.001 BNB to dispatch the back-leg.`);
-    console.error(`   Faucet to: ${bnbCEA.address}`);
-    console.error('   https://www.bnbchain.org/en/testnet-faucet');
-    process.exit(1);
-  }
+  console.log(`📊 BNB CEA balance: ${ethers.formatEther(ceaBnbBal)} BNB (informational; TSS forwards gas value during the destination tx)`);
 
   const solanaCEA = await PushChain.utils.account.deriveExecutorAccount(
     dispatcherAccount,

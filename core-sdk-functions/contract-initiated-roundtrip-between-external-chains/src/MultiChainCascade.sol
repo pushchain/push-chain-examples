@@ -40,12 +40,15 @@ pragma solidity ^0.8.26;
 //   - BNB CEA holds BNB for the back-leg gateway fee (faucet to its address once)
 //   - Solana CEA gets gas budget from UGPC outbound 2 (no separate funding)
 
+// SDK v6 layout: `gasPrice` and `maxPCForGas` added.
 struct UniversalOutboundTxRequest {
-    bytes target;
+    bytes   recipient;
     address token;
     uint256 amount;
     uint256 gasLimit;
-    bytes payload;
+    uint256 gasPrice;
+    uint256 maxPCForGas;
+    bytes   payload;
     address revertRecipient;
 }
 
@@ -113,6 +116,13 @@ contract MultiChainCascade {
     uint256 public bnbBackLegCount;    // back-leg from BNB landed on Push
     uint256 public solanaDispatchCount; // outbound to Solana fired
 
+    /// @notice Configurable gas limits on each outbound leg. 0 = use the
+    /// per-leg hardcoded default (3M for BNB, 2M for Solana). Override via
+    /// `configureGasLimits` to dial in for live chain conditions without
+    /// redeploying.
+    uint256 public bnbOutboundGasLimit;
+    uint256 public solanaOutboundGasLimit;
+
     mapping(bytes32 => bool) public seenInboundTxIds;
     bytes32 public lastInboundTxId;
 
@@ -124,9 +134,19 @@ contract MultiChainCascade {
     event ConfiguredBnbTarget(address indexed bnbContract, bytes calldata_);
     event ConfiguredSolanaTarget(bytes solanaCEABytes, bytes solanaPayload);
     event ConfiguredSolanaValue(uint256 valuePc);
+    event ConfiguredGasLimits(uint256 bnbOutboundGasLimit, uint256 solanaOutboundGasLimit);
     event KickedOff(uint256 kickOffCount, bytes outboundPayload);
+    /// @notice Emitted at the very start of `executeUniversalTx` so we have an
+    /// on-chain record that TSS delivered the back-leg, separately from
+    /// whether the subsequent Solana dispatch succeeded.
+    event InboundReceived(bytes32 indexed txId, uint256 bnbBackLegCount);
     event BnbBackLegLanded(bytes32 indexed txId, uint256 bnbBackLegCount);
     event SolanaDispatched(uint256 solanaDispatchCount, uint256 valuePc);
+    /// @notice Emitted when `_dispatchSolanaOutbound` reverts inside
+    /// `executeUniversalTx`. Lets the inbound be recorded even when the
+    /// downstream UGPC call fails, so devs can diagnose without losing the
+    /// inbound receipt.
+    event SolanaDispatchFailed(bytes32 indexed txId, bytes reason);
 
     error NotOwner();
     error NotUniversalExecutor();
@@ -134,6 +154,7 @@ contract MultiChainCascade {
     error ZeroAddress();
     error NotConfigured();
     error InsufficientPC(uint256 required, uint256 available);
+    error NotSelfCall();
 
     struct Multicall {
         address to;
@@ -194,6 +215,17 @@ contract MultiChainCascade {
         emit ConfiguredSolanaValue(_valuePc);
     }
 
+    /// @notice Owner-only. Override the per-leg gas limits used in UGPC
+    /// outbound requests. Pass 0 in either slot to fall back to the per-leg
+    /// hardcoded default (3M BNB, 2M Solana). Useful when destination-chain
+    /// gas pressure shifts and the defaults stop landing.
+    function configureGasLimits(uint256 _bnbGasLimit, uint256 _solanaGasLimit) external {
+        if (msg.sender != owner) revert NotOwner();
+        bnbOutboundGasLimit = _bnbGasLimit;
+        solanaOutboundGasLimit = _solanaGasLimit;
+        emit ConfiguredGasLimits(_bnbGasLimit, _solanaGasLimit);
+    }
+
     // -------------------------------------------------------------------------
     // Step 1: kickOff — Push contract → UGPC → BNB CEA
     // -------------------------------------------------------------------------
@@ -202,10 +234,14 @@ contract MultiChainCascade {
     /// @param bnbCEAAddr This contract's CEA on BNB (= deriveExecutorAccount(this, BNB_TESTNET)).
     /// @param protocolFeePc PC the contract forwards to UGPC for outbound 1.
     /// @param ueaNonce UEA nonce on Push for back-leg replay protection (0 for fresh).
+    /// @param bnbGasLimitOverride Per-call override for the BNB outbound's UGPC
+    ///         `gasLimit`. Pass 0 to fall back to `bnbOutboundGasLimit` storage
+    ///         (or the 3M hardcoded default if storage is also 0).
     function kickOff(
         address bnbCEAAddr,
         uint256 protocolFeePc,
-        uint256 ueaNonce
+        uint256 ueaNonce,
+        uint256 bnbGasLimitOverride
     ) external {
         if (bnbDestinationContract == address(0)) revert NotConfigured();
         if (solanaCEABytes.length == 0) revert NotConfigured();
@@ -214,6 +250,12 @@ contract MultiChainCascade {
         if (address(this).balance < protocolFeePc) {
             revert InsufficientPC(protocolFeePc, address(this).balance);
         }
+
+        // Resolve the BNB outbound gasLimit with the precedence:
+        //   per-call override → storage `bnbOutboundGasLimit` → 3M default.
+        uint256 bnbGasLimit = bnbGasLimitOverride != 0
+            ? bnbGasLimitOverride
+            : (bnbOutboundGasLimit != 0 ? bnbOutboundGasLimit : 3_000_000);
 
         // Layer 1: BNB-side action — call the configured BNB target.
         Multicall[] memory bnbCalls = new Multicall[](1);
@@ -258,10 +300,16 @@ contract MultiChainCascade {
         );
 
         UniversalOutboundTxRequest memory req = UniversalOutboundTxRequest({
-            target: abi.encodePacked(bnbCEAAddr),
+            recipient: abi.encodePacked(bnbCEAAddr),
             token: PBNB,
             amount: 0,
-            gasLimit: 2_000_000,
+            // Resolved at call time: per-call override > storage override > 3M.
+            // The outer multicall runs TWO calls on the BNB CEA (bnb action
+            // + CEA self-call to sendUniversalTxToUEA). 2M leaves the nested
+            // gateway call short on gas and TSS silently drops the back-leg.
+            gasLimit: bnbGasLimit,
+            gasPrice: 0,
+            maxPCForGas: 0,
             payload: outerMulticallData,
             revertRecipient: address(this)
         });
@@ -290,9 +338,30 @@ contract MultiChainCascade {
         seenInboundTxIds[txId] = true;
         bnbBackLegCount += 1;
         lastInboundTxId = txId;
-        emit BnbBackLegLanded(txId, bnbBackLegCount);
+        // InboundReceived is the on-chain proof that TSS delivered the back-leg.
+        // It's emitted BEFORE the Solana dispatch attempt, so even if the
+        // downstream UGPC call reverts, we keep the record that the inbound
+        // landed. BnbBackLegLanded follows only on a successful Solana dispatch.
+        emit InboundReceived(txId, bnbBackLegCount);
 
-        // Now dispatch to Solana — the cascade's third leg.
+        // Wrap the Solana dispatch in try/catch so a downstream revert
+        // (e.g., insufficient PC, pool-swap STF, UGPC sizing edge case)
+        // doesn't roll back the inbound bookkeeping above. The caller's tx
+        // still succeeds, the bookkeeping persists, and the failure surfaces
+        // via the SolanaDispatchFailed event for off-chain diagnostics.
+        try this.dispatchSolanaOutboundExternal() {
+            emit BnbBackLegLanded(txId, bnbBackLegCount);
+        } catch (bytes memory reason) {
+            emit SolanaDispatchFailed(txId, reason);
+        }
+    }
+
+    /// @notice External shim around `_dispatchSolanaOutbound` that lets
+    /// `executeUniversalTx` reach it through `this.<fn>()` so Solidity's
+    /// try/catch (which only works on external calls) can intercept reverts.
+    /// Restricted to self-calls — never call this directly from off-chain.
+    function dispatchSolanaOutboundExternal() external {
+        if (msg.sender != address(this)) revert NotSelfCall();
         _dispatchSolanaOutbound();
     }
 
@@ -309,11 +378,20 @@ contract MultiChainCascade {
         if (fee == 0) revert NotConfigured();
         if (address(this).balance < fee) revert InsufficientPC(fee, address(this).balance);
 
+        // Solana outbound gasLimit: pass through the storage value verbatim.
+        // 0 (the default) tells UGPC to apply the per-chain auto-floor — this
+        // is what the SDK does for SVM. Hardcoded EVM-style budgets (2M, 3M)
+        // can land outside the valid range for Solana and trigger "no revert
+        // data" reverts inside the UGPC swap precompile.
+        uint256 solanaGasLimit = solanaOutboundGasLimit;
+
         UniversalOutboundTxRequest memory req = UniversalOutboundTxRequest({
-            target: solanaCEABytes,        // 32-byte Solana program-derived address
+            recipient: solanaCEABytes,     // 32-byte Solana program-derived address
             token: PSOL,
             amount: 0,
-            gasLimit: 2_000_000,
+            gasLimit: solanaGasLimit,
+            gasPrice: 0,
+            maxPCForGas: 0,
             payload: solanaPayload,        // pre-encoded Anchor instruction
             revertRecipient: address(this)
         });

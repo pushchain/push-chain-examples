@@ -15,8 +15,8 @@ import "./App.css";
 // Devs running the tutorial against their own contracts can swap these out.
 // =============================================================================
 
-/// Address of MultiChainCounter on Push Donut Testnet.
-const ORCHESTRATOR_ADDRESS = "0x6448B16c0b295F24DAB9743C80d842f47F923D15";
+/// Address of MultiChainCounter on Push Donut Testnet (SDK v6 layout, 8-field UGPC struct).
+const ORCHESTRATOR_ADDRESS = "0x7dd80f17C593F73292b3c4B785C4dD0100C4fBDd";
 
 /// Per-destination configuration. Each entry maps a destination chain to:
 ///   • the deployed `ExternalCounter` address on that chain
@@ -28,7 +28,7 @@ const DESTINATIONS = [
   {
     label: "Ethereum Sepolia",
     chainKey: "ETHEREUM_SEPOLIA" as const,
-    counterAddress: "0x6448B16c0b295F24DAB9743C80d842f47F923D15",
+    counterAddress: "0xCf5DB8F40F7dAA8Aa8Cb36C880F7207a65e2Ee92",
     pushRoutingToken: "0x2971824Db68229D087931155C2b8bB820B275809", // pETH
     destinationRpc: "https://ethereum-sepolia-rpc.publicnode.com",
     explorerBase: "https://sepolia.etherscan.io",
@@ -37,7 +37,7 @@ const DESTINATIONS = [
   {
     label: "BNB Testnet",
     chainKey: "BNB_TESTNET" as const,
-    counterAddress: "0xb3fB98A3C6EEA643532198CF22cc50BC48026E79",
+    counterAddress: "0xfEe777Fbd341AC02d105037022fc03D3CcD757D5",
     pushRoutingToken: "0x7a9082dA308f3fa005beA7dB0d203b3b86664E36", // pBNB
     destinationRpc: "https://bsc-testnet-rpc.publicnode.com",
     explorerBase: "https://testnet.bscscan.com",
