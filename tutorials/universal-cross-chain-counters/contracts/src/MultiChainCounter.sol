@@ -72,6 +72,7 @@ contract MultiChainCounter {
         address chainToken,
         uint256 gasLimit
     ) external onlyOwner {
+        if (gasLimit == 0) revert ZeroGasLimit();
         destinations.push(Destination({
             target: target,
             chainToken: chainToken,
@@ -126,12 +127,22 @@ contract MultiChainCounter {
         address revertRecipient,
         uint256[] memory gasLimitOverrides
     ) internal {
-        if (perCallFee.length != destinations.length) revert LengthMismatch();
+        uint256 n = destinations.length;
+        if (perCallFee.length != n) revert LengthMismatch();
+
+        // Checks-Effects-Interactions: sum the fees and validate msg.value
+        // BEFORE dispatching any UGPC outbound. Otherwise an under-funded call
+        // would still issue every outbound (paying out of the contract's own
+        // balance from prior UGPC refunds) and only revert at the end,
+        // wasting the caller's gas and consuming contract balance.
+        uint256 total;
+        for (uint256 i = 0; i < n; i++) {
+            total += perCallFee[i];
+        }
+        if (msg.value < total) revert InsufficientValue();
 
         bytes memory payload = abi.encodeCall(IExternalCounter.increment, ());
 
-        uint256 total;
-        uint256 n = destinations.length;
         for (uint256 i = 0; i < n; i++) {
             Destination memory d = destinations[i];
             uint256 gas = gasLimitOverrides.length == n && gasLimitOverrides[i] > 0
@@ -150,10 +161,7 @@ contract MultiChainCounter {
                     revertRecipient: revertRecipient
                 })
             );
-            total += perCallFee[i];
         }
-
-        if (msg.value < total) revert InsufficientValue();
 
         emit Ticked(n, msg.value);
     }
