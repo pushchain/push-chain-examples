@@ -92,7 +92,7 @@ const account = PushChain.utils.account.toUniversal(
 );
 
 // Derive the Universal Executor Account (UEA).
-// Note: convertOriginToExecutor() is deprecated in favor of deriveExecutorAccount().
+// Note: convertOriginToExecutor() was removed in SDK v6 — use deriveExecutorAccount().
 const executorAddress = await PushChain.utils.account.deriveExecutorAccount(account);
 ```
 
