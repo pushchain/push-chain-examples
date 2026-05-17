@@ -106,7 +106,7 @@ When the user holds the reserve token on the origin chain (USDT on Sepolia, here
 ## 🔧 Setup Requirements
 
 - **Sepolia ETH** for the origin transaction's gas. Faucet: <https://cloud.google.com/application/web3/faucet/ethereum/sepolia>.
-- **USDT on Sepolia** at address `0x7169D38820dfd117C3FA1f22a697dBA58d90BA06` — this is the real test ERC-20 on Sepolia. Mint via the contract's `mint` function on [Sepolia Etherscan](https://sepolia.etherscan.io/address/0x7169D38820dfd117C3FA1f22a697dBA58d90BA06#writeContract).
+- **USDT on Sepolia** at address `0xC4230aEaFcF6b8B49a7b4e53886420f00ff71876` — this is the real test ERC-20 on Sepolia. Mint via the contract's `mint` function on [Sepolia Etherscan](https://sepolia.etherscan.io/address/0xC4230aEaFcF6b8B49a7b4e53886420f00ff71876#writeContract).
   > ⚠️ Don't confuse this with `0xCA0C5E6F002A389E1580F0DB7cd06e4549B5F9d3` — that is the **Donut representation** of Sepolia USDT (where the relay bridges to and where the multicall approves + deposits). The Donut address only exists on Push Chain, not on Sepolia.
 - Node.js v18+.
 

@@ -139,7 +139,7 @@ You'll need on **Ethereum Sepolia**:
 
 **USDT on Sepolia** (real ERC-20 on Sepolia — call `mint`):
 ```
-https://sepolia.etherscan.io/address/0x7169D38820dfd117C3FA1f22a697dBA58d90BA06#writeContract
+https://sepolia.etherscan.io/address/0xC4230aEaFcF6b8B49a7b4e53886420f00ff71876#writeContract
 ```
 
 **USDC on Sepolia** (real ERC-20 on Sepolia — call `mint`):

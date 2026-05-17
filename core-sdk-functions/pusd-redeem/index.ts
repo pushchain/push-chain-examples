@@ -51,12 +51,12 @@ const PUSD_MANAGER = '0x7A24Eea43a1095e9Dc652AB9Cba156a93Ed5Ed46';
 
 // USDT.eth — Donut representation of Sepolia USDT. Hop 1 returns this on
 // Donut; hop 2 bridges it back to Sepolia USDT
-// (`0x7169D38820dfd117C3FA1f22a697dBA58d90BA06`) via `funds`.
+// (`0xC4230aEaFcF6b8B49a7b4e53886420f00ff71876`) via `funds`.
 const USDT_DONUT = '0xCA0C5E6F002A389E1580F0DB7cd06e4549B5F9d3';
 
 // USDT on Ethereum Sepolia — only used for reading the destination balance
 // before/after to demonstrate the cross-chain delivery.
-const USDT_SEPOLIA = '0x7169D38820dfd117C3FA1f22a697dBA58d90BA06';
+const USDT_SEPOLIA = '0xC4230aEaFcF6b8B49a7b4e53886420f00ff71876';
 
 // Default amount to redeem in both scenarios (6 decimals → 1 PUSD).
 const PUSD_AMOUNT_HUMAN = '1';
