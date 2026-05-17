@@ -45,7 +45,7 @@ const USDT_DONUT = '0xCA0C5E6F002A389E1580F0DB7cd06e4549B5F9d3' as `0x${string}`
 // the relay bridges it to Donut). Mint test USDT from the contract's `mint`
 // function on Sepolia Etherscan. Source: @pushchain/core token registry —
 // `pushChainClient.moveable.token.USDT` resolves to this on a Sepolia origin.
-const USDT_SEPOLIA = '0x7169D38820dfd117C3FA1f22a697dBA58d90BA06' as `0x${string}`;
+const USDT_SEPOLIA = '0xC4230aEaFcF6b8B49a7b4e53886420f00ff71876' as `0x${string}`;
 
 // Sentinel for multicall mode on the universal transaction layer.
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as `0x${string}`;

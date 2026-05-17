@@ -1,4 +1,15 @@
 // Full Documentation: https://push.org/docs/chain/build/send-universal-transaction
+//
+// PROGRESS HOOK:
+// The progressHook callback allows you to monitor transaction progress through different stages:
+// - 'preparing': Transaction is being prepared
+// - 'signing': Transaction is being signed
+// - 'sending': Transaction is being sent to the network
+// - 'waiting': Waiting for transaction confirmation
+// - 'confirmed': Transaction has been confirmed
+// - 'error': An error occurred during processing
+//
+// Usage: progressHook: (step: string, data?: any) => void
 
 // Import Push Chain Core
 import { PushChain } from '@pushchain/core';
@@ -62,9 +73,12 @@ async function quickstartExample() {
   try {
     // Note: This would fail in playground without funds
     // In production, ensure wallet has funds
-    const txResponse = await pushChainClient.universal.sendTransaction({
+    const txResponse = await (pushChainClient.universal.sendTransaction as any)({
       to: '0x0000000000000000000000000000000000042101',
       value: BigInt('100000000000000000'), // 0.1 PC in wei
+      progressHook: (step: string, data?: any) => {
+        console.log(`📊 Progress: ${step}`, data ? `| Data: ${JSON.stringify(data)}` : '');
+      },
     });
     console.log('Transaction Response:', JSON.stringify(txResponse));
   } catch (error) {
@@ -115,9 +129,12 @@ async function ethersV6() {
   console.log('\n4. Send Universal Transaction');
   try {
     // Example: Send 0.001 ETH to a random address
-    const txResponse = await pushChainClient.universal.sendTransaction({
+    const txResponse = await (pushChainClient.universal.sendTransaction as any)({
       to: '0x0000000000000000000000000000000000042101', // receiver address
       value: PushChain.utils.helpers.parseUnits('0.001', 18), // 0.001 PC in uPC (wei)
+      progressHook: (step: string, data?: any) => {
+        console.log(`📊 Progress: ${step}`, data ? `| Data: ${JSON.stringify(data)}` : '');
+      },
     });
     console.log('📤 Transaction Response:', txResponse);
 
@@ -183,9 +200,12 @@ async function viemExample() {
 
   console.log('\n4. Send Universal Transaction');
   try {
-    const txResponse = await pushChainClient.universal.sendTransaction({
+    const txResponse = await (pushChainClient.universal.sendTransaction as any)({
       to: '0x0000000000000000000000000000000000042101',
       value: BigInt(1000000000000000), // 0.001 PC in wei
+      progressHook: (step: string, data?: any) => {
+        console.log(`📊 Progress: ${step}`, data ? `| Data: ${JSON.stringify(data)}` : '');
+      },
     });
     console.log('📤 Transaction Response:', txResponse);
 
@@ -251,9 +271,12 @@ async function solanaExample() {
 
   console.log('\n4. Send Universal Transaction');
   try {
-    const txResponse = await pushChainClient.universal.sendTransaction({
+    const txResponse = await (pushChainClient.universal.sendTransaction as any)({
       to: '0x0000000000000000000000000000000000042101',
       value: BigInt(1000000000000), // .001 PC
+      progressHook: (step: string, data?: any) => {
+        console.log(`📊 Progress: ${step}`, data ? `| Data: ${JSON.stringify(data)}` : '');
+      },
     });
     console.log('📤 Transaction Response:', txResponse);
 
