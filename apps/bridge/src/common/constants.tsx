@@ -1,6 +1,6 @@
 import { PushChain } from "@pushchain/core";
 import { PROGRESS_HOOK } from "@pushchain/core/src/lib/progress-hook/progress-hook.types";
-import { ArbitrumMonotone, EthereumMonotone, SolanaMonotone, BaseMonotone, BnbMonotone, IllustrationProps, IconProps, Ethereum, Solana, USDT, WEthereum, PushMonotone, USDC, StEthereum, Push } from "shared-components";
+import { ArbitrumMonotone, EthereumMonotone, SolanaMonotone, BaseMonotone, BnbMonotone, IllustrationProps, IconProps, Ethereum, Solana, USDT, WEthereum, PushMonotone, USDC, StEthereum, Push, DAI } from "shared-components";
 import { defineChain } from "viem";
 import { mainnet, sepolia, baseSepolia, arbitrumSepolia, bscTestnet } from 'viem/chains';
 
@@ -44,6 +44,7 @@ export const tokensIconList: Record<string, React.FC<IllustrationProps>> = {
   ["USDC"]: USDC,
   ["stETH"]: StEthereum,
   ["PC"]: Push,
+  ["DAI"]: DAI,
 }
 
 export const EVM_CHAIN_CONFIGS = {

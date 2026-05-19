@@ -13,7 +13,7 @@
     "deploy:alpha": "VITE_DEPLOYMENT_MODE=alpha npm run build && echo 'simulate-alpha.push.org' > ./dist/CNAME && gh-pages -d dist -r https://github.com/push-protocol/simulate-alpha-deployment"
   },
   "dependencies": {
-    "@pushchain/ui-kit": "^5.2.1",
+    "@pushchain/ui-kit": "^6.0.9",
     "@radix-ui/react-popover": "^1.1.2",
     "formik": "^2.4.6",
     "gh-pages": "^6.2.0",
@@ -39,5 +39,6 @@
     "typescript-eslint": "^8.0.1",
     "vite": "^5.4.1",
     "vite-plugin-node-polyfills": "^0.23.0"
-  }
+  },
+  "packageManager": "yarn@4.2.2+sha512.c44e283c54e02de9d1da8687025b030078c1b9648d2895a65aab8e64225bfb7becba87e1809fc0b4b6778bbd47a1e2ab6ac647de4c5e383a53a7c17db6c3ff4b"
 }

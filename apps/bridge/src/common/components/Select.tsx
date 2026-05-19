@@ -144,6 +144,7 @@ const Select: React.FC<SelectProps> = ({
                                     const BadgeIcon = opt?.badge;
                                     return (
                                         <Box
+                                            key={opt.value}
                                             display='flex'
                                             alignItems='center'
                                             padding='spacing-sm'

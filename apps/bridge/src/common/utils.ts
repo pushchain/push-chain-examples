@@ -1,53 +1,61 @@
-import { ethers } from "ethers";
-import { Address, createPublicClient, defineChain, erc20Abi, formatUnits, http } from "viem";
+import { ethers } from 'ethers';
+import {
+    Address,
+    createPublicClient,
+    defineChain,
+    erc20Abi,
+    formatUnits,
+    http,
+} from 'viem';
 import { Contract, JsonRpcProvider } from 'ethers';
-import { EVM_CHAIN_CONFIGS, TOKENS } from "./constants";
-import { CHAIN } from "@pushchain/core/src/lib/constants/enums";
+import { EVM_CHAIN_CONFIGS, TOKENS } from './constants';
+import { CHAIN } from '@pushchain/core/src/lib/constants/enums';
 import { Connection, PublicKey, clusterApiUrl } from '@solana/web3.js';
-import { UniversalAccount } from "@pushchain/ui-kit";
-import { MoveableToken } from "@pushchain/core/src/lib/constants";
-import { getAssociatedTokenAddress } from "@solana/spl-token";
-import { PushChain } from "@pushchain/core";
-import { SWAP_ROUTER_ABI, SWAP_ROUTER_ADDRESS } from "./abi";
+import { UniversalAccount } from '@pushchain/ui-kit';
+import { MoveableToken } from '@pushchain/core/src/lib/constants';
+import { getAssociatedTokenAddress } from '@solana/spl-token';
+import { PushChain } from '@pushchain/core';
+import { getRamenfiQuote, getRamenfiSwapRoute } from '../services/ramenfiApi';
 
-const provider = new JsonRpcProvider("https://evm.donut.rpc.push.org/");
+const provider = new JsonRpcProvider('https://evm.donut.rpc.push.org/');
 
-const ERC20_ABI = [
-  "function symbol() view returns (string)",
-];
+const ERC20_ABI = ['function symbol() view returns (string)'];
 
 const titleCase = (s: string) =>
-  s.toLowerCase().replace(/\b[a-z]/g, c => c.toUpperCase());
+    s.toLowerCase().replace(/\b[a-z]/g, (c) => c.toUpperCase());
 
 export function enumKeyToDisplay(key: string): string {
-  const parts = key.split("_");
-  const last = parts[parts.length - 1];
-  if (parts.length > 2) {
-    parts.pop();
-    return `${titleCase(parts.join(" "))} (${titleCase(last)})`;
-  }
-  return titleCase(parts.join(" "));
+    const parts = key.split('_');
+    const last = parts[parts.length - 1];
+
+    if (parts.length > 2) {
+        parts.pop();
+        return `${titleCase(parts.join(' '))} (${titleCase(last)})`;
+    }
+
+    return titleCase(parts.join(' '));
 }
 
 export async function fetchNativeBalance(address: string) {
-  const RPC = "https://evm.donut.rpc.push.org/";
-  const provider = new ethers.JsonRpcProvider(RPC);
-  if (!ethers.isAddress(address)) throw new Error("Invalid address");
-  const balance = await provider.getBalance(address);
-  const balanceInPC = ethers.formatEther(balance);
-  return balanceInPC;
+    const RPC = 'https://evm.donut.rpc.push.org/';
+    const rpcProvider = new ethers.JsonRpcProvider(RPC);
+
+    if (!ethers.isAddress(address)) throw new Error('Invalid address');
+
+    const balance = await rpcProvider.getBalance(address);
+    return ethers.formatEther(balance);
 }
 
-type fetchTokenBalanceProps = {
-    walletAddress: Address,
-    tokenAddress?: Address,
-    decimals: number
-}
+type FetchTokenBalanceProps = {
+    walletAddress: Address;
+    tokenAddress?: Address;
+    decimals: number;
+};
 
-type fetchNativeTokenBalanceProps = {
-    wallet: UniversalAccount,
-    token: MoveableToken,
-}
+type FetchNativeTokenBalanceProps = {
+    wallet: UniversalAccount;
+    token: MoveableToken;
+};
 
 export const pushTestnetChain = defineChain({
     id: 42101,
@@ -66,184 +74,297 @@ export const pushTestnetChain = defineChain({
     blockExplorers: {
         default: { name: 'Explorer', url: 'https://donut.push.network/' },
     },
-})
+});
 
-export const getChainIdFromChain = (
-  chain: CHAIN
-): number | null => {
-  const [namespace, reference] = chain.split(":");
+export const getChainIdFromChain = (chain?: CHAIN | string): number | null => {
+    if (!chain) return null;
 
-  // EVM chains → eip155:<chainId>
-  if (namespace === "eip155") {
-    const id = Number(reference);
-    return Number.isFinite(id) ? id : null;
-  }
+    const [namespace, reference] = chain.split(':');
 
-  // Solana chains → no numeric chainId
-  if (namespace === "solana") {
+    if (namespace === 'eip155') {
+        const id = Number(reference);
+        return Number.isFinite(id) ? id : null;
+    }
+
     return null;
-  }
-
-  return null;
 };
 
+type PreparedUniversalTransaction = Awaited<
+    ReturnType<PushChain['universal']['prepareTransaction']>
+>;
+
 type SwapPushTokensParams = {
-  pushChainClient: PushChain;
-  tokenIn: string;
-  tokenOut: string;
-  amountIn: bigint;
-  fee?: number;
-  amountOutMinimum?: bigint;
-  sqrtPriceLimitX96?: bigint;
+    pushChainClient: PushChain;
+    tokenIn: string;
+    tokenOut: string;
+    amountIn: bigint;
+    tokenInDecimals: number;
+    tokenOutDecimals?: number;
+    sourceChain?: string;
+    destinationChain?: string;
+    maxSlippagePercent?: number;
+};
+
+type SwapPushTokensResult = {
+    transactions: PreparedUniversalTransaction[];
+    expectedAmountOut?: bigint;
+};
+
+const isAddressLike = (value?: string | null) =>
+    !!value && ethers.isAddress(value);
+
+const resolveTokenAddress = (token: string) => {
+    if (isAddressLike(token)) return token;
+
+    const tokenDetails = TOKENS.find(
+        (item) => item.symbol === token || item.address === token,
+    );
+    return tokenDetails?.address ?? null;
+};
+
+const parseAmountOutFromUnknownShape = (value: unknown): string | undefined => {
+    if (!value || typeof value !== 'object') return undefined;
+
+    const stack: unknown[] = [value];
+    const candidateKeys = [
+        'amountOut',
+        'expectedAmountOut',
+        'minAmountOut',
+        'toAmount',
+        'outputAmount',
+        'buyAmount',
+        'returnAmount',
+    ];
+
+    while (stack.length) {
+        const current = stack.pop();
+        if (!current || typeof current !== 'object') continue;
+
+        const record = current as Record<string, unknown>;
+
+        for (const key of candidateKeys) {
+            const candidate = record[key];
+            if (typeof candidate === 'string' && candidate.trim())
+                return candidate;
+            if (typeof candidate === 'number' && Number.isFinite(candidate))
+                return String(candidate);
+            if (typeof candidate === 'bigint') return candidate.toString();
+        }
+
+        for (const nested of Object.values(record)) {
+            if (nested && typeof nested === 'object') stack.push(nested);
+        }
+    }
+
+    return undefined;
+};
+
+const toBaseUnits = (amount: string, decimals: number) => {
+    const normalized = amount.trim();
+    if (!normalized) return undefined;
+
+    // If the API already returns an integer base-unit string, keep it as bigint.
+    if (/^\d+$/.test(normalized) && normalized.length > decimals) {
+        return BigInt(normalized);
+    }
+
+    try {
+        return ethers.parseUnits(normalized, decimals);
+    } catch {
+        return undefined;
+    }
 };
 
 export const swapPushTokens = async ({
-  pushChainClient,
-  tokenIn,
-  tokenOut,
-  amountIn,
-  fee = 3000,
-  amountOutMinimum = BigInt(0),
-  sqrtPriceLimitX96 = BigInt(0),
-}: SwapPushTokensParams) => {
-  const tokenInAddress =
-    ethers.isAddress(tokenIn)
-      ? tokenIn
-      : (TOKENS.find((t) => t.symbol === tokenIn)?.address ?? null);
-  const tokenOutAddress =
-    ethers.isAddress(tokenOut)
-      ? tokenOut
-      : (TOKENS.find((t) => t.symbol === tokenOut)?.address ?? null);
+    pushChainClient,
+    tokenIn,
+    tokenOut,
+    amountIn,
+    tokenInDecimals,
+    tokenOutDecimals = tokenInDecimals,
+    sourceChain = 'eip155:42101',
+    destinationChain = 'eip155:42101',
+    maxSlippagePercent = 0.5,
+}: SwapPushTokensParams): Promise<SwapPushTokensResult> => {
+    const tokenInAddress = resolveTokenAddress(tokenIn);
+    const tokenOutAddress = resolveTokenAddress(tokenOut);
 
-  if (!tokenInAddress) throw new Error(`Token not found in TOKENS: ${tokenIn}`);
-  if (!tokenOutAddress) throw new Error(`Token not found in TOKENS: ${tokenOut}`);
+    if (!tokenInAddress)
+        throw new Error(`Token not found in TOKENS: ${tokenIn}`);
+    if (!tokenOutAddress)
+        throw new Error(`Token not found in TOKENS: ${tokenOut}`);
 
-  // const approveTx = await pushChainClient.universal.prepareTransaction({
-  //   to: tokenInAddress as `0x${string}`,
-  //   value: BigInt(0),
-  //   data: PushChain.utils.helpers.encodeTxData({
-  //     abi: erc20Abi,
-  //     functionName: 'approve',
-  //     args: [SWAP_ROUTER_ADDRESS as `0x${string}`, amountIn],
-  //   }),
-  // });
+    const userAddress = pushChainClient.universal.account as string;
+    const amountInFormatted = ethers.formatUnits(amountIn, tokenInDecimals);
 
-  // console.log(approveTx);
+    const quoteResponse = await getRamenfiQuote({
+        sourceChain,
+        destinationChain,
+        fromToken: tokenInAddress,
+        toToken: tokenOutAddress,
+        amountIn: amountInFormatted,
+    });
 
-  const swapTx = await pushChainClient.universal.prepareTransaction({
-    to: SWAP_ROUTER_ADDRESS,
-    value: BigInt(0),
-    data: PushChain.utils.helpers.encodeTxData({
-      abi: SWAP_ROUTER_ABI,
-      functionName: 'exactInputSingle',
-      args: [{
-        tokenIn: tokenInAddress,
-        tokenOut: tokenOutAddress,
-        fee,
-        recipient: pushChainClient.universal.account,
-        amountIn,
-        amountOutMinimum,
-        sqrtPriceLimitX96,
-      }],
-    }),
-  });
+    if (!quoteResponse.success || !quoteResponse.poolResult) {
+        throw new Error(
+            quoteResponse.error || 'Failed to get quote from RamenFi API',
+        );
+    }
 
-  return pushChainClient.universal.executeTransactions([swapTx]);
+    const swapResponse = await getRamenfiSwapRoute({
+        sourceChain,
+        destinationChain,
+        fromToken: tokenInAddress,
+        toToken: tokenOutAddress,
+        amountIn: amountInFormatted,
+        userAddress,
+        poolResult: quoteResponse.poolResult,
+        maxSlippage: maxSlippagePercent,
+    });
+
+    if (!swapResponse.success || !swapResponse.steps?.length) {
+        throw new Error(
+            swapResponse.error || 'Failed to get swap route from RamenFi API',
+        );
+    }
+
+    const transactions: PreparedUniversalTransaction[] = [];
+
+    for (const step of swapResponse.steps) {
+        if (step.type === 'swap') {
+            if (!step.to || !step.data) {
+                throw new Error('Invalid swap step returned by RamenFi API');
+            }
+
+            const swapTx = await pushChainClient.universal.prepareTransaction({
+                to: step.to as `0x${string}`,
+                value: BigInt(String(step.value || '0')),
+                data: step.data as `0x${string}`,
+            });
+
+            transactions.push(swapTx);
+        }
+
+        // The bridge/outbound steps are intentionally not executed here because the bridge app
+        // prepares its own Push universal bridge transaction after resolving the output token.
+    }
+
+    if (!transactions.length) {
+        throw new Error('No swap transactions to execute');
+    }
+
+    const rawAmountOut =
+        parseAmountOutFromUnknownShape(swapResponse) ??
+        parseAmountOutFromUnknownShape(quoteResponse.poolResult);
+    const expectedAmountOut = rawAmountOut
+        ? toBaseUnits(rawAmountOut, tokenOutDecimals)
+        : undefined;
+
+    return {
+        transactions,
+        expectedAmountOut,
+    };
 };
 
 export const getCEAAddress = async (uoa: UniversalAccount, chain: CHAIN) => {
-  const solanaCEA = await PushChain.utils.account.deriveExecutorAccount(uoa, {
-      chain,
-      skipNetworkCheck: true,
-  });
-  return solanaCEA.address;
-}
+    const cea = await PushChain.utils.account.deriveExecutorAccount(uoa, {
+        chain,
+        skipNetworkCheck: true,
+    });
+
+    return cea.address;
+};
 
 export const fetchNativeTokenBalance = async ({
-  wallet,
-  token
-}: fetchNativeTokenBalanceProps) => {
-  if (!wallet || !token) {
-    return '0';
-  }
+    wallet,
+}: FetchNativeTokenBalanceProps) => {
+    if (!wallet) return '0';
 
-  try {
-    if (wallet.chain === CHAIN.SOLANA_DEVNET || !wallet.chain) {
-      // Solana
-      const network = 'devnet';
-      const connection = new Connection(clusterApiUrl(network));
-      const publicKey = new PublicKey(wallet.address);
-      const lamports = await connection.getBalance(publicKey);
-      const sol = lamports / 1e9;
-      return sol.toLocaleString(undefined, { maximumFractionDigits: 2 });
-    } else {
-      // EVM
-      const chainId = getChainIdFromChain(wallet.chain);
-      if (!chainId) {
+    try {
+        if (wallet.chain === CHAIN.SOLANA_DEVNET || !wallet.chain) {
+            const connection = new Connection(clusterApiUrl('devnet'));
+            const publicKey = new PublicKey(wallet.address);
+            const lamports = await connection.getBalance(publicKey);
+            return String(lamports / 1e9);
+        }
+
+        const chainId = getChainIdFromChain(wallet.chain);
+        if (!chainId) return '0';
+
+        const chain =
+            EVM_CHAIN_CONFIGS[chainId as keyof typeof EVM_CHAIN_CONFIGS];
+        if (!chain) return '0';
+
+        const client = createPublicClient({ chain, transport: http() });
+        const wei = await client.getBalance({
+            address: wallet.address as `0x${string}`,
+        });
+
+        return formatUnits(wei, 18);
+    } catch (err) {
+        console.error('Error fetching native token balance:', err);
         return '0';
-      }
-      const chain = EVM_CHAIN_CONFIGS[chainId as keyof typeof EVM_CHAIN_CONFIGS];
-      const client = createPublicClient({ chain, transport: http() });
-      const wei = await client.getBalance({ address:  wallet.address as `0x${string}` });
-      const eth = Number(wei) / 1e18;
-      return eth.toLocaleString(undefined, { maximumFractionDigits: 2 });
     }
-  } catch (err) {
-    console.error('Error fetching native token balance:', err);
-    return '0';
-  }
-}
+};
 
 export const fetchErc20TokenBalance = async ({
-  wallet,
-  token,
-}: fetchNativeTokenBalanceProps) => {
-  const chainId = getChainIdFromChain(wallet.chain);
-  const chain = EVM_CHAIN_CONFIGS[chainId as keyof typeof EVM_CHAIN_CONFIGS];
-  const client = createPublicClient({ chain, transport: http() });
+    wallet,
+    token,
+}: FetchNativeTokenBalanceProps) => {
+    const chainId = getChainIdFromChain(wallet.chain);
+    if (!chainId) return '0';
 
-  const [raw, dec] = await Promise.all([
-    client.readContract({
-      address: token.address as `0x${string}`,
-      abi: erc20Abi,
-      functionName: "balanceOf",
-      args: [wallet.address as `0x${string}`],
-    }),
-    token.decimals ??
-      client.readContract({
-        address: token.address as `0x${string}`,
-        abi: erc20Abi,
-        functionName: "decimals",
-      }),
-  ]);
+    const chain = EVM_CHAIN_CONFIGS[chainId as keyof typeof EVM_CHAIN_CONFIGS];
+    if (!chain) return '0';
 
-  return formatUnits(raw, Number(dec));
+    const client = createPublicClient({ chain, transport: http() });
+
+    const [raw, decimals] = await Promise.all([
+        client.readContract({
+            address: token.address as `0x${string}`,
+            abi: erc20Abi,
+            functionName: 'balanceOf',
+            args: [wallet.address as `0x${string}`],
+        }),
+        token.decimals ??
+            client.readContract({
+                address: token.address as `0x${string}`,
+                abi: erc20Abi,
+                functionName: 'decimals',
+            }),
+    ]);
+
+    return formatUnits(raw, Number(decimals));
 };
 
 export const fetchSplTokenBalance = async ({
-  owner,
-  mint,
-  rpcUrl = "https://api.devnet.solana.com",
+    owner,
+    mint,
+    rpcUrl = 'https://api.devnet.solana.com',
 }: {
-  owner: string;
-  mint: string;
-  rpcUrl?: string;
+    owner: string;
+    mint: string;
+    rpcUrl?: string;
 }) => {
-  const conn = new Connection(rpcUrl);
-  const ownerPk = new PublicKey(owner);
-  const mintPk = new PublicKey(mint);
+    try {
+        const conn = new Connection(rpcUrl);
+        const ownerPk = new PublicKey(owner);
+        const mintPk = new PublicKey(mint);
+        const ata = await getAssociatedTokenAddress(mintPk, ownerPk);
+        const res = await conn.getTokenAccountBalance(ata).catch(() => null);
 
-  const ata = await getAssociatedTokenAddress(mintPk, ownerPk);
-  const res = await conn.getTokenAccountBalance(ata).catch(() => null);
-
-  return res?.value?.uiAmountString ?? "0";
+        return res?.value?.uiAmountString ?? '0';
+    } catch (error) {
+        console.error('Error fetching SPL token balance:', error);
+        return '0';
+    }
 };
 
 export const fetchPrc20TokenBalance = async ({
     walletAddress,
     tokenAddress,
-    decimals
-}: fetchTokenBalanceProps) => {
+    decimals,
+}: FetchTokenBalanceProps) => {
     const publicClient = createPublicClient({
         chain: pushTestnetChain,
         transport: http(),
@@ -251,7 +372,9 @@ export const fetchPrc20TokenBalance = async ({
 
     try {
         if (!tokenAddress) {
-            const nativeBalance = await publicClient.getBalance({ address: walletAddress });
+            const nativeBalance = await publicClient.getBalance({
+                address: walletAddress,
+            });
             return formatUnits(nativeBalance, decimals);
         }
 
@@ -265,45 +388,47 @@ export const fetchPrc20TokenBalance = async ({
         return formatUnits(balance as bigint, decimals);
     } catch (error) {
         console.error('Error fetching token balance:', error);
-        throw new Error('Error fetching token balance:')
+        return '0';
     }
-}
+};
 
 export function formatTxTime(
-  dateLike: number | string | Date,
-  timeZone?: string
+    dateLike: number | string | Date,
+    timeZone?: string,
 ) {
-  const d = new Date(dateLike);
-  const fmt = new Intl.DateTimeFormat("en-US", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-    timeZone,
-  });
+    const d = new Date(dateLike);
+    const fmt = new Intl.DateTimeFormat('en-US', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+        timeZone,
+    });
 
-  const parts = Object.fromEntries(fmt.formatToParts(d).map(p => [p.type, p.value]));
+    const parts = Object.fromEntries(
+        fmt.formatToParts(d).map((p) => [p.type, p.value]),
+    );
 
-  return `${parts.day} ${parts.month} ${parts.year} - ${parts.hour}:${parts.minute} ${parts.dayPeriod}`;
+    return `${parts.day} ${parts.month} ${parts.year} - ${parts.hour}:${parts.minute} ${parts.dayPeriod}`;
 }
 
 export function formatDuration(seconds: number) {
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  const s = seconds % 60;
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
 
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${pad(h)}h ${pad(m)}m ${pad(s)}s`;
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${pad(h)}h ${pad(m)}m ${pad(s)}s`;
 }
 
 export const getTokenSymbol = async (tokenAddress: string) => {
-  try {
-    const contract = new Contract(tokenAddress, ERC20_ABI, provider);
-    return await contract.symbol();
-  } catch (e) {
-    console.error("symbol() failed", e);
-    return null;
-  }
-}
+    try {
+        const contract = new Contract(tokenAddress, ERC20_ABI, provider);
+        return await contract.symbol();
+    } catch (e) {
+        console.error('symbol() failed', e);
+        return null;
+    }
+};

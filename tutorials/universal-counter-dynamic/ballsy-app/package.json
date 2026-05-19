@@ -12,7 +12,7 @@
     "deploy": "yarn run build && echo 'ballsy.push.org' > ./dist/CNAME && gh-pages -d dist -r https://github.com/pushchain/push-chain-ballsy-app-deployment"
   },
   "dependencies": {
-    "@pushchain/ui-kit": "^5.2.2",
+    "@pushchain/ui-kit": "^6.0.9",
     "buffer": "^6.0.3",
     "ethers": "^6.14.4",
     "gh-pages": "^6.3.0",
@@ -38,5 +38,6 @@
     "typescript-eslint": "^8.30.1",
     "util": "^0.12.5",
     "vite": "^7.0.2"
-  }
+  },
+  "packageManager": "yarn@4.2.2+sha512.c44e283c54e02de9d1da8687025b030078c1b9648d2895a65aab8e64225bfb7becba87e1809fc0b4b6778bbd47a1e2ab6ac647de4c5e383a53a7c17db6c3ff4b"
 }

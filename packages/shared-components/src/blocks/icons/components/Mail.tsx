@@ -19,9 +19,9 @@ const Mail: FC<IconProps> = (allProps) => {
           <path
             d="M1 1.25L10 8.75L19 1.25"
             stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
           />
           <rect
             x="1"
@@ -29,9 +29,9 @@ const Mail: FC<IconProps> = (allProps) => {
             width="18"
             height="13.5"
             stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
           />
         </svg>
       }
