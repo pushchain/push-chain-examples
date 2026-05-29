@@ -8,15 +8,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
     Box,
     Text,
-    TextInput,
     Button,
-    IconProps,
     Wallet,
-    IllustrationProps,
     css,
 } from 'shared-components';
 import {
-    enumKeyToDisplay,
     fetchErc20TokenBalance,
     fetchNativeTokenBalance,
     fetchPrc20TokenBalance,
@@ -27,215 +23,38 @@ import {
 import Divider from './Divider';
 import { CHAIN } from '@pushchain/core/src/lib/constants/enums';
 import { MoveableToken } from '@pushchain/core/src/lib/constants';
-import { encodeFunctionData, erc20Abi, isAddress } from 'viem';
+import { isAddress } from 'viem';
 import { PublicKey } from '@solana/web3.js';
 import QuoteSummary from './Summary';
 import TermsConsent from './TermsConsent';
 import Select, { SelectOption } from '../../common/components/Select';
-import { chainsIconList, TOKENS, tokensIconList } from '../../common/constants';
+import { tokensIconList } from '../../common/constants';
 import Success from './Success';
 import {
     sendBridgeEvent,
     createBridgeEventPayload,
 } from '../../services/bridgeApi';
+import AddressField from './AddressField';
+import { DECIMAL_INPUT, PC_TOKEN_OPTION, PUSH_CHAIN } from './constants';
+import { useBridgeQuote } from './hooks/useBridgeQuote';
+import type { AddressPrefillType, ChainOptions, TokenOptions } from './types';
+import {
+    buildExternalTransferCalldata,
+    createChainOption,
+    getChainNamespace,
+    getDestinationTokenDetails,
+    getMatchingTokenOption,
+    getSourceType,
+    getTokenDetailsByAddress,
+    isExternalNativeLikeToken,
+    isPositiveAmount,
+    isSameAddress,
+    normaliseAmount,
+    resolveCascadeFinalHash,
+    toSafeNumber,
+} from './utils';
 
-export type ChainOptions = {
-    icon?: React.FC<IconProps>;
-    label: string;
-    value: string;
-};
-
-export type TokenOptions = {
-    icon?: React.FC<IllustrationProps>;
-    label: string;
-    displayName?: string;
-    badge?: React.FC<IllustrationProps>;
-    value: string;
-    token: MoveableToken;
-};
-
-const PUSH_CHAIN = CHAIN.PUSH_TESTNET_DONUT;
-const PC_TOKEN_OPTION: TokenOptions = {
-    value: 'PC',
-    label: 'PC',
-    displayName: 'Push Chain Native Token',
-    token: {
-        symbol: 'PC',
-        decimals: 18,
-        address: '',
-        mechanism: 'native',
-    } as MoveableToken,
-    icon: tokensIconList['PC'],
-};
-
-const DECIMAL_INPUT = /^\d*(?:\.\d*)?$/;
-
-const normaliseAmount = (value: string) => value.replace(/,/g, '').trim();
-const toSafeNumber = (value: string) => {
-    const parsed = Number(normaliseAmount(value));
-    return Number.isFinite(parsed) ? parsed : 0;
-};
-
-const isPositiveAmount = (value: string) => toSafeNumber(value) > 0;
-
-const getChainNamespace = (chainValue?: string): string => {
-    if (!chainValue) return '';
-    return chainValue.split(':')[0] || '';
-};
-
-const getDestinationChainName = (chain?: string) => {
-    const chainMap: Record<string, string> = {
-        [CHAIN.ETHEREUM_SEPOLIA]: 'eth',
-        [CHAIN.BASE_SEPOLIA]: 'base',
-        [CHAIN.ARBITRUM_SEPOLIA]: 'arb',
-        [CHAIN.BNB_TESTNET]: 'bsc',
-        [CHAIN.SOLANA_DEVNET]: 'sol',
-    };
-
-    return chain ? chainMap[chain] || '' : '';
-};
-
-const getTokenFamily = (symbol?: string) =>
-    symbol?.split('_')[0] || symbol || '';
-
-const getTokenDetailsByAddress = (address?: string) => {
-    if (!address) return undefined;
-    return TOKENS.find(
-        (token) => token.address?.toLowerCase() === address.toLowerCase(),
-    );
-};
-
-const getDestinationTokenDetails = (
-    token: MoveableToken,
-    destinationChain?: string,
-) => {
-    const tokenInDetails = getTokenDetailsByAddress(token.address);
-    const destinationChainName = getDestinationChainName(destinationChain);
-
-    if (!tokenInDetails || !destinationChainName) return undefined;
-
-    const tokenFamily = getTokenFamily(tokenInDetails.symbol);
-
-    return TOKENS.find(
-        (candidate) =>
-            getTokenFamily(candidate.symbol) === tokenFamily &&
-            candidate.chainName === destinationChainName,
-    );
-};
-
-const isSameAddress = (a?: string, b?: string) =>
-    !!a && !!b && a.toLowerCase() === b.toLowerCase();
-
-
-type SourceType = 'UOA' | 'UEA' | 'CEA';
-
-const getSourceType = ({
-    fromChain,
-    originChain,
-}: {
-    fromChain: string;
-    originChain: string;
-}): SourceType => {
-    if (fromChain === PUSH_CHAIN) return 'UEA';
-    if (fromChain === originChain) return 'UOA';
-    return 'CEA';
-};
-
-const isExternalNativeLikeToken = (token: MoveableToken) => {
-    const family = getTokenFamily(token.symbol).toUpperCase();
-
-    return (
-        token.mechanism === 'native' ||
-        !token.address ||
-        ['ETH', 'BNB', 'SOL', 'MATIC', 'AVAX'].includes(family)
-    );
-};
-
-const buildExternalTransferCalldata = ({
-    token,
-    recipient,
-    amount,
-}: {
-    token: MoveableToken;
-    recipient: string;
-    amount: bigint;
-}) => {
-    if (!token.address) {
-        throw new Error('Token address is required for ERC20/SPL transfer.');
-    }
-
-    return encodeFunctionData({
-        abi: erc20Abi,
-        functionName: 'transfer',
-        args: [recipient as `0x${string}`, amount],
-    });
-};
-
-type ResolvedHop = {
-    txHash?: string;
-    outboundDetails?: {
-        externalTxHash?: string;
-    };
-};
-
-type CascadeCompletion = {
-    success?: boolean;
-    failedAt?: number | string;
-    finalTxHash?: string;
-    hops?: ResolvedHop[];
-};
-
-type CascadeResponse = {
-    initialTxHash?: string;
-    finalTxHash?: string;
-    hops?: ResolvedHop[];
-    waitForAll?: () => Promise<CascadeCompletion>;
-    wait?: () => Promise<CascadeCompletion>;
-};
-
-const getResolvedHopHash = (hop: ResolvedHop) =>
-    hop.txHash || hop.outboundDetails?.externalTxHash || '';
-
-const getLastResolvedHopHash = (hops?: ResolvedHop[]) => {
-    if (!Array.isArray(hops)) return '';
-
-    for (let i = hops.length - 1; i >= 0; i -= 1) {
-        const hash = getResolvedHopHash(hops[i]);
-        if (hash) return hash;
-    }
-
-    return '';
-};
-
-const resolveCascadeFinalHash = async (cascadeResponse: CascadeResponse) => {
-    const completion =
-        typeof cascadeResponse?.waitForAll === 'function'
-            ? await cascadeResponse.waitForAll()
-            : typeof cascadeResponse?.wait === 'function'
-              ? await cascadeResponse.wait()
-              : null;
-
-    if (completion && completion.success === false) {
-        throw new Error(
-            `Multichain transaction failed at hop ${completion.failedAt ?? ''}`.trim(),
-        );
-    }
-
-    const finalTxHash =
-        completion?.finalTxHash ||
-        cascadeResponse?.finalTxHash ||
-        getLastResolvedHopHash(completion?.hops) ||
-        getLastResolvedHopHash(cascadeResponse?.hops);
-
-    if (!finalTxHash) {
-        throw new Error('Unable to resolve final transaction hash.');
-    }
-
-    return {
-        finalTxHash,
-        completion,
-    };
-};
+export type { ChainOptions, TokenOptions } from './types';
 
 const Bridge = () => {
     const [amount, setAmount] = useState('');
@@ -244,6 +63,10 @@ const Bridge = () => {
     const [error, setError] = useState('');
     const [addressError, setAddressError] = useState('');
     const [address, setAddress] = useState('');
+    const [addressLoading, setAddressLoading] = useState(false);
+    const [suggestedAddress, setSuggestedAddress] = useState('');
+    const [suggestedAddressType, setSuggestedAddressType] =
+        useState<AddressPrefillType>(null);
     const [fromChain, setFromChain] = useState<ChainOptions | null>(null);
     const [toChain, setToChain] = useState<ChainOptions | null>(null);
     const [userEnteredAddress, setUserEnteredAddress] = useState(false);
@@ -266,11 +89,24 @@ const Bridge = () => {
     const { pushChainClient } = usePushChainClient();
     const { handleConnectToPushWallet } = usePushWalletContext();
 
-    const isToPushChain = toChain?.value === PUSH_CHAIN;
+    const fromChainValue = fromChain?.value;
+    const toChainValue = toChain?.value;
+    const isToPushChain = toChainValue === PUSH_CHAIN;
+
+    const supportedFromChainsList = useMemo(
+        () =>
+            supportedChainsList.filter(
+                (chain) => chain.value !== toChainValue,
+            ),
+        [supportedChainsList, toChainValue],
+    );
 
     const supportedToChainsList = useMemo(
-        () => supportedChainsList,
-        [supportedChainsList],
+        () =>
+            supportedChainsList.filter(
+                (chain) => chain.value !== fromChainValue,
+            ),
+        [fromChainValue, supportedChainsList],
     );
 
     const toTokenOptions = useMemo(() => {
@@ -284,10 +120,47 @@ const Bridge = () => {
         return [fromToken];
     }, [fromToken, isToPushChain]);
 
+    const quotePreview = useBridgeQuote({
+        amount,
+        fromToken,
+        toToken,
+        toChain: toChainValue,
+    });
+
     const buttonText = useMemo(() => {
         if (!pushChainClient) return 'Connect Wallet';
         return 'Confirm Transaction';
     }, [pushChainClient]);
+
+    const buildChainOption = useCallback(
+        (chain: CHAIN | string): ChainOptions =>
+            createChainOption(chain, (chainId) =>
+                PushChain.utils.chains.getChainName(chainId),
+            ),
+        [PushChain.utils.chains],
+    );
+
+    const selectedAddressIsSuggested =
+        !!suggestedAddress && address.trim() === suggestedAddress;
+
+    const addressPrefillNote = useMemo(() => {
+        if (!selectedAddressIsSuggested) return '';
+
+        if (suggestedAddressType === 'uea') {
+            return 'Pre filled with your Push Chain account linked to the connected wallet.';
+        }
+
+        if (suggestedAddressType === 'cea') {
+            return `Pre filled with your ${toChain?.label || 'destination chain'} sub-account linked to your Push Wallet.`;
+        }
+
+        return '';
+    }, [selectedAddressIsSuggested, suggestedAddressType, toChain?.label]);
+
+    const showUseMyAddress =
+        userEnteredAddress &&
+        !!suggestedAddress &&
+        address.trim() !== suggestedAddress;
 
     const validateAddressForChain = useCallback(
         (addr: string, chainValue?: string): string => {
@@ -321,6 +194,8 @@ const Bridge = () => {
         if (!pushChainClient) return '';
         if (!fromChain) return 'Please select source chain.';
         if (!toChain) return 'Please select destination chain.';
+        if (fromChain.value === toChain.value)
+            return 'Source and destination chains must be different.';
         if (!fromToken) return 'Please select token.';
         if (!toToken) return 'Please select destination token.';
         if (!amount || !isPositiveAmount(amount))
@@ -521,8 +396,14 @@ const Bridge = () => {
     const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const next = e.target.value;
         setAddress(next);
-        setUserEnteredAddress(next.length > 0);
+        setUserEnteredAddress(next.trim() !== suggestedAddress);
         setAddressError(validateAddressForChain(next, toChain?.value));
+    };
+
+    const handleUseSuggestedAddress = () => {
+        setAddress(suggestedAddress);
+        setUserEnteredAddress(false);
+        setAddressError(validateAddressForChain(suggestedAddress, toChainValue));
     };
 
     const handleBridge = async () => {
@@ -827,18 +708,15 @@ const Bridge = () => {
         const chains = PushChain.utils.chains.getSupportedChains(
             PushUI.CONSTANTS.PUSH_NETWORK.TESTNET,
         ).chains;
-        const options = chains.map((chain) => ({
-            label: enumKeyToDisplay(
-                PushChain.utils.chains.getChainName(chain) || '',
-            ),
-            value: chain,
-            icon: Object.keys(chainsIconList).includes(chain)
-                ? chainsIconList[chain]
-                : undefined,
-        }));
+        const options = chains.map((chain) => buildChainOption(chain));
 
-        setSupportedChainsList(options);
-    }, [PushChain.utils.chains]);
+        setSupportedChainsList((current) =>
+            current.length === options.length &&
+            current.every((chain, index) => chain.value === options[index].value)
+                ? current
+                : options,
+        );
+    }, [PushChain.utils.chains, buildChainOption]);
 
     useEffect(() => {
         if (!pushChainClient) {
@@ -847,50 +725,66 @@ const Bridge = () => {
             setFromToken(null);
             setToToken(null);
             setAddress('');
+            setSuggestedAddress('');
+            setSuggestedAddressType(null);
             setBalance('');
             return;
         }
 
         if (!userSelectedFromChain) {
             const originChain = pushChainClient.universal.origin.chain;
-            setFromChain({
-                label: enumKeyToDisplay(
-                    PushChain.utils.chains.getChainName(originChain) || '',
-                ),
-                value: originChain,
-                icon: Object.keys(chainsIconList).includes(originChain)
-                    ? chainsIconList[originChain]
-                    : undefined,
-            });
+            setFromChain((current) =>
+                current?.value === originChain
+                    ? current
+                    : buildChainOption(originChain),
+            );
         }
 
-        if (!userSelectedToChain && supportedChainsList.length) {
+        if (!userSelectedToChain && supportedToChainsList.length) {
             const defaultToChain =
-                supportedChainsList.find(
+                supportedToChainsList.find(
                     (chain) =>
                         chain.value === PUSH_CHAIN &&
                         chain.value !== pushChainClient.universal.origin.chain,
                 ) ||
-                supportedChainsList.find(
+                supportedToChainsList.find(
                     (chain) =>
                         chain.value !== pushChainClient.universal.origin.chain,
                 ) ||
                 null;
-            setToChain(defaultToChain);
+            setToChain((current) =>
+                current?.value === defaultToChain?.value
+                    ? current
+                    : defaultToChain,
+            );
         }
     }, [
-        PushChain.utils.chains,
+        buildChainOption,
         pushChainClient,
-        supportedChainsList,
+        supportedToChainsList,
         userSelectedFromChain,
         userSelectedToChain,
     ]);
 
     useEffect(() => {
-        if (!fromChain) return;
+        if (!fromChainValue || !toChainValue || fromChainValue !== toChainValue)
+            return;
+
+        setToChain(
+            supportedChainsList.find((chain) => chain.value !== fromChainValue) ||
+                null,
+        );
+    }, [fromChainValue, supportedChainsList, toChainValue]);
+
+    useEffect(() => {
+        if (!fromChainValue) {
+            setMovableTokensList([]);
+            setFromToken(null);
+            return;
+        }
 
         const tokens = PushChain.utils.tokens.getMoveableTokens(
-            fromChain.value as CHAIN,
+            fromChainValue as CHAIN,
         ).tokens;
         const options: TokenOptions[] = tokens.map((token) => {
             const tokenDetails = getTokenDetailsByAddress(token.address);
@@ -921,9 +815,11 @@ const Bridge = () => {
         });
 
         setMovableTokensList(options);
-        setFromToken(options[0] || null);
-        setToToken(options[0] || null);
-    }, [PushChain.utils.tokens, fromChain]);
+        setFromToken(
+            (current) =>
+                getMatchingTokenOption(options, current) || options[0] || null,
+        );
+    }, [PushChain.utils.tokens, fromChainValue]);
 
     useEffect(() => {
         if (!fromToken) {
@@ -931,10 +827,13 @@ const Bridge = () => {
             return;
         }
 
-        if (!toTokenOptions.some((option) => option.value === toToken?.value)) {
-            setToToken(toTokenOptions[0] || null);
-        }
-    }, [fromToken, toToken?.value, toTokenOptions]);
+        setToToken(
+            (current) =>
+                getMatchingTokenOption(toTokenOptions, current) ||
+                toTokenOptions[0] ||
+                null,
+        );
+    }, [fromToken, toTokenOptions]);
 
     useEffect(() => {
         let cancelled = false;
@@ -967,56 +866,53 @@ const Bridge = () => {
                         decimals: fromToken.token.decimals,
                     });
                 } else if (getChainNamespace(fromChain.value) === 'solana') {
+                    const sourceWallet =
+                        pushChainClient.universal.origin.chain ===
+                        fromChain.value
+                            ? wallet
+                            : {
+                                  chain: fromChain.value as CHAIN,
+                                  address: await getCEAAddress(
+                                      pushChainClient.universal.origin,
+                                      fromChain.value as CHAIN,
+                                  ),
+                              };
+
                     if (fromToken.token.mechanism === 'native') {
                         nextBalance = await fetchNativeTokenBalance({
-                            wallet,
+                            wallet: sourceWallet,
                             token: fromToken.token,
                         });
-                    } else if (pushChainClient.universal.origin.chain === fromChain.value) {
+                    } else {
                         nextBalance = await fetchSplTokenBalance({
-                            owner: wallet.address,
+                            owner: sourceWallet.address,
                             mint: fromToken.token.address,
                         });
-                    } else {
-						const cea = await getCEAAddress(pushChainClient.universal.origin, fromChain.value as CHAIN);
-						nextBalance = await fetchSplTokenBalance({
-							owner: cea,
-							mint: fromToken.token.address,
-						});
-					}
+                    }
                 } else if (getChainNamespace(fromChain.value) === 'eip155') {
-					if (pushChainClient.universal.origin.chain === fromChain.value) {
-						if (fromToken.token.mechanism === 'native') {
-							nextBalance = await fetchNativeTokenBalance({
-								wallet,
-								token: fromToken.token,
-							});
-						} else {
-							nextBalance = await fetchErc20TokenBalance({
-								wallet,
-								token: fromToken.token,
-							});
-						}
-					} else {
-						const cea = await getCEAAddress(pushChainClient.universal.origin, fromChain.value as CHAIN);
-						if (fromToken.token.mechanism === 'native') {
-							nextBalance = await fetchNativeTokenBalance({
-								wallet: {
-									chain: fromChain.value as CHAIN,
-									address: cea,
-								},
-								token: fromToken.token,
-							});
-						} else {
-							nextBalance = await fetchErc20TokenBalance({
-								wallet: {
-									chain: fromChain.value as CHAIN,
-									address: cea,
-								},
-								token: fromToken.token,
-							});
-						}
-					}
+                    const sourceWallet =
+                        pushChainClient.universal.origin.chain ===
+                        fromChain.value
+                            ? wallet
+                            : {
+                                  chain: fromChain.value as CHAIN,
+                                  address: await getCEAAddress(
+                                      pushChainClient.universal.origin,
+                                      fromChain.value as CHAIN,
+                                  ),
+                              };
+
+                    if (fromToken.token.mechanism === 'native') {
+                        nextBalance = await fetchNativeTokenBalance({
+                            wallet: sourceWallet,
+                            token: fromToken.token,
+                        });
+                    } else {
+                        nextBalance = await fetchErc20TokenBalance({
+                            wallet: sourceWallet,
+                            token: fromToken.token,
+                        });
+                    }
                 }
             } catch (fetchError) {
                 console.error('Error fetching balance:', fetchError);
@@ -1045,37 +941,59 @@ const Bridge = () => {
     useEffect(() => {
         let cancelled = false;
 
-        const populateAddress = async () => {
-            if (!pushChainClient || !toChain?.value || userEnteredAddress)
+        const resolveSuggestedAddress = async () => {
+            setAddressLoading(false);
+            setSuggestedAddress('');
+            setSuggestedAddressType(null);
+
+            if (!pushChainClient || !toChainValue) {
                 return;
+            }
 
             const uoa = pushChainClient.universal.origin;
 
-            if (toChain.value === PUSH_CHAIN) {
-                setAddress(pushChainClient.universal.account);
+            if (toChainValue === PUSH_CHAIN) {
+                setSuggestedAddress(pushChainClient.universal.account);
+                setSuggestedAddressType('uea');
                 return;
             }
 
-            if (toChain.value === uoa.chain) {
-                setAddress(uoa.address);
+            if (toChainValue === uoa.chain) {
+                setSuggestedAddress(uoa.address);
+                setSuggestedAddressType('uoa');
                 return;
             }
+
+            setAddressLoading(true);
 
             try {
-                const cea = await getCEAAddress(uoa, toChain.value as CHAIN);
-                if (!cancelled) setAddress(cea);
+                const cea = await getCEAAddress(uoa, toChainValue as CHAIN);
+                if (cancelled) return;
+                setSuggestedAddress(cea);
+                setSuggestedAddressType('cea');
             } catch (ceaError) {
                 console.error('Failed to derive CEA address:', ceaError);
-                if (!cancelled) setAddress('');
+                if (!cancelled) {
+                    setSuggestedAddress('');
+                    setSuggestedAddressType(null);
+                }
+            } finally {
+                if (!cancelled) setAddressLoading(false);
             }
         };
 
-        populateAddress();
+        resolveSuggestedAddress();
 
         return () => {
             cancelled = true;
         };
-    }, [pushChainClient, toChain?.value, userEnteredAddress]);
+    }, [pushChainClient, toChainValue]);
+
+    useEffect(() => {
+        if (!userEnteredAddress) {
+            setAddress(suggestedAddress);
+        }
+    }, [suggestedAddress, userEnteredAddress]);
 
     useEffect(() => {
         setAddressError(validateAddressForChain(address, toChain?.value));
@@ -1342,7 +1260,7 @@ const Bridge = () => {
                                 <Select
                                     onChange={handleSelectFromChain}
                                     selected={fromChain}
-                                    options={supportedChainsList}
+                                    options={supportedFromChainsList}
                                     placeholder="Select Chain"
                                 />
                             </Box>
@@ -1399,58 +1317,23 @@ const Bridge = () => {
                             </Box>
                         </Box>
 
-                        <Box
-                            display="flex"
-                            gap="spacing-xxs"
-                            alignItems={{ initial: 'center', tb: 'flex-start' }}
-                            flexDirection={{ initial: 'row', tb: 'column' }}
-                            margin="spacing-none spacing-none spacing-xs spacing-none"
-                        >
-                            <Box
-                                width="64px"
-                                display="flex"
-                                justifyContent={{
-                                    initial: 'center',
-                                    tb: 'flex-start',
-                                }}
-                            >
-                                <Text
-                                    variant="bm-regular"
-                                    color="text-secondary"
-                                >
-                                    Address
-                                </Text>
-                            </Box>
-                            <Box
-                                width={{
-                                    initial: 'calc(100% - 72px)',
-                                    tb: '100%',
-                                }}
-                            >
-                                <TextInput
-                                    onChange={handleAddressChange}
-                                    placeholder="Enter Address"
-                                    value={address}
-                                />
-                                {addressError ? (
-                                    <Box
-                                        position="absolute"
-                                        margin="spacing-none spacing-xs"
-                                    >
-                                        <Text
-                                            variant="bes-regular"
-                                            color="text-state-danger-subtle"
-                                        >
-                                            {addressError}
-                                        </Text>
-                                    </Box>
-                                ) : null}
-                            </Box>
-                        </Box>
+                        <AddressField
+                            address={address}
+                            addressError={addressError}
+                            loading={addressLoading}
+                            prefillNote={addressPrefillNote}
+                            showUseMyAddress={showUseMyAddress}
+                            onAddressChange={handleAddressChange}
+                            onUseMyAddress={handleUseSuggestedAddress}
+                        />
 
                         <QuoteSummary
-                            token={fromToken?.token}
-                            amount={amount}
+                            fromToken={fromToken?.token}
+                            fromAmount={amount}
+                            toToken={quotePreview.token}
+                            toAmount={quotePreview.amount}
+                            loading={quotePreview.loading}
+                            error={quotePreview.error}
                         />
 
                         <Button

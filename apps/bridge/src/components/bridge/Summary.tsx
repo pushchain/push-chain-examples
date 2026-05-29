@@ -1,14 +1,40 @@
 import { MoveableToken } from "@pushchain/core/src/lib/constants";
 import { useState } from "react";
-import { Box, CaretDown, css, Text } from "shared-components";
+import { Box, CaretDown, css, Spinner, Text } from "shared-components";
 
 type QuoteSummaryProps = {
-  amount: string;
-  token?: MoveableToken;
+  fromAmount: string;
+  fromToken?: MoveableToken;
+  toAmount: string;
+  toToken?: MoveableToken;
+  loading?: boolean;
+  error?: string;
 };
 
-const QuoteSummary: React.FC<QuoteSummaryProps> = ({token, amount}) => {
+const formatDisplayAmount = (value: string) => {
+  if (!value) return "0";
+
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return value;
+  if (parsed === 0) return "0";
+  if (parsed > 0 && parsed < 0.0001) return "<0.0001";
+
+  return new Intl.NumberFormat("en-US", {
+    maximumFractionDigits: 6,
+  }).format(parsed);
+};
+
+const QuoteSummary: React.FC<QuoteSummaryProps> = ({
+  fromAmount,
+  fromToken,
+  toAmount,
+  toToken,
+  loading = false,
+  error = "",
+}) => {
   const [open, setOpen] = useState(false);
+  const receiveToken = toToken?.symbol || fromToken?.symbol || "";
+  const sendToken = fromToken?.symbol || "";
 
   return (
     <Box
@@ -44,9 +70,24 @@ const QuoteSummary: React.FC<QuoteSummaryProps> = ({token, amount}) => {
                 </Box> */}
 
                 <Box display="flex" gap="spacing-xxs" alignItems="baseline">
-                    <Text variant="bm-regular">{Number(amount)} {token?.symbol}</Text>
-                    <Text variant="bm-regular" color="text-tertiary">in</Text>
-                    <Text variant="bm-regular">~20 secs</Text>
+                    {loading ? (
+                        <Box display="flex" alignItems="center" gap="spacing-xxs">
+                            <Spinner size="small" variant="secondary" />
+                            <Text variant="bm-regular">Fetching quote</Text>
+                        </Box>
+                    ) : error ? (
+                        <Text variant="bm-regular" color="text-state-danger-subtle">
+                            {error}
+                        </Text>
+                    ) : (
+                        <>
+                            <Text variant="bm-regular">
+                                {formatDisplayAmount(toAmount)} {receiveToken}
+                            </Text>
+                            <Text variant="bm-regular" color="text-tertiary">in</Text>
+                            <Text variant="bm-regular">~20 secs</Text>
+                        </>
+                    )}
                 </Box>
             </Box>
 
@@ -55,6 +96,21 @@ const QuoteSummary: React.FC<QuoteSummaryProps> = ({token, amount}) => {
 
         {open && (
             <Box display="flex" flexDirection="column" gap="spacing-xs">
+                <Row
+                    label="You send"
+                    value={`${formatDisplayAmount(fromAmount)} ${sendToken}`}
+                />
+
+                <Row
+                    label="You receive"
+                    value={
+                        loading
+                            ? "Fetching"
+                            : error
+                              ? "Unavailable"
+                              : `${formatDisplayAmount(toAmount)} ${receiveToken}`
+                    }
+                />
 
                 <Row label="Net fee" value='$0.00' />
 

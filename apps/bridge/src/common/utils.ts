@@ -122,7 +122,9 @@ const resolveTokenAddress = (token: string) => {
     return tokenDetails?.address ?? null;
 };
 
-const parseAmountOutFromUnknownShape = (value: unknown): string | undefined => {
+export const parseAmountOutFromUnknownShape = (
+    value: unknown,
+): string | undefined => {
     if (!value || typeof value !== 'object') return undefined;
 
     const stack: unknown[] = [value];
@@ -159,7 +161,7 @@ const parseAmountOutFromUnknownShape = (value: unknown): string | undefined => {
     return undefined;
 };
 
-const toBaseUnits = (amount: string, decimals: number) => {
+export const toBaseUnits = (amount: string, decimals: number) => {
     const normalized = amount.trim();
     if (!normalized) return undefined;
 
@@ -266,13 +268,43 @@ export const swapPushTokens = async ({
     };
 };
 
+const hexToBytes = (hex: string) => {
+    const clean = hex.replace(/^0x/, '');
+
+    if (!clean || clean.length % 2 !== 0 || !/^[\da-f]+$/i.test(clean)) {
+        return null;
+    }
+
+    const bytes = new Uint8Array(clean.length / 2);
+
+    for (let i = 0; i < bytes.length; i += 1) {
+        bytes[i] = parseInt(clean.slice(i * 2, i * 2 + 2), 16);
+    }
+
+    return bytes;
+};
+
+export const formatChainAddress = (chain: CHAIN | string, address: string) => {
+    if (!String(chain).startsWith('solana:') || !address) return address;
+
+    const bytes = hexToBytes(address);
+
+    if (!bytes || bytes.length !== 32) return address;
+
+    try {
+        return new PublicKey(bytes).toBase58();
+    } catch {
+        return address;
+    }
+};
+
 export const getCEAAddress = async (uoa: UniversalAccount, chain: CHAIN) => {
     const cea = await PushChain.utils.account.deriveExecutorAccount(uoa, {
         chain,
         skipNetworkCheck: true,
     });
 
-    return cea.address;
+    return formatChainAddress(chain, cea.address);
 };
 
 export const fetchNativeTokenBalance = async ({
