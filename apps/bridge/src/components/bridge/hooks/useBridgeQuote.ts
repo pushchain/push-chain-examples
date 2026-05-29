@@ -9,6 +9,7 @@ import { PC_TOKEN_OPTION, PUSH_CHAIN } from '../constants';
 import type { QuotePreview, TokenOptions } from '../types';
 import {
     getDestinationTokenDetails,
+    getExternalTokenSymbol,
     getTokenDetailsByAddress,
     isPositiveAmount,
     isSameAddress,
@@ -60,7 +61,7 @@ export const useBridgeQuote = ({
         return {
             token: {
                 ...fromToken.token,
-                symbol: tokenOutDetails.symbol,
+                symbol: getExternalTokenSymbol(tokenOutDetails.symbol),
                 address: tokenOutDetails.address,
                 decimals: tokenOutDetails.decimals ?? fromToken.token.decimals,
             },

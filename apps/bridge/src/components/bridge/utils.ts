@@ -56,6 +56,16 @@ export const getDestinationChainName = (chain?: string) => {
 export const getTokenFamily = (symbol?: string) =>
     symbol?.split('_')[0] || symbol || '';
 
+export const getExternalTokenSymbol = (symbol?: string) => {
+    const family = getTokenFamily(symbol);
+
+    if (family.startsWith('p') && family.length > 1) {
+        return family.slice(1);
+    }
+
+    return family;
+};
+
 export const getTokenDetailsByAddress = (address?: string) => {
     if (!address) return undefined;
     return TOKENS.find(

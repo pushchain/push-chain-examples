@@ -1638,9 +1638,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pushchain/core@npm:^6.0.9":
-  version: 6.0.9
-  resolution: "@pushchain/core@npm:6.0.9"
+"@pushchain/core@npm:^6.0.13":
+  version: 6.0.13
+  resolution: "@pushchain/core@npm:6.0.13"
   dependencies:
     "@bufbuild/protobuf": "npm:^2.0.0"
     "@cosmjs/crypto": "npm:0.33.1"
@@ -1665,18 +1665,18 @@ __metadata:
       optional: true
     tweetnacl:
       optional: true
-  checksum: 10c0/a3f0d7d1ed96c9b8b2b942df0c34bfc27cf180a57c67c63b865392af0c65e125fd7541b015977da16b7c96905e1945f473bf76fb7ace4a5094b0aafc1bcf08c8
+  checksum: 10c0/a97955c1c387eaece17a68c7bf61ffb949d6fa7e1334e83d376c796a6568f5e0485585702cbd98dd70b8b8bb9295ca1cb5d0d69f58b4ffce9c4dec8ade5dce79
   languageName: node
   linkType: hard
 
-"@pushchain/ui-kit@npm:^6.0.10":
-  version: 6.0.11
-  resolution: "@pushchain/ui-kit@npm:6.0.11"
+"@pushchain/ui-kit@npm:^6.0.13":
+  version: 6.0.13
+  resolution: "@pushchain/ui-kit@npm:6.0.13"
   dependencies:
     "@coral-xyz/anchor": "npm:^0.31.1"
     "@human.tech/waap-sdk": "npm:^1.3.0"
     "@metamask/sdk": "npm:^0.32.0"
-    "@pushchain/core": "npm:^6.0.9"
+    "@pushchain/core": "npm:^6.0.13"
     "@solana/web3.js": "npm:^1.98.2"
     "@walletconnect/ethereum-provider": "npm:^2.21.5"
     buffer: "npm:^6.0.3"
@@ -1688,7 +1688,7 @@ __metadata:
   peerDependencies:
     react: ">=18.3.0 <20.0.0"
     react-dom: ">=18.3.0 <20.0.0"
-  checksum: 10c0/25380848156cebd0378b277965a5cdcd1a3410ad63d31af1a4075702fd4c77494e34c332cae271d43e7261b9459b1395b6d77094404e72eaadcb640c7f5d3cd5
+  checksum: 10c0/759186f59c415cc750ff399b31e56d1dad43231ea72b7f6719c5edbd60b7308b9e97b4df28aba5f60639bfda80ededd1f20ca122d88de68b9e450b9005bf46a6
   languageName: node
   linkType: hard
 
@@ -9951,7 +9951,7 @@ __metadata:
   resolution: "push-bridge@workspace:."
   dependencies:
     "@eslint/js": "npm:^9.9.0"
-    "@pushchain/ui-kit": "npm:^6.0.10"
+    "@pushchain/ui-kit": "npm:^6.0.13"
     "@radix-ui/react-popover": "npm:^1.1.2"
     "@solana/spl-token": "npm:^0.4.14"
     "@types/react": "npm:^18.3.3"
