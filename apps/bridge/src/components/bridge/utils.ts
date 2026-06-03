@@ -66,10 +66,37 @@ export const getExternalTokenSymbol = (symbol?: string) => {
     return family;
 };
 
+const getComparableTokenFamily = (symbol?: string) =>
+    getExternalTokenSymbol(symbol).toLowerCase();
+
 export const getTokenDetailsByAddress = (address?: string) => {
     if (!address) return undefined;
     return TOKENS.find(
         (token) => token.address?.toLowerCase() === address.toLowerCase(),
+    );
+};
+
+export const getTokenDetailsForChain = (
+    token: MoveableToken,
+    chain?: string,
+) => {
+    const chainName = getDestinationChainName(chain);
+    const tokenDetails = getTokenDetailsByAddress(token.address);
+
+    if (tokenDetails && (!chainName || tokenDetails.chainName === chainName)) {
+        return tokenDetails;
+    }
+
+    if (!chainName) return tokenDetails;
+
+    const tokenFamily = getComparableTokenFamily(
+        tokenDetails?.symbol || token.symbol,
+    );
+
+    return TOKENS.find(
+        (candidate) =>
+            candidate.chainName === chainName &&
+            getComparableTokenFamily(candidate.symbol) === tokenFamily,
     );
 };
 
@@ -80,13 +107,15 @@ export const getDestinationTokenDetails = (
     const tokenInDetails = getTokenDetailsByAddress(token.address);
     const destinationChainName = getDestinationChainName(destinationChain);
 
-    if (!tokenInDetails || !destinationChainName) return undefined;
+    if (!destinationChainName) return undefined;
 
-    const tokenFamily = getTokenFamily(tokenInDetails.symbol);
+    const tokenFamily = getComparableTokenFamily(
+        tokenInDetails?.symbol || token.symbol,
+    );
 
     return TOKENS.find(
         (candidate) =>
-            getTokenFamily(candidate.symbol) === tokenFamily &&
+            getComparableTokenFamily(candidate.symbol) === tokenFamily &&
             candidate.chainName === destinationChainName,
     );
 };

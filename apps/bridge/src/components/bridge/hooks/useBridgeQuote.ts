@@ -10,7 +10,7 @@ import type { QuotePreview, TokenOptions } from '../types';
 import {
     getDestinationTokenDetails,
     getExternalTokenSymbol,
-    getTokenDetailsByAddress,
+    getTokenDetailsForChain,
     isPositiveAmount,
     isSameAddress,
     normaliseAmount,
@@ -24,11 +24,13 @@ const EMPTY_QUOTE: QuotePreview = {
 
 export const useBridgeQuote = ({
     amount,
+    fromChain,
     fromToken,
     toToken,
     toChain,
 }: {
     amount: string;
+    fromChain?: string;
     fromToken: TokenOptions | null;
     toToken: TokenOptions | null;
     toChain?: string;
@@ -43,8 +45,9 @@ export const useBridgeQuote = ({
             };
         }
 
-        const tokenInDetails = getTokenDetailsByAddress(
-            fromToken.token.address,
+        const tokenInDetails = getTokenDetailsForChain(
+            fromToken.token,
+            fromChain,
         );
         const tokenOutDetails = getDestinationTokenDetails(
             fromToken.token,
@@ -72,7 +75,7 @@ export const useBridgeQuote = ({
                 tokenOutDetails.address,
             ),
         };
-    }, [fromToken, toChain, toToken]);
+    }, [fromChain, fromToken, toChain, toToken]);
 
     const [quote, setQuote] = useState<QuotePreview>(EMPTY_QUOTE);
 

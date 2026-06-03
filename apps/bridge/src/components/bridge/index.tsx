@@ -46,6 +46,7 @@ import {
     getMatchingTokenOption,
     getSourceType,
     getTokenDetailsByAddress,
+    getTokenDetailsForChain,
     isExternalNativeLikeToken,
     isPositiveAmount,
     isSameAddress,
@@ -122,6 +123,7 @@ const Bridge = () => {
 
     const quotePreview = useBridgeQuote({
         amount,
+        fromChain: fromChainValue,
         fromToken,
         toToken,
         toChain: toChainValue,
@@ -239,9 +241,11 @@ const Bridge = () => {
     const buildSwapAndResolveOutgoingToken = useCallback(
         async ({
             tokenIn,
+            sourceChain,
             destinationChain,
         }: {
             tokenIn: TokenOptions;
+            sourceChain: CHAIN | string;
             destinationChain: CHAIN;
         }) => {
             let outgoingToken = tokenIn.token;
@@ -249,8 +253,9 @@ const Bridge = () => {
                 amount,
                 tokenIn.token.decimals,
             );
-            const tokenInDetails = getTokenDetailsByAddress(
-                tokenIn.token.address,
+            const tokenInDetails = getTokenDetailsForChain(
+                tokenIn.token,
+                sourceChain,
             );
             const tokenOutDetails = getDestinationTokenDetails(
                 tokenIn.token,
@@ -540,6 +545,7 @@ const Bridge = () => {
                     outgoingAmount,
                 } = await buildSwapAndResolveOutgoingToken({
                     tokenIn: fromToken,
+                    sourceChain: fromChain.value,
                     destinationChain: toChain.value as CHAIN,
                 });
 
@@ -597,6 +603,7 @@ const Bridge = () => {
                     outgoingAmount,
                 } = await buildSwapAndResolveOutgoingToken({
                     tokenIn: fromToken,
+                    sourceChain: fromChain.value,
                     destinationChain: toChain.value as CHAIN,
                 });
 
