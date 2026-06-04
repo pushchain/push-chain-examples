@@ -1,33 +1,46 @@
 import { MoveableToken } from "@pushchain/core/src/lib/constants";
-import { ArrowUpRight, Box, Button, css, IconProps, PlusSquare, PushMonotone, Text } from "shared-components";
+import { CHAIN } from "@pushchain/core/src/lib/constants/enums";
+import { ArrowUpRight, Box, Button, css, IconProps, PlusSquare, Text } from "shared-components";
 import { chainsIconList } from "../../common/constants";
 import { formatDuration, formatTxTime } from "../../common/utils";
 import { usePushChainClient } from "@pushchain/ui-kit";
 
 type SuccessProps = {
-    token: MoveableToken;
-    amount: string;
-    chain?: string;
+    fromToken: MoveableToken;
+    fromAmount: string;
+    fromChain?: string;
+    toToken: MoveableToken;
+    toAmount: string;
+    toChain?: string;
+    toChainLabel?: string;
     duration: number;
     txnHash: string;
     handleBack: () => void;
 }
 
 const Success: React.FC<SuccessProps> = ({
-    chain,
+    fromChain,
+    fromAmount,
+    fromToken,
+    toChain,
+    toChainLabel,
+    toAmount,
+    toToken,
     duration,
-    amount,
-    token,
     txnHash,
     handleBack,
 }) => {
-    const ToChainIcon = chainsIconList[chain || ''];
+    const FromChainIcon = chainsIconList[fromChain || ''];
+    const ToChainIcon = chainsIconList[toChain || ''];
 
     const { pushChainClient } = usePushChainClient();
 
-    const FromChainIcon = chainsIconList[pushChainClient?.universal.origin.chain || ''];
-
     const time = formatTxTime(Date.now());  
+    const explorerLabel =
+        toChain && toChain !== CHAIN.PUSH_TESTNET_DONUT
+            ? toChainLabel || 'Destination'
+            : 'Push';
+    const receivedAmount = toAmount || fromAmount;
 
     return (
         <Box
@@ -72,8 +85,9 @@ const Success: React.FC<SuccessProps> = ({
                     justifyContent='center'
                     alignItems='center'
                 >
-                    <Text variant='h2-regular'>{amount} {token.symbol}</Text>
+                    <Text variant='h2-regular'>{receivedAmount} {toToken.symbol}</Text>
                     <Text variant='bl-regular' color='text-tertiary'>Transfer Successful!</Text>
+                    <Text variant='bm-regular' color='text-tertiary'>Sent {fromAmount} {fromToken.symbol}</Text>
                 </Box>
             </Box>
             <Box display='flex' flexDirection='column' gap='spacing-xs'>
@@ -86,6 +100,10 @@ const Success: React.FC<SuccessProps> = ({
                     border='border-sm solid stroke-brand-bold'
                     padding='spacing-sm'
                 >
+                    <Box display='flex' justifyContent='space-between' alignItems='center'>
+                        <Text variant='bm-regular' color='text-brand-bold'>Received:</Text>
+                        <Text variant='h5-semibold' color='text-brand-bold'>{receivedAmount} {toToken.symbol}</Text>
+                    </Box>
                     <Box display='flex' justifyContent='space-between' alignItems='center'>
                         <Text variant='bm-regular' color='text-brand-bold'>Deposit time:</Text>
                         <Text variant='h5-semibold' color='text-brand-bold'>{time}</Text>
@@ -104,10 +122,22 @@ const Success: React.FC<SuccessProps> = ({
                     padding='spacing-xs'
                     cursor='pointer'
                     onClick={() => {
-                        window.open(pushChainClient?.explorer.getTransactionUrl(txnHash), '_blank')
+                        const explorerUrl =
+                            pushChainClient?.explorer.getTransactionUrl(
+                                txnHash,
+                                toChain
+                                    ? {
+                                          chain: toChain as CHAIN,
+                                      }
+                                    : undefined,
+                            );
+
+                        if (explorerUrl) {
+                            window.open(explorerUrl, '_blank')
+                        }
                     }}
                 >
-                    <Text variant='bm-regular' color='text-brand-medium'>View in Push Explorer</Text>
+                    <Text variant='bm-regular' color='text-brand-medium'>View in {explorerLabel} Explorer</Text>
                     <ArrowUpRight size={16} color='icon-tertiary' />
                 </Box>
             </Box>

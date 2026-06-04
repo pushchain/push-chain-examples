@@ -29,6 +29,8 @@ export type QuotePreview = {
 
 export type ResolvedHop = {
     txHash?: string;
+    finalTxHash?: string;
+    finalTxnHash?: string;
     outboundDetails?: {
         externalTxHash?: string;
     };
@@ -38,12 +40,14 @@ export type CascadeCompletion = {
     success?: boolean;
     failedAt?: number | string;
     finalTxHash?: string;
+    finalTxnHash?: string;
     hops?: ResolvedHop[];
 };
 
 export type CascadeResponse = {
     initialTxHash?: string;
     finalTxHash?: string;
+    finalTxnHash?: string;
     hops?: ResolvedHop[];
     waitForAll?: () => Promise<CascadeCompletion>;
     wait?: () => Promise<CascadeCompletion>;

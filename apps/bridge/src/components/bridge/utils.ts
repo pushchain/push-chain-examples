@@ -185,7 +185,11 @@ export const buildExternalTransferCalldata = ({
 };
 
 const getResolvedHopHash = (hop: ResolvedHop) =>
-    hop.txHash || hop.outboundDetails?.externalTxHash || '';
+    hop.finalTxnHash ||
+    hop.finalTxHash ||
+    hop.outboundDetails?.externalTxHash ||
+    hop.txHash ||
+    '';
 
 const getLastResolvedHopHash = (hops?: ResolvedHop[]) => {
     if (!Array.isArray(hops)) return '';
@@ -215,7 +219,9 @@ export const resolveCascadeFinalHash = async (
     }
 
     const finalTxHash =
+        completion?.finalTxnHash ||
         completion?.finalTxHash ||
+        cascadeResponse?.finalTxnHash ||
         cascadeResponse?.finalTxHash ||
         getLastResolvedHopHash(completion?.hops) ||
         getLastResolvedHopHash(cascadeResponse?.hops);

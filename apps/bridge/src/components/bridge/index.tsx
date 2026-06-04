@@ -57,6 +57,45 @@ import {
 
 export type { ChainOptions, TokenOptions } from './types';
 
+type TransactionResponseWithFinalHash = {
+    hash: string;
+    finalTxHash?: string;
+    finalTxnHash?: string;
+    externalTxHash?: string;
+    pushInboundTxHash?: string;
+    externalStatus?: 'success' | 'failed' | 'timeout';
+    externalError?: string;
+    status?: 0 | 1;
+    wait?: () => Promise<TransactionResponseWithFinalHash>;
+};
+
+const getFinalTransactionHash = (response: TransactionResponseWithFinalHash) =>
+    response.finalTxnHash ||
+    response.finalTxHash ||
+    response.pushInboundTxHash ||
+    response.externalTxHash ||
+    response.hash;
+
+const waitForFinalTransactionHash = async (
+    response: TransactionResponseWithFinalHash,
+) => {
+    const receipt =
+        typeof response.wait === 'function' ? await response.wait() : response;
+
+    if (receipt.status === 0) {
+        throw new Error('Transaction failed.');
+    }
+
+    if (receipt.externalStatus && receipt.externalStatus !== 'success') {
+        throw new Error(
+            receipt.externalError ||
+                `External transaction ${receipt.externalStatus}.`,
+        );
+    }
+
+    return getFinalTransactionHash(receipt);
+};
+
 const Bridge = () => {
     const [amount, setAmount] = useState('');
     const [balance, setBalance] = useState('');
@@ -475,9 +514,11 @@ const Bridge = () => {
                           },
                 );
 
-                setTxnHash(txnRes.hash);
                 sourceTxHash = txnRes.hash;
-                destinationTxHash = txnRes.hash;
+                const finalTxHash = await waitForFinalTransactionHash(txnRes);
+
+                setTxnHash(finalTxHash);
+                destinationTxHash = finalTxHash;
             };
 
             const sendExternalDirectTransfer = async (sourceChain: CHAIN) => {
@@ -490,9 +531,12 @@ const Bridge = () => {
                         value: parsedInputAmount,
                     });
 
-                    setTxnHash(txnRes.hash);
                     sourceTxHash = txnRes.hash;
-                    destinationTxHash = txnRes.hash;
+                    const finalTxHash =
+                        await waitForFinalTransactionHash(txnRes);
+
+                    setTxnHash(finalTxHash);
+                    destinationTxHash = finalTxHash;
                     return;
                 }
 
@@ -508,9 +552,11 @@ const Bridge = () => {
                     }),
                 });
 
-                setTxnHash(txnRes.hash);
                 sourceTxHash = txnRes.hash;
-                destinationTxHash = txnRes.hash;
+                const finalTxHash = await waitForFinalTransactionHash(txnRes);
+
+                setTxnHash(finalTxHash);
+                destinationTxHash = finalTxHash;
             };
 
             const buildBridgeOutTx = async ({
@@ -566,9 +612,12 @@ const Bridge = () => {
                         },
                     });
 
-                    setTxnHash(txnRes.hash);
                     sourceTxHash = txnRes.hash;
-                    destinationTxHash = txnRes.hash;
+                    const finalTxHash =
+                        await waitForFinalTransactionHash(txnRes);
+
+                    setTxnHash(finalTxHash);
+                    destinationTxHash = finalTxHash;
                     return;
                 }
 
@@ -692,11 +741,6 @@ const Bridge = () => {
             }
         } catch (err) {
             console.error('Error in bridging:', err);
-            const message =
-                err instanceof Error
-                    ? err.message
-                    : 'Transaction failed. Please try again.';
-            setError(message || 'Transaction failed. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -1028,9 +1072,13 @@ const Bridge = () => {
         >
             {txnHash && fromToken && fromChain && toChain ? (
                 <Success
-                    chain={toChain.value}
-                    amount={amount}
-                    token={fromToken.token}
+                    fromChain={fromChain.value}
+                    fromAmount={amount}
+                    fromToken={fromToken.token}
+                    toChain={toChain.value}
+                    toChainLabel={toChain.label}
+                    toAmount={quotePreview.amount || amount}
+                    toToken={quotePreview.token || toToken?.token || fromToken.token}
                     duration={txnDuration || 0}
                     txnHash={txnHash}
                     handleBack={() => {
