@@ -1,14 +1,20 @@
 import { MoveableToken } from "@pushchain/core/src/lib/constants";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Box, CaretDown, css, Spinner, Text } from "shared-components";
+import { getExternalTokenSymbol, normaliseAmount } from "./utils";
 
 type QuoteSummaryProps = {
-  fromAmount: string;
+  fromAmount?: string;
   fromToken?: MoveableToken;
   toAmount: string;
   toToken?: MoveableToken;
   loading?: boolean;
   error?: string;
+  netFee?: string;
+  bridgeFee?: string;
+  destinationGasFee?: string;
+  feeLoading?: boolean;
+  disabled?: boolean;
 };
 
 const formatDisplayAmount = (value: string) => {
@@ -24,6 +30,52 @@ const formatDisplayAmount = (value: string) => {
   }).format(parsed);
 };
 
+const percentFormatter = new Intl.NumberFormat("en-US", {
+  maximumFractionDigits: 2,
+});
+
+const getDisplaySymbol = (token?: MoveableToken) =>
+  getExternalTokenSymbol(token?.symbol) || token?.symbol || "";
+
+const getRateImpact = ({
+  fromAmount,
+  fromToken,
+  toAmount,
+  toToken,
+}: {
+  fromAmount?: string;
+  fromToken?: MoveableToken;
+  toAmount: string;
+  toToken?: MoveableToken;
+}) => {
+  const fromSymbol = getDisplaySymbol(fromToken);
+  const toSymbol = getDisplaySymbol(toToken);
+
+  if (!fromAmount || !toAmount || !fromSymbol || fromSymbol !== toSymbol) {
+    return "";
+  }
+
+  const parsedFrom = Number(normaliseAmount(fromAmount));
+  const parsedTo = Number(normaliseAmount(toAmount));
+
+  if (
+    !Number.isFinite(parsedFrom) ||
+    !Number.isFinite(parsedTo) ||
+    parsedFrom <= 0 ||
+    parsedTo <= 0
+  ) {
+    return "";
+  }
+
+  const difference = parsedFrom - parsedTo;
+
+  if (difference <= 0) return "";
+
+  const percent = (difference / parsedFrom) * 100;
+
+  return `${formatDisplayAmount(String(difference))} ${toSymbol} (${percentFormatter.format(percent)}%)`;
+};
+
 const QuoteSummary: React.FC<QuoteSummaryProps> = ({
   fromAmount,
   fromToken,
@@ -31,10 +83,24 @@ const QuoteSummary: React.FC<QuoteSummaryProps> = ({
   toToken,
   loading = false,
   error = "",
+  netFee = "--",
+  bridgeFee = "--",
+  destinationGasFee = "--",
+  feeLoading = false,
+  disabled = false,
 }) => {
   const [open, setOpen] = useState(false);
-  const receiveToken = toToken?.symbol || fromToken?.symbol || "";
-  const sendToken = fromToken?.symbol || "";
+  const receiveToken = toToken?.symbol || "";
+  const rateImpact = useMemo(
+    () =>
+      getRateImpact({
+        fromAmount,
+        fromToken,
+        toAmount,
+        toToken,
+      }),
+    [fromAmount, fromToken, toAmount, toToken],
+  );
 
   return (
     <Box
@@ -52,10 +118,10 @@ const QuoteSummary: React.FC<QuoteSummaryProps> = ({
             justifyContent="space-between"
             css={css`
                 box-sizing: border-box;
-                cursor: pointer;
+                cursor: ${disabled ? "default" : "pointer"};
                 user-select: none;
             `}
-            onClick={() => setOpen((s) => !s)}
+            onClick={disabled ? undefined : () => setOpen((s) => !s)}
         >
             <Box display="flex" alignItems="center" gap="spacing-xs">
 
@@ -91,28 +157,15 @@ const QuoteSummary: React.FC<QuoteSummaryProps> = ({
                 </Box>
             </Box>
 
-            <CaretDown size={20} color="icon-primary" />
+            {!disabled && <CaretDown size={20} color="icon-primary" />}
         </Box>
 
-        {open && (
+        {!disabled && open && (
             <Box display="flex" flexDirection="column" gap="spacing-xs">
-                <Row
-                    label="You send"
-                    value={`${formatDisplayAmount(fromAmount)} ${sendToken}`}
-                />
-
-                <Row
-                    label="You receive"
-                    value={
-                        loading
-                            ? "Fetching"
-                            : error
-                              ? "Unavailable"
-                              : `${formatDisplayAmount(toAmount)} ${receiveToken}`
-                    }
-                />
-
-                <Row label="Net fee" value='$0.00' />
+                {!loading && !error && rateImpact && (
+                    <Row label="Rate impact" value={rateImpact} />
+                )}
+                <Row label="Network fee" value={feeLoading ? "Estimating" : netFee} />
 
                 <Box height="1px" backgroundColor='surface-tertiary' />
 
@@ -141,8 +194,11 @@ const QuoteSummary: React.FC<QuoteSummaryProps> = ({
                     </Box>
 
                     <Box display="flex" flexDirection="column" width='100%' gap="spacing-sm">
-                        <Row label="Bridge fee" value="$0.00" />
-                        <Row label="Destination gas fee" value="$0.00" />
+                        <Row label="Bridge fee" value={feeLoading ? "Estimating" : bridgeFee} />
+                        <Row
+                            label="Destination gas fee"
+                            value={feeLoading ? "Estimating" : destinationGasFee}
+                        />
                     </Box>
                 </Box>
             </Box>
@@ -153,7 +209,7 @@ const QuoteSummary: React.FC<QuoteSummaryProps> = ({
 
 const Row = ({ label, value, info = false }: { label: string; value: string; info?: boolean }) => {
   return (
-    <Box display="flex" alignItems="center" justifyContent="space-between">
+    <Box display="flex" alignItems="center" justifyContent="space-between" gap="spacing-xs">
       <Box display="flex" alignItems="center" gap="spacing-xxs">
         <Text variant='h5-regular' color="text-tertiary">{label}</Text>
         {info && (
@@ -166,7 +222,15 @@ const Row = ({ label, value, info = false }: { label: string; value: string; inf
           </Box>
         )}
       </Box>
-      <Text variant='h5-regular' color="text-tertiary">{value}</Text>
+      <Text
+        variant='h5-regular'
+        color="text-tertiary"
+        css={css`
+          text-align: right;
+        `}
+      >
+        {value}
+      </Text>
     </Box>
   );
 }

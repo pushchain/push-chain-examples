@@ -36,6 +36,7 @@ import {
 } from '../../services/bridgeApi';
 import AddressField from './AddressField';
 import { DECIMAL_INPUT, PC_TOKEN_OPTION, PUSH_CHAIN } from './constants';
+import { useBridgeFeePreview } from './hooks/useBridgeFeePreview';
 import { useBridgeQuote } from './hooks/useBridgeQuote';
 import type { AddressPrefillType, ChainOptions, TokenOptions } from './types';
 import {
@@ -165,6 +166,12 @@ const Bridge = () => {
         fromChain: fromChainValue,
         fromToken,
         toToken,
+        toChain: toChainValue,
+    });
+    const feePreview = useBridgeFeePreview({
+        amount,
+        fromToken,
+        pushChainClient,
         toChain: toChainValue,
     });
 
@@ -1383,12 +1390,17 @@ const Bridge = () => {
                         />
 
                         <QuoteSummary
-                            fromToken={fromToken?.token}
                             fromAmount={amount}
+                            fromToken={fromToken?.token}
                             toToken={quotePreview.token}
                             toAmount={quotePreview.amount}
                             loading={quotePreview.loading}
                             error={quotePreview.error}
+                            netFee={feePreview.netFee}
+                            bridgeFee={feePreview.bridgeFee}
+                            destinationGasFee={feePreview.destinationGasFee}
+                            feeLoading={feePreview.loading}
+                            disabled
                         />
 
                         <Button

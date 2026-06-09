@@ -85,9 +85,8 @@ const Success: React.FC<SuccessProps> = ({
                     justifyContent='center'
                     alignItems='center'
                 >
-                    <Text variant='h2-regular'>{receivedAmount} {toToken.symbol}</Text>
+                    <Text variant='h2-regular'>{fromAmount} {fromToken.symbol}</Text>
                     <Text variant='bl-regular' color='text-tertiary'>Transfer Successful!</Text>
-                    <Text variant='bm-regular' color='text-tertiary'>Sent {fromAmount} {fromToken.symbol}</Text>
                 </Box>
             </Box>
             <Box display='flex' flexDirection='column' gap='spacing-xs'>
