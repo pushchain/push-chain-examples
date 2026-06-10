@@ -4,6 +4,7 @@ import { ArrowUpRight, Box, Button, css, IconProps, PlusSquare, Text } from "sha
 import { chainsIconList } from "../../common/constants";
 import { formatDuration, formatTxTime } from "../../common/utils";
 import { usePushChainClient } from "@pushchain/ui-kit";
+import { formatSignificantAmount } from "./utils";
 
 type SuccessProps = {
     fromToken: MoveableToken;
@@ -41,6 +42,8 @@ const Success: React.FC<SuccessProps> = ({
             ? toChainLabel || 'Destination'
             : 'Push';
     const receivedAmount = toAmount || fromAmount;
+    const displayFromAmount = formatSignificantAmount(fromAmount);
+    const displayReceivedAmount = formatSignificantAmount(receivedAmount);
 
     return (
         <Box
@@ -85,7 +88,7 @@ const Success: React.FC<SuccessProps> = ({
                     justifyContent='center'
                     alignItems='center'
                 >
-                    <Text variant='h2-regular'>{fromAmount} {fromToken.symbol}</Text>
+                    <Text variant='h2-regular'>{displayFromAmount} {fromToken.symbol}</Text>
                     <Text variant='bl-regular' color='text-tertiary'>Transfer Successful!</Text>
                 </Box>
             </Box>
@@ -101,7 +104,7 @@ const Success: React.FC<SuccessProps> = ({
                 >
                     <Box display='flex' justifyContent='space-between' alignItems='center'>
                         <Text variant='bm-regular' color='text-brand-bold'>Received:</Text>
-                        <Text variant='h5-semibold' color='text-brand-bold'>{receivedAmount} {toToken.symbol}</Text>
+                        <Text variant='h5-semibold' color='text-brand-bold'>{displayReceivedAmount} {toToken.symbol}</Text>
                     </Box>
                     <Box display='flex' justifyContent='space-between' alignItems='center'>
                         <Text variant='bm-regular' color='text-brand-bold'>Deposit time:</Text>

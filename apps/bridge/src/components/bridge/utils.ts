@@ -21,6 +21,44 @@ export const toSafeNumber = (value: string) => {
 
 export const isPositiveAmount = (value: string) => toSafeNumber(value) > 0;
 
+const SIGNIFICANT_AMOUNT_DIGITS = 3;
+
+const trimTrailingDecimalZeros = (value: string) =>
+    value.replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '');
+
+export const formatSignificantAmount = (value: string) => {
+    const normalised = normaliseAmount(value);
+
+    if (!normalised) return '0';
+    if (!/^-?\d*(?:\.\d*)?$/.test(normalised)) return value;
+
+    const isNegative = normalised.startsWith('-');
+    const unsigned = isNegative ? normalised.slice(1) : normalised;
+    const [rawInteger = '0', rawDecimal = ''] = unsigned.split('.');
+    const integer = rawInteger.replace(/^0+(?=\d)/, '') || '0';
+
+    if (integer === '0') {
+        const firstMeaningfulDecimalIndex = rawDecimal.search(/[1-9]/);
+
+        if (firstMeaningfulDecimalIndex === -1) return '0';
+
+        const decimalLength =
+            firstMeaningfulDecimalIndex + SIGNIFICANT_AMOUNT_DIGITS;
+        const formatted = `0.${rawDecimal.slice(0, decimalLength)}`;
+
+        return `${isNegative ? '-' : ''}${trimTrailingDecimalZeros(formatted)}`;
+    }
+
+    const decimalLength = Math.max(
+        SIGNIFICANT_AMOUNT_DIGITS - integer.length,
+        0,
+    );
+    const decimal = rawDecimal.slice(0, decimalLength);
+    const formatted = decimal ? `${integer}.${decimal}` : integer;
+
+    return `${isNegative ? '-' : ''}${trimTrailingDecimalZeros(formatted)}`;
+};
+
 export const getChainNamespace = (chainValue?: string): string => {
     if (!chainValue) return '';
     return chainValue.split(':')[0] || '';
