@@ -118,10 +118,12 @@ const Select: React.FC<SelectProps> = ({
                             backgroundColor='surface-secondary'
                             minWidth={{ initial: '400px', tb: '100%' }}
                             maxHeight='70dvh'
+                            customScrollbar
                             onMouseDown={(e) => e.stopPropagation()}
                             onTouchStart={(e) => e.stopPropagation()}
                             css={css`
-                                overflow: scroll;
+                                overflow-x: hidden;
+                                overflow-y: auto;
                             `}
                         >
                             <Box display='flex' alignItems='center' justifyContent='space-between' padding='spacing-sm'>

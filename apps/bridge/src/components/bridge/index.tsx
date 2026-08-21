@@ -289,10 +289,12 @@ const Bridge = () => {
             tokenIn,
             sourceChain,
             destinationChain,
+            prepareTransactions = true,
         }: {
             tokenIn: TokenOptions;
             sourceChain: CHAIN | string;
             destinationChain: CHAIN;
+            prepareTransactions?: boolean;
         }) => {
             let outgoingToken = tokenIn.token;
             let outgoingAmount = PushChain.utils.helpers.parseUnits(
@@ -309,19 +311,35 @@ const Bridge = () => {
             );
 
             if (!tokenInDetails?.address || !tokenOutDetails?.address) {
-                return { transactions: [], outgoingToken, outgoingAmount };
+                return {
+                    transactions: [],
+                    directTransactions: [],
+                    outgoingToken,
+                    outgoingAmount,
+                };
             }
 
             if (
                 isSameAddress(tokenInDetails.address, tokenOutDetails.address)
             ) {
-                return { transactions: [], outgoingToken, outgoingAmount };
+                return {
+                    transactions: [],
+                    directTransactions: [],
+                    outgoingToken,
+                    outgoingAmount,
+                };
             }
 
             const tokenOption = getTokenOptionByAddress(
                 tokenOutDetails.address,
             );
+            const pushToken = PushChain.utils.tokens
+                .getMoveableTokens(PUSH_CHAIN)
+                .tokens.find((token) =>
+                    isSameAddress(token.address, tokenOutDetails.address),
+                );
             const resolvedOutgoingToken =
+                pushToken ??
                 tokenOption?.token ??
                 ({
                     ...tokenIn.token,
@@ -339,24 +357,28 @@ const Bridge = () => {
                 tokenInDecimals: tokenIn.token.decimals,
                 tokenOutDecimals: resolvedOutgoingToken.decimals,
                 maxSlippagePercent: 0.5,
+                prepareTransactions,
             });
 
-            outgoingToken = resolvedOutgoingToken;
-            outgoingAmount =
-                swapResult.expectedAmountOut ??
-                PushChain.utils.helpers.parseUnits(
-                    amount,
-                    outgoingToken.decimals,
+            if (!swapResult.expectedAmountOut) {
+                throw new Error(
+                    'Unable to determine the minimum swap output amount.',
                 );
+            }
+
+            outgoingToken = resolvedOutgoingToken;
+            outgoingAmount = swapResult.expectedAmountOut;
 
             return {
                 transactions: swapResult.transactions,
+                directTransactions: swapResult.directTransactions,
                 outgoingToken,
                 outgoingAmount,
             };
         },
         [
             PushChain.utils.helpers,
+            PushChain.utils.tokens,
             amount,
             getTokenOptionByAddress,
             pushChainClient,
@@ -504,15 +526,25 @@ const Bridge = () => {
                 originChain: pushChainClient.universal.origin.chain,
             });
             const isSameChain = fromChain.value === toChain.value;
+            const ceaSource =
+                sourceType === 'CEA'
+                    ? {
+                          from: {
+                              chain: fromChain.value as CHAIN,
+                          },
+                      }
+                    : {};
 
             const sendPushTransfer = async () => {
                 const txnRes = await pushChainClient.universal.sendTransaction(
                     toToken.value === 'PC'
                         ? {
+                              ...ceaSource,
                               to: address as `0x${string}`,
                               value: parsedPcAmount,
                           }
                         : {
+                              ...ceaSource,
                               to: address as `0x${string}`,
                               funds: {
                                   amount: parsedInputAmount,
@@ -531,6 +563,7 @@ const Bridge = () => {
             const sendExternalDirectTransfer = async (sourceChain: CHAIN) => {
                 if (isExternalNativeLikeToken(fromToken.token)) {
                     const txnRes = await pushChainClient.universal.sendTransaction({
+                        ...ceaSource,
                         to: {
                             address: address as `0x${string}`,
                             chain: sourceChain,
@@ -548,6 +581,7 @@ const Bridge = () => {
                 }
 
                 const txnRes = await pushChainClient.universal.sendTransaction({
+                    ...ceaSource,
                     to: {
                         address: fromToken.token.address as `0x${string}`,
                         chain: sourceChain,
@@ -593,16 +627,17 @@ const Bridge = () => {
 
             const sendPushToExternal = async () => {
                 const {
-                    transactions: swapTransactions,
+                    directTransactions,
                     outgoingToken,
                     outgoingAmount,
                 } = await buildSwapAndResolveOutgoingToken({
                     tokenIn: fromToken,
                     sourceChain: fromChain.value,
                     destinationChain: toChain.value as CHAIN,
+                    prepareTransactions: false,
                 });
 
-                if (swapTransactions.length === 0) {
+                if (directTransactions.length === 0) {
                     const txnRes = await pushChainClient.universal.sendTransaction({
                         to: {
                             address: address as `0x${string}`,
@@ -628,24 +663,39 @@ const Bridge = () => {
                     return;
                 }
 
-                const bridgeOutTx = await buildBridgeOutTx({
-                    token: outgoingToken,
-                    bridgeAmount: outgoingAmount,
-                    destinationChain: toChain.value as CHAIN,
-                });
-                const txnRes = await pushChainClient.universal.executeTransactions([
-                    ...swapTransactions,
-                    bridgeOutTx,
-                ]);
-                const { finalTxHash } = await resolveCascadeFinalHash(txnRes);
+                const swapResponse =
+                    await pushChainClient.universal.sendTransaction({
+                        to: directTransactions[0].to,
+                        value: BigInt(0),
+                        data: directTransactions,
+                    });
+                sourceTxHash = swapResponse.hash;
+                await waitForFinalTransactionHash(swapResponse);
 
+                const outboundResponse =
+                    await pushChainClient.universal.sendTransaction({
+                        to: {
+                            address: address as `0x${string}`,
+                            chain: toChain.value as CHAIN,
+                        },
+                        ...(isExternalNativeLikeToken(outgoingToken)
+                            ? { value: outgoingAmount }
+                            : {}),
+                        funds: {
+                            amount: outgoingAmount,
+                            token: outgoingToken,
+                        },
+                    });
+                const finalTxHash =
+                    await waitForFinalTransactionHash(outboundResponse);
                 setTxnHash(finalTxHash);
-                sourceTxHash = txnRes.initialTxHash;
+                sourceTxHash ??= outboundResponse.hash;
                 destinationTxHash = finalTxHash;
             };
 
             const sendExternalToExternal = async () => {
                 const bridgeInTx = await pushChainClient.universal.prepareTransaction({
+                    ...ceaSource,
                     to: pushChainClient.universal.account as `0x${string}`,
                     funds: {
                         amount: parsedInputAmount,

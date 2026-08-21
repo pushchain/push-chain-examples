@@ -103,10 +103,18 @@ type SwapPushTokensParams = {
     sourceChain?: string;
     destinationChain?: string;
     maxSlippagePercent?: number;
+    prepareTransactions?: boolean;
+};
+
+export type DirectPushTransaction = {
+    to: `0x${string}`;
+    value: bigint;
+    data: `0x${string}`;
 };
 
 type SwapPushTokensResult = {
     transactions: PreparedUniversalTransaction[];
+    directTransactions: DirectPushTransaction[];
     expectedAmountOut?: bigint;
 };
 
@@ -187,6 +195,7 @@ export const swapPushTokens = async ({
     sourceChain = 'eip155:42101',
     destinationChain = 'eip155:42101',
     maxSlippagePercent = 0.5,
+    prepareTransactions = true,
 }: SwapPushTokensParams): Promise<SwapPushTokensResult> => {
     const tokenInAddress = resolveTokenAddress(tokenIn);
     const tokenOutAddress = resolveTokenAddress(tokenOut);
@@ -231,6 +240,7 @@ export const swapPushTokens = async ({
     }
 
     const transactions: PreparedUniversalTransaction[] = [];
+    const directTransactions: DirectPushTransaction[] = [];
 
     for (const step of swapResponse.steps) {
         if (step.type === 'swap') {
@@ -238,32 +248,50 @@ export const swapPushTokens = async ({
                 throw new Error('Invalid swap step returned by RamenFi API');
             }
 
-            const swapTx = await pushChainClient.universal.prepareTransaction({
+            const transaction = {
                 to: step.to as `0x${string}`,
                 value: BigInt(String(step.value || '0')),
                 data: step.data as `0x${string}`,
-            });
+            };
 
-            transactions.push(swapTx);
+            if (prepareTransactions) {
+                transactions.push(
+                    await pushChainClient.universal.prepareTransaction(
+                        transaction,
+                    ),
+                );
+            } else {
+                directTransactions.push(transaction);
+            }
         }
 
         // The bridge/outbound steps are intentionally not executed here because the bridge app
         // prepares its own Push universal bridge transaction after resolving the output token.
     }
 
-    if (!transactions.length) {
+    if (!transactions.length && !directTransactions.length) {
         throw new Error('No swap transactions to execute');
     }
 
     const rawAmountOut =
         parseAmountOutFromUnknownShape(swapResponse) ??
-        parseAmountOutFromUnknownShape(quoteResponse.poolResult);
-    const expectedAmountOut = rawAmountOut
+        parseAmountOutFromUnknownShape(quoteResponse);
+    const quotedAmountOut = rawAmountOut
         ? toBaseUnits(rawAmountOut, tokenOutDecimals)
+        : undefined;
+    const slippageBps = BigInt(
+        Math.min(
+            10_000,
+            Math.max(0, Math.ceil(maxSlippagePercent * 100)),
+        ),
+    );
+    const expectedAmountOut = quotedAmountOut
+        ? (quotedAmountOut * (BigInt(10_000) - slippageBps)) / BigInt(10_000)
         : undefined;
 
     return {
         transactions,
+        directTransactions,
         expectedAmountOut,
     };
 };
