@@ -10,6 +10,11 @@ import {
     isPositiveAmount,
     normaliseAmount,
 } from '../utils';
+import {
+    BRIDGE_FAILURE_EVENTS,
+    getSafeErrorMessage,
+    trackEvent,
+} from '../../../services/analytics';
 
 export type BridgeFeePreview = {
     netFee: string;
@@ -135,7 +140,16 @@ export const useBridgeFeePreview = ({
             toChain,
         );
 
+        // Each of these leaves the user confirming a bridge with no fee shown.
+        const trackFeeFailure = (reason: string) =>
+            trackEvent(BRIDGE_FAILURE_EVENTS.FEE_PREVIEW_FAILED, {
+                to_chain: toChain,
+                from_token: fromToken.token.symbol,
+                reason: reason.slice(0, 100),
+            });
+
         if (!destinationTokenDetails?.address) {
+            trackFeeFailure('No destination token address');
             setFeePreview(UNAVAILABLE_FEE_PREVIEW);
             return;
         }
@@ -143,6 +157,7 @@ export const useBridgeFeePreview = ({
         const queryOutboundGasFee = getOutboundGasFeeQuery(pushChainClient);
 
         if (!queryOutboundGasFee) {
+            trackFeeFailure('Fee query unavailable on client');
             setFeePreview(UNAVAILABLE_FEE_PREVIEW);
             return;
         }
@@ -175,6 +190,9 @@ export const useBridgeFeePreview = ({
                 });
             } catch (error) {
                 console.error('Failed to fetch bridge fee preview:', error);
+                trackFeeFailure(
+                    getSafeErrorMessage(error, 'Fee query failed'),
+                );
                 if (!cancelled) setFeePreview(UNAVAILABLE_FEE_PREVIEW);
             }
         }, 450);

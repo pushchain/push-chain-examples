@@ -5,6 +5,11 @@ import { chainsIconList } from "../../common/constants";
 import { formatDuration, formatTxTime } from "../../common/utils";
 import { usePushChainClient } from "@pushchain/ui-kit";
 import { formatSignificantAmount } from "./utils";
+import {
+    BRIDGE_SIGNAL_EVENTS,
+    getTokenPair,
+    trackEvent,
+} from "../../services/analytics";
 
 type SuccessProps = {
     fromToken: MoveableToken;
@@ -133,6 +138,15 @@ const Success: React.FC<SuccessProps> = ({
                                       }
                                     : undefined,
                             );
+
+                        trackEvent(BRIDGE_SIGNAL_EVENTS.EXPLORER_LINK_CLICKED, {
+                            to_chain: toChain,
+                            to_chain_name: toChainLabel,
+                            token_pair: getTokenPair(
+                                fromToken.symbol,
+                                toToken.symbol,
+                            ),
+                        });
 
                         if (explorerUrl) {
                             window.open(explorerUrl, '_blank')

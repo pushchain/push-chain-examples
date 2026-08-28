@@ -1,4 +1,5 @@
 import { Box, css } from 'shared-components';
+import { BRIDGE_SIGNAL_EVENTS, trackEvent } from '../services/analytics';
 
 const Footer = () => {
   return (
@@ -25,6 +26,11 @@ const Footer = () => {
                 rel="noopener noreferrer"
                 aria-label="Join us on Discord"
                 style={{height: '16px', paddingRight: '16px'}}
+                onClick={() =>
+                    trackEvent(BRIDGE_SIGNAL_EVENTS.SOCIAL_LINK_CLICKED, {
+                        network: 'discord',
+                    })
+                }
             >
                 <img height={16} src="/Discord.png" alt="Discord" />
             </a>
@@ -34,6 +40,11 @@ const Footer = () => {
                 rel="noopener noreferrer"
                 aria-label="Follow us on Twitter"
                 style={{height: '16px', paddingRight: '16px'}}
+                onClick={() =>
+                    trackEvent(BRIDGE_SIGNAL_EVENTS.SOCIAL_LINK_CLICKED, {
+                        network: 'x',
+                    })
+                }
             >
                 <img height={16} src="/Twitter.png" alt="Twitter" />
             </a>

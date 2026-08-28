@@ -34,6 +34,20 @@ import {
     sendBridgeEvent,
     createBridgeEventPayload,
 } from '../../services/bridgeApi';
+import {
+    BRIDGE_FAILURE_EVENTS,
+    BRIDGE_FUNNEL_EVENTS,
+    BRIDGE_SIGNAL_EVENTS,
+    getAmountBucket,
+    getDurationBucket,
+    getPercentOfBalanceBucket,
+    getRouteLabel,
+    getSafeAmount,
+    getSafeErrorMessage,
+    getTokenPair,
+    trackEvent,
+    type AnalyticsMetadata,
+} from '../../services/analytics';
 import AddressField from './AddressField';
 import { DECIMAL_INPUT, PC_TOKEN_OPTION, PUSH_CHAIN } from './constants';
 import { useBridgeFeePreview } from './hooks/useBridgeFeePreview';
@@ -125,6 +139,23 @@ const Bridge = () => {
     const [txnDuration, setTxnDuration] = useState<number | null>(null);
 
     const startRef = useRef<number | null>(null);
+    // Analytics guards: each keeps a high-frequency handler from re-firing the
+    // same event for the same route while the user is still typing.
+    const connectedAccountRef = useRef('');
+    const amountTrackedRouteRef = useRef('');
+    const addressEditedRouteRef = useRef('');
+    const addressErrorRef = useRef('');
+    const insufficientBalanceRef = useRef('');
+    // Route details captured at submit, so the success and failure events
+    // report the same route even after state has moved on.
+    const txnMetaRef = useRef<AnalyticsMetadata | null>(null);
+    // Timestamps behind the two "how long did that take" parameters.
+    const mountedAtRef = useRef(performance.now());
+    const connectedAtRef = useRef<number | null>(null);
+    const routeReadyRef = useRef('');
+    const zeroBalanceRef = useRef('');
+    const balanceFetchFailedRef = useRef('');
+    const prefillShownRef = useRef('');
 
     const { PushChain } = usePushChain();
     const { pushChainClient } = usePushChainClient();
@@ -133,6 +164,32 @@ const Bridge = () => {
     const fromChainValue = fromChain?.value;
     const toChainValue = toChain?.value;
     const isToPushChain = toChainValue === PUSH_CHAIN;
+
+    // The shared parameter vocabulary every bridge event carries. `token_pair`
+    // and `route` are pre-joined so a dashboard breakdown is one query, not two.
+    const routeMeta = useMemo<AnalyticsMetadata>(
+        () => ({
+            from_chain: fromChainValue,
+            from_chain_name: fromChain?.label,
+            to_chain: toChainValue,
+            to_chain_name: toChain?.label,
+            from_token: fromToken?.token.symbol,
+            to_token: toToken?.token.symbol,
+            token_pair: getTokenPair(
+                fromToken?.token.symbol,
+                toToken?.token.symbol,
+            ),
+            route: getRouteLabel(fromChain?.label, toChain?.label),
+        }),
+        [
+            fromChain?.label,
+            fromChainValue,
+            fromToken,
+            toChain?.label,
+            toChainValue,
+            toToken,
+        ],
+    );
 
     const supportedFromChainsList = useMemo(
         () =>
@@ -399,6 +456,16 @@ const Bridge = () => {
         setError('');
         setAddressError('');
         setUserEnteredAddress(false);
+        amountTrackedRouteRef.current = '';
+        addressEditedRouteRef.current = '';
+        insufficientBalanceRef.current = '';
+
+        trackEvent(BRIDGE_SIGNAL_EVENTS.FROM_CHAIN_SELECTED, {
+            from_chain: chain?.value,
+            from_chain_name: chain?.label,
+            to_chain: toChainValue,
+            to_chain_name: toChain?.label,
+        });
     };
 
     const handleSelectTOChain = (option: SelectOption) => {
@@ -409,6 +476,15 @@ const Bridge = () => {
         setUserSelectedToChain(true);
         setAddressError('');
         setUserEnteredAddress(false);
+        amountTrackedRouteRef.current = '';
+        addressEditedRouteRef.current = '';
+
+        trackEvent(BRIDGE_SIGNAL_EVENTS.TO_CHAIN_SELECTED, {
+            from_chain: fromChainValue,
+            from_chain_name: fromChain?.label,
+            to_chain: chain?.value,
+            to_chain_name: chain?.label,
+        });
     };
 
     const handleSelectToken = (option: SelectOption) => {
@@ -419,17 +495,42 @@ const Bridge = () => {
         setAmount('');
         setBalance('');
         setError('');
+        amountTrackedRouteRef.current = '';
+        insufficientBalanceRef.current = '';
+
+        trackEvent(BRIDGE_SIGNAL_EVENTS.FROM_TOKEN_SELECTED, {
+            ...routeMeta,
+            from_token: token?.token.symbol,
+            to_token: token?.token.symbol,
+            token_pair: getTokenPair(
+                token?.token.symbol,
+                token?.token.symbol,
+            ),
+        });
     };
 
     const handleSelectToToken = (option: SelectOption) => {
+        const trackToTokenSelected = (selected: TokenOptions | null) =>
+            trackEvent(BRIDGE_SIGNAL_EVENTS.TO_TOKEN_SELECTED, {
+                ...routeMeta,
+                to_token: selected?.token.symbol,
+                token_pair: getTokenPair(
+                    fromToken?.token.symbol,
+                    selected?.token.symbol,
+                ),
+                is_pc: selected?.value === PC_TOKEN_OPTION.value,
+            });
+
         if (option.value === 'PC') {
             setToToken(PC_TOKEN_OPTION);
+            trackToTokenSelected(PC_TOKEN_OPTION);
             return;
         }
 
         const token =
             toTokenOptions.find((opt) => opt.value === option.value) || null;
         setToToken(token);
+        trackToTokenSelected(token);
     };
 
     const handleSwap = () => {
@@ -445,6 +546,18 @@ const Bridge = () => {
         setError('');
         setAddressError('');
         setUserEnteredAddress(false);
+        amountTrackedRouteRef.current = '';
+        addressEditedRouteRef.current = '';
+        insufficientBalanceRef.current = '';
+
+        // Chains are swapped, so report the direction the user is moving to.
+        trackEvent(BRIDGE_SIGNAL_EVENTS.DIRECTION_FLIPPED, {
+            from_chain: toChainValue,
+            from_chain_name: toChain?.label,
+            to_chain: fromChainValue,
+            to_chain_name: fromChain?.label,
+            route: getRouteLabel(toChain?.label, fromChain?.label),
+        });
     };
 
     const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -460,6 +573,18 @@ const Bridge = () => {
 
         if (balance && toSafeNumber(value) > toSafeNumber(balance)) {
             setError('Insufficient balance');
+
+            // Once per route: the 10s balance refresh would otherwise repeat this.
+            const balanceKey = `${fromChainValue}|${fromToken?.value}`;
+            if (insufficientBalanceRef.current !== balanceKey) {
+                insufficientBalanceRef.current = balanceKey;
+                trackEvent(BRIDGE_FAILURE_EVENTS.INSUFFICIENT_BALANCE, {
+                    from_chain: fromChainValue,
+                    from_chain_name: fromChain?.label,
+                    from_token: fromToken?.token.symbol,
+                    amount_bucket: getAmountBucket(value),
+                });
+            }
             return;
         }
 
@@ -477,6 +602,12 @@ const Bridge = () => {
         setAddress(suggestedAddress);
         setUserEnteredAddress(false);
         setAddressError(validateAddressForChain(suggestedAddress, toChainValue));
+
+        trackEvent(BRIDGE_SIGNAL_EVENTS.USE_MY_ADDRESS_CLICKED, {
+            to_chain: toChainValue,
+            to_chain_name: toChain?.label,
+            prefill_type: suggestedAddressType || undefined,
+        });
     };
 
     const handleBridge = async () => {
@@ -509,6 +640,9 @@ const Bridge = () => {
         setLoading(true);
         setTxnDuration(null);
         startRef.current = performance.now();
+        // Cleared up front: anything that throws before the route is resolved
+        // would otherwise be reported against the previous bridge's route.
+        txnMetaRef.current = null;
 
         try {
             let sourceTxHash: string | undefined;
@@ -731,37 +865,86 @@ const Bridge = () => {
                 destinationTxHash = finalTxHash;
             };
 
+            // Which branch runs is the single most useful thing to know when a
+            // bridge fails, so it is resolved before dispatch and reported on
+            // every transaction event.
+            let flowCase: string;
+            let send: () => Promise<void>;
+
             if (sourceType === 'UOA' && isToPushChain) {
                 // Case 1: Connected chain A -> Push.
-                await sendPushTransfer();
+                flowCase = 'uoa_to_push';
+                send = sendPushTransfer;
             } else if (sourceType === 'UOA' && isSameChain) {
                 // Case 2: Connected chain A -> same chain A.
-                await sendExternalDirectTransfer(fromChain.value as CHAIN);
+                flowCase = 'uoa_to_same_chain';
+                send = () => sendExternalDirectTransfer(fromChain.value as CHAIN);
             } else if (sourceType === 'UOA') {
                 // Case 3: Connected chain A -> another external chain.
-                await sendExternalToExternal();
+                flowCase = 'uoa_to_external';
+                send = sendExternalToExternal;
             } else if (sourceType === 'UEA' && isToPushChain) {
                 // Case 4: Push UEA -> Push.
-                await sendPushTransfer();
+                flowCase = 'uea_to_push';
+                send = sendPushTransfer;
             } else if (sourceType === 'UEA') {
                 // Cases 5/6: Push UEA -> connected chain A / other external chain.
-                await sendPushToExternal();
+                flowCase = 'uea_to_external';
+                send = sendPushToExternal;
             } else if (sourceType === 'CEA' && isToPushChain) {
                 // Case 7: Other chain CEA -> Push.
-                await sendPushTransfer();
+                flowCase = 'cea_to_push';
+                send = sendPushTransfer;
             } else if (sourceType === 'CEA' && isSameChain) {
                 // Case 8: Other chain CEA -> same external chain.
-                await sendExternalDirectTransfer(fromChain.value as CHAIN);
+                flowCase = 'cea_to_same_chain';
+                send = () => sendExternalDirectTransfer(fromChain.value as CHAIN);
             } else {
                 // Case 9: Other chain CEA -> connected chain A / another external chain.
-                await sendExternalToExternal();
+                flowCase = 'cea_to_external';
+                send = sendExternalToExternal;
             }
 
-            const end = performance.now();
-            setTxnDuration(
-                Math.round((end - (startRef.current ?? end)) / 1000),
+            // True for the branches that route through the RamenFi swap leg.
+            const requiresSwap = flowCase.endsWith('_to_external');
+
+            txnMetaRef.current = {
+                ...routeMeta,
+                route_type: sourceType,
+                flow_case: flowCase,
+                requires_swap: requiresSwap,
+                amount: getSafeAmount(amount),
+                amount_bucket: getAmountBucket(amount),
+                amount_pct_of_balance: getPercentOfBalanceBucket(
+                    amount,
+                    balance,
+                ),
+                time_to_submit_sec: connectedAtRef.current
+                    ? Math.round(
+                          (performance.now() - connectedAtRef.current) / 1000,
+                      )
+                    : undefined,
+            };
+
+            trackEvent(
+                BRIDGE_FUNNEL_EVENTS.TRANSACTION_SUBMITTED,
+                txnMetaRef.current,
             );
+
+            await send();
+
+            const end = performance.now();
+            const durationSec = Math.round(
+                (end - (startRef.current ?? end)) / 1000,
+            );
+            setTxnDuration(durationSec);
             startRef.current = null;
+
+            trackEvent(BRIDGE_FUNNEL_EVENTS.TRANSACTION_SUCCEEDED, {
+                ...txnMetaRef.current,
+                duration_sec: durationSec,
+                duration_bucket: getDurationBucket(durationSec),
+            });
 
             try {
                 const amountBaseUnits = parsedInputAmount.toString();
@@ -795,9 +978,25 @@ const Bridge = () => {
                     'Failed to send COMPLETED bridge event:',
                     apiError,
                 );
+
+                // The bridge landed but the points event did not - the user
+                // earned nothing and nothing else records that today.
+                trackEvent(BRIDGE_FAILURE_EVENTS.POINTS_EVENT_FAILED, {
+                    ...txnMetaRef.current,
+                    status: 'COMPLETED',
+                    error_message: getSafeErrorMessage(
+                        apiError,
+                        'Points event rejected',
+                    ),
+                });
             }
         } catch (err) {
             console.error('Error in bridging:', err);
+
+            trackEvent(BRIDGE_FAILURE_EVENTS.TRANSACTION_FAILED, {
+                ...(txnMetaRef.current ?? routeMeta),
+                error_message: getSafeErrorMessage(err),
+            });
         } finally {
             setLoading(false);
         }
@@ -805,6 +1004,7 @@ const Bridge = () => {
 
     const handleClick = async () => {
         if (!pushChainClient) {
+            trackEvent(BRIDGE_FUNNEL_EVENTS.WALLET_CONNECT_CLICKED);
             handleConnectToPushWallet();
             return;
         }
@@ -961,6 +1161,7 @@ const Bridge = () => {
             // }
 
             let nextBalance = '0';
+            let fetchFailed = false;
 
             try {
                 if (isPushSource) {
@@ -1024,11 +1225,51 @@ const Bridge = () => {
                 }
             } catch (fetchError) {
                 console.error('Error fetching balance:', fetchError);
+                fetchFailed = true;
+
+                // Once per token: this effect also runs on a 10s interval.
+                const failKey = `${fromChain.value}|${fromToken.value}`;
+                if (balanceFetchFailedRef.current !== failKey) {
+                    balanceFetchFailedRef.current = failKey;
+                    trackEvent(BRIDGE_FAILURE_EVENTS.BALANCE_FETCH_FAILED, {
+                        from_chain: fromChain.value,
+                        from_chain_name: fromChain.label,
+                        from_token: fromToken.token.symbol,
+                        error_message: getSafeErrorMessage(
+                            fetchError,
+                            'Balance lookup failed',
+                        ),
+                    });
+                }
             }
 
             if (cancelled) return;
 
             setBalance(nextBalance);
+
+            // A connected user with nothing to send. Distinct from insufficient
+            // balance, which needs them to have typed an amount first - and the
+            // strongest argument for putting a faucet link in this app.
+            // Guarded on the same condition the branches above use: an
+            // unsupported namespace leaves nextBalance at its '0' default
+            // without ever querying, which is unknown, not empty.
+            const namespace = getChainNamespace(fromChain.value);
+            const queriedBalance =
+                isPushSource || namespace === 'solana' || namespace === 'eip155';
+            const zeroKey = `${fromChain.value}|${fromToken.value}`;
+            if (
+                queriedBalance &&
+                !fetchFailed &&
+                toSafeNumber(nextBalance) === 0 &&
+                zeroBalanceRef.current !== zeroKey
+            ) {
+                zeroBalanceRef.current = zeroKey;
+                trackEvent(BRIDGE_FAILURE_EVENTS.ZERO_BALANCE, {
+                    from_chain: fromChain.value,
+                    from_chain_name: fromChain.label,
+                    from_token: fromToken.token.symbol,
+                });
+            }
 
             if (amount && toSafeNumber(amount) > toSafeNumber(nextBalance)) {
                 setError('Insufficient balance');
@@ -1060,15 +1301,28 @@ const Bridge = () => {
 
             const uoa = pushChainClient.universal.origin;
 
+            // Reported once per destination so the edit rate has a denominator.
+            const trackPrefill = (type: AddressPrefillType) => {
+                const key = `${toChainValue}|${type}`;
+                if (prefillShownRef.current === key) return;
+                prefillShownRef.current = key;
+                trackEvent(BRIDGE_SIGNAL_EVENTS.ADDRESS_PREFILL_SHOWN, {
+                    to_chain: toChainValue,
+                    prefill_type: type || 'none',
+                });
+            };
+
             if (toChainValue === PUSH_CHAIN) {
                 setSuggestedAddress(pushChainClient.universal.account);
                 setSuggestedAddressType('uea');
+                trackPrefill('uea');
                 return;
             }
 
             if (toChainValue === uoa.chain) {
                 setSuggestedAddress(uoa.address);
                 setSuggestedAddressType('uoa');
+                trackPrefill('uoa');
                 return;
             }
 
@@ -1079,8 +1333,19 @@ const Bridge = () => {
                 if (cancelled) return;
                 setSuggestedAddress(cea);
                 setSuggestedAddressType('cea');
+                trackPrefill('cea');
             } catch (ceaError) {
                 console.error('Failed to derive CEA address:', ceaError);
+
+                // No address gets pre-filled, so the user has to find one.
+                trackEvent(BRIDGE_FAILURE_EVENTS.ADDRESS_DERIVATION_FAILED, {
+                    to_chain: toChainValue,
+                    error_message: getSafeErrorMessage(
+                        ceaError,
+                        'Sub-account lookup failed',
+                    ),
+                });
+
                 if (!cancelled) {
                     setSuggestedAddress('');
                     setSuggestedAddressType(null);
@@ -1107,10 +1372,140 @@ const Bridge = () => {
         setAddressError(validateAddressForChain(address, toChain?.value));
     }, [address, toChain?.value, validateAddressForChain]);
 
+    // Fires once per connected account, not on every client re-render.
+    useEffect(() => {
+        if (!pushChainClient) {
+            connectedAccountRef.current = '';
+            return;
+        }
+
+        const account = pushChainClient.universal.account;
+        if (connectedAccountRef.current === account) return;
+        connectedAccountRef.current = account;
+
+        connectedAtRef.current = performance.now();
+
+        const originChain = pushChainClient.universal.origin.chain;
+        trackEvent(BRIDGE_FUNNEL_EVENTS.WALLET_CONNECTED, {
+            from_chain: originChain,
+            from_chain_name: buildChainOption(originChain).label,
+            namespace: getChainNamespace(originChain),
+            time_to_connect_sec: Math.round(
+                (performance.now() - mountedAtRef.current) / 1000,
+            ),
+        });
+    }, [buildChainOption, pushChainClient]);
+
+    // Debounced so a typed amount reports once per route, not per keystroke.
+    useEffect(() => {
+        if (!amount || !isPositiveAmount(amount)) return;
+
+        const routeKey = `${fromChainValue}|${toChainValue}|${fromToken?.value}|${toToken?.value}`;
+        if (amountTrackedRouteRef.current === routeKey) return;
+
+        const timer = window.setTimeout(() => {
+            amountTrackedRouteRef.current = routeKey;
+            trackEvent(BRIDGE_FUNNEL_EVENTS.AMOUNT_ENTERED, {
+                ...routeMeta,
+                amount: getSafeAmount(amount),
+                amount_bucket: getAmountBucket(amount),
+                amount_pct_of_balance: getPercentOfBalanceBucket(
+                    amount,
+                    balance,
+                ),
+            });
+        }, 800);
+
+        return () => window.clearTimeout(timer);
+    }, [
+        amount,
+        balance,
+        fromChainValue,
+        fromToken?.value,
+        routeMeta,
+        toChainValue,
+        toToken?.value,
+    ]);
+
+    // Only counts as an edit once the user has actually replaced the prefill.
+    useEffect(() => {
+        if (!userEnteredAddress || !address.trim()) return;
+
+        const routeKey = `${toChainValue}|${suggestedAddressType}`;
+        if (addressEditedRouteRef.current === routeKey) return;
+
+        const timer = window.setTimeout(() => {
+            addressEditedRouteRef.current = routeKey;
+            trackEvent(BRIDGE_SIGNAL_EVENTS.DESTINATION_ADDRESS_EDITED, {
+                to_chain: toChainValue,
+                to_chain_name: toChain?.label,
+                prefill_type: suggestedAddressType || 'none',
+            });
+        }, 900);
+
+        return () => window.clearTimeout(timer);
+    }, [
+        address,
+        suggestedAddressType,
+        toChain?.label,
+        toChainValue,
+        userEnteredAddress,
+    ]);
+
+    // Debounced so half-typed addresses do not each report as a failure.
+    useEffect(() => {
+        if (!addressError) {
+            addressErrorRef.current = '';
+            return;
+        }
+
+        const errorKey = `${toChainValue}|${addressError}`;
+        if (addressErrorRef.current === errorKey) return;
+
+        const timer = window.setTimeout(() => {
+            addressErrorRef.current = errorKey;
+            trackEvent(BRIDGE_FAILURE_EVENTS.ADDRESS_VALIDATION, {
+                to_chain: toChainValue,
+                to_chain_name: toChain?.label,
+                namespace: getChainNamespace(toChainValue),
+            });
+        }, 900);
+
+        return () => window.clearTimeout(timer);
+    }, [addressError, toChain?.label, toChainValue]);
+
     const disabled = useMemo(() => {
         if (!pushChainClient) return false;
         return !!validateBridgeForm();
     }, [pushChainClient, validateBridgeForm]);
+
+    // The button just went live. The gap between this and
+    // bridge_transaction_submitted is people who could bridge and chose not to -
+    // fee shock, second thoughts - which no other event can show.
+    useEffect(() => {
+        if (!pushChainClient || disabled) return;
+
+        const routeKey = `${fromChainValue}|${toChainValue}|${fromToken?.value}|${toToken?.value}`;
+        if (routeReadyRef.current === routeKey) return;
+        routeReadyRef.current = routeKey;
+
+        trackEvent(BRIDGE_FUNNEL_EVENTS.ROUTE_READY, {
+            ...routeMeta,
+            amount: getSafeAmount(amount),
+            amount_bucket: getAmountBucket(amount),
+            amount_pct_of_balance: getPercentOfBalanceBucket(amount, balance),
+        });
+    }, [
+        amount,
+        balance,
+        disabled,
+        fromChainValue,
+        fromToken?.value,
+        pushChainClient,
+        routeMeta,
+        toChainValue,
+        toToken?.value,
+    ]);
 
     return (
         <Box
@@ -1139,10 +1534,15 @@ const Bridge = () => {
                     duration={txnDuration || 0}
                     txnHash={txnHash}
                     handleBack={() => {
+                        trackEvent(BRIDGE_SIGNAL_EVENTS.MORE_TOKENS_CLICKED, {
+                            ...(txnMetaRef.current ?? routeMeta),
+                        });
                         setTxnHash('');
                         setAmount('');
                         setTxnDuration(null);
                         setError('');
+                        amountTrackedRouteRef.current = '';
+                        routeReadyRef.current = '';
                     }}
                 />
             ) : (
@@ -1294,6 +1694,16 @@ const Bridge = () => {
                                                     normaliseAmount(balance),
                                                 );
                                                 setError('');
+                                                trackEvent(
+                                                    BRIDGE_SIGNAL_EVENTS.MAX_AMOUNT_CLICKED,
+                                                    {
+                                                        ...routeMeta,
+                                                        amount_bucket:
+                                                            getAmountBucket(
+                                                                balance,
+                                                            ),
+                                                    },
+                                                );
                                             }}
                                         >
                                             <Text

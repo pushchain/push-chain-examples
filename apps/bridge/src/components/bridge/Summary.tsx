@@ -2,6 +2,11 @@ import { MoveableToken } from "@pushchain/core/src/lib/constants";
 import { useMemo, useState } from "react";
 import { Box, CaretDown, css, Spinner, Text } from "shared-components";
 import { getExternalTokenSymbol, normaliseAmount } from "./utils";
+import {
+  BRIDGE_SIGNAL_EVENTS,
+  getTokenPair,
+  trackEvent,
+} from "../../services/analytics";
 
 type QuoteSummaryProps = {
   fromAmount?: string;
@@ -121,7 +126,25 @@ const QuoteSummary: React.FC<QuoteSummaryProps> = ({
                 cursor: ${disabled ? "default" : "pointer"};
                 user-select: none;
             `}
-            onClick={disabled ? undefined : () => setOpen((s) => !s)}
+            onClick={
+                disabled
+                    ? undefined
+                    : () =>
+                          setOpen((s) => {
+                              if (!s) {
+                                  trackEvent(
+                                      BRIDGE_SIGNAL_EVENTS.FEE_SUMMARY_EXPANDED,
+                                      {
+                                          token_pair: getTokenPair(
+                                              getDisplaySymbol(fromToken),
+                                              getDisplaySymbol(toToken),
+                                          ),
+                                      },
+                                  );
+                              }
+                              return !s;
+                          })
+            }
         >
             <Box display="flex" alignItems="center" gap="spacing-xs">
 
